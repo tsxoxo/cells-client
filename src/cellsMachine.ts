@@ -4,15 +4,15 @@ import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants";
 
 const INITIAL_CELLS = Array((ALPHABET_WITH_FILLER.length - 1) * NUM_OF_ROWS) as Cell[]
 INITIAL_CELLS[0] = {
-  content: 10,
+  value: 10,
   cellsThatDependOnMe: []
 }
 INITIAL_CELLS[1] = {
-  content: 11,
+  value: 11,
   cellsThatDependOnMe: []
 }
 INITIAL_CELLS[100] = {
-  content: 101,
+  value: 101,
   cellsThatDependOnMe: []
 }
 
@@ -29,7 +29,7 @@ export const cellsMachine = setup({
     "updateCell": assign(({ context, event }) => {
       assertEvent(event, 'changeCell');
       const newCell = structuredClone(context.cells[event.cellID]) ?? {}
-      newCell.content = event.newValue
+      newCell.value = event.newValue
       return {
         cells: context.cells.toSpliced(event.cellID, 1, newCell)
       }

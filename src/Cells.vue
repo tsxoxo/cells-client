@@ -34,7 +34,7 @@ watch(cells, () => console.log(cells.value))
           <template v-else>
             <div class="cell"><input
                 @change="event => send({ type: 'changeCell', cellID: (NUM_OF_ROWS * (x - 1) + y - 1), newValue: Number((event.target as HTMLInputElement).value) })"
-                :value="cells[NUM_OF_ROWS * (x - 1) + y - 1]?.content"></input>
+                :value="cells[NUM_OF_ROWS * (x - 1) + y - 1]?.value"></input>
             </div>
           </template>
         </template>
