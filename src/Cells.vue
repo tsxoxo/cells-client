@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMachine } from '@xstate/vue'
-import { circlesMachine } from './circlesMachine'
+import { cellsMachine } from './cellsMachine'
 import { createBrowserInspector } from '@statelyai/inspect'
 import { computed } from 'vue';
 
@@ -10,7 +10,7 @@ const { inspect } = createBrowserInspector({
   autoStart: false
 });
 
-const { snapshot, send } = useMachine(circlesMachine, {
+const { snapshot, send } = useMachine(cellsMachine, {
   inspect
 })
 const circles = computed(() => snapshot.value.context.states[snapshot.value.context.stateHistory[snapshot.value.context.currentPosInStateHistory]])

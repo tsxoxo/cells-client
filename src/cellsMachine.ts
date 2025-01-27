@@ -49,7 +49,7 @@ function findClosestCircleThatIntersects(circles: Circle[], coordinates: { x: nu
 
 interface Context { 'states': State[], 'stateHistory': number[], 'indexOfSelectedCircle': number, 'currentPosInStateHistory': number }
 
-export const circlesMachine = setup({
+export const cellsMachine = setup({
   "types": {
     "context": {} as Context,
     "events": {} as { type: 'undo', } | { type: 'redo', } | { type: 'leftClickOnCanvas', coordinates: { x: number, y: number } } | { type: 'changeCircle', } | { type: 'confirm', } | { type: 'cancel', } | { type: 'changeRadius', newRadius: number }
