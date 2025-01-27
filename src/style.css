@@ -47,7 +47,7 @@ body {
 main {
     display: grid;
     grid-template-columns: repeat(27, 64px);
-    grid-template-rows: repeat(101, 64px);
+    grid-template-rows: repeat(101, 54px);
     gap: 0;
     overflow: scroll;
     height: 517px;
@@ -73,6 +73,7 @@ main div input {
 }
 .track-names {
     background-color: var(--track-names-bg);
+    font-weight: bold;
 }
 
 .cell {
