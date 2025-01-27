@@ -1,7 +1,8 @@
 import { setup, assign, assertEvent } from 'xstate'
 import type { Cell } from './types'
+import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants";
 
-const INITIAL_CELLS = [] as Cell[]
+const INITIAL_CELLS = Array((ALPHABET_WITH_FILLER.length - 1) * NUM_OF_ROWS) as Cell[]
 INITIAL_CELLS[0] = {
   content: 10,
   id: 0,
@@ -12,11 +13,11 @@ INITIAL_CELLS[1] = {
   id: 1,
   cellsThatDependOnMe: []
 }
-INITIAL_CELLS[100] = {
-  content: 101,
-  id: 100,
-  cellsThatDependOnMe: []
-}
+// INITIAL_CELLS[100] = {
+//   content: 101,
+//   id: 100,
+//   cellsThatDependOnMe: []
+// }
 
 interface Context { 'cells': Cell[] }
 
@@ -24,12 +25,16 @@ export const cellsMachine = setup({
   "types": {
     "context": {} as Context,
     "events": {} as {
-      type: 'changeCell', cellID: number
+      type: 'changeCell', cellID: number, newValue: number
     }
   },
   "actions": {
-    "updateCell": assign(() => {
+    "updateCell": assign(({ context, event }) => {
+      assertEvent(event, 'changeCell');
+      const newCell = structuredClone(context.cells[event.cellID]) ?? {}
+      newCell.content = event.newValue
       return {
+        cells: context.cells.toSpliced(event.cellID, 1, newCell)
       }
     }),
   }
