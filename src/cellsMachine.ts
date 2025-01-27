@@ -5,19 +5,16 @@ import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants";
 const INITIAL_CELLS = Array((ALPHABET_WITH_FILLER.length - 1) * NUM_OF_ROWS) as Cell[]
 INITIAL_CELLS[0] = {
   content: 10,
-  id: 0,
   cellsThatDependOnMe: []
 }
 INITIAL_CELLS[1] = {
   content: 11,
-  id: 1,
   cellsThatDependOnMe: []
 }
-// INITIAL_CELLS[100] = {
-//   content: 101,
-//   id: 100,
-//   cellsThatDependOnMe: []
-// }
+INITIAL_CELLS[100] = {
+  content: 101,
+  cellsThatDependOnMe: []
+}
 
 interface Context { 'cells': Cell[] }
 
