@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import Circles from './Circles.vue'
+import Cells from './Cells.vue'
 </script>
 
 <template>
-  <Circles />
+  <Cells />
 </template>
