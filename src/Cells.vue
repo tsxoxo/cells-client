@@ -10,8 +10,6 @@ const { inspect } = createBrowserInspector({
   autoStart: false
 });
 
-
-
 const { snapshot, send } = useMachine(cellsMachine, {
   inspect
 })
