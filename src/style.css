@@ -7,7 +7,7 @@
 }
 
 :root {
-    font-family: "Roboto Mono", system-ui, Avenir, Helvetica, Arial, sans-serif;
+    font-family: "Roboto Mono", system-ui, Helvetica, Arial, sans-serif;
     line-height: 1.5;
     font-weight: 400;
     --primary-100: #ffffea;
@@ -48,17 +48,28 @@ main {
     display: grid;
     grid-template-columns: repeat(27, 64px);
     grid-template-rows: repeat(101, 64px);
-    gap: 0px;
+    gap: 0;
     overflow: scroll;
     height: 517px;
     width: 288px;
     border: 1px solid var(--lines-darker);
 }
+
 main div {
     border: 0.5px solid var(--lines-lighter);
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+main div input {
+    appearance: none;
+    border: none;
+    width: 100%;
+    height: 100%;
+    color: inherit;
+    font-size: inherit;
+    text-align: center;
 }
 .track-names {
     background-color: var(--track-names-bg);
