@@ -9,23 +9,24 @@ const { inspect } = createBrowserInspector({
   autoStart: false
 });
 
-const alphabetWithFiller = ['-', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+const ALPHABET_WITH_FILLER = ['-', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+const NUM_OF_ROWS = 100
 
 const { snapshot, send } = useMachine(cellsMachine, {
   inspect
 })
-const circles = computed(() => snapshot.value.context.states[snapshot.value.context.stateHistory[snapshot.value.context.currentPosInStateHistory]])
+const cells = computed(() => snapshot.value.context.cells)
 
-const handleClick = (e: MouseEvent) => {
-  send({ type: 'leftClickOnCanvas', coordinates: { x: e.offsetX, y: e.offsetY } })
-}
+// const handleClick = (e: MouseEvent) => {
+//   send({ type: 'leftClickOnCanvas', coordinates: { x: e.offsetX, y: e.offsetY } })
+// }
 
 </script>
 
 <template>
   <main>
-    <template v-for="number in 101">
-      <template v-for="letter in alphabetWithFiller">
+    <template v-for="(number, y) in (NUM_OF_ROWS + 1)">
+      <template v-for="(letter, x) in ALPHABET_WITH_FILLER">
         <template v-if="number === 1">
           <div class="track-names">{{ letter }}</div>
         </template>
@@ -36,7 +37,8 @@ const handleClick = (e: MouseEvent) => {
             </div>
           </template>
           <template v-else>
-            <div class="cell"> e</div>
+            <div class="cell"><input type="number" :value="cells[NUM_OF_ROWS * (x - 1) + y - 1]?.content"></input>
+            </div>
           </template>
         </template>
       </template>
