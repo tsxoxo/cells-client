@@ -9,7 +9,7 @@ const { inspect } = createBrowserInspector({
   autoStart: false
 });
 
-const uppercaseAlphabet = Array.from({ length: 26 }, (_element, index) => String.fromCharCode(65 + index));
+const alphabetWithFiller = ['-', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 
 const { snapshot, send } = useMachine(cellsMachine, {
   inspect
@@ -24,6 +24,22 @@ const handleClick = (e: MouseEvent) => {
 
 <template>
   <main>
-    hello
+    <template v-for="number in 101">
+      <template v-for="letter in alphabetWithFiller">
+        <template v-if="number === 1">
+          <div class="track-names">{{ letter }}</div>
+        </template>
+        <template v-else>
+          <template v-if="letter === '-'">
+            <div class="track-names">
+              {{ number - 2 }}
+            </div>
+          </template>
+          <template v-else>
+            <div class="cell"> e</div>
+          </template>
+        </template>
+      </template>
+    </template>
   </main>
 </template>
