@@ -33,23 +33,23 @@ export const cellsMachine = setup({
   "actions": {
     "updateCell": assign(({ context, event }) => {
       assertEvent(event, 'changeCell');
-      const newCell = structuredClone(context.cells[event.cellID]) ?? {}
+      const updatedCell = structuredClone(context.cells[event.cellID]) ?? {}
 
       if (isFormula(event.input)) {
         const { error, result } = solveFormula(event.input.slice(1))
 
         if (error !== undefined) {
           console.log(`We've got an error -- keep calm and carry on!\nHere's the error message: ${error}`);
-          newCell.value = event.input
+          updatedCell.value = event.input
         } else {
-          newCell.value = String(result)
+          updatedCell.value = String(result)
         }
       } else {
-        newCell.value = String(event.input)
+        updatedCell.value = String(event.input)
       }
-      newCell.content = event.input
+      updatedCell.content = event.input
       return {
-        cells: context.cells.toSpliced(event.cellID, 1, newCell)
+        cells: context.cells.toSpliced(event.cellID, 1, updatedCell)
       }
     }),
   }
