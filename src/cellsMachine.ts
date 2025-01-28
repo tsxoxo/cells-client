@@ -1,5 +1,5 @@
 import { setup, assign, assertEvent } from 'xstate'
-import type { Cell, CleanToken } from './types'
+import type { Cell } from './types'
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants"
 import { solveFormula, isFormula } from "./utils"
 
@@ -27,13 +27,14 @@ export const cellsMachine = setup({
   "types": {
     "context": {} as Context,
     "events": {} as {
-      type: 'changeCell', cellID: number, input: string
+      type: 'changeCell', indexOfCell: number, input: string
     }
   },
   "actions": {
     "updateCell": assign(({ context, event }) => {
       assertEvent(event, 'changeCell');
-      const updatedCell = structuredClone(context.cells[event.cellID]) ?? {}
+      const updatedCell = structuredClone(context.cells[event.indexOfCell]) ?? {}
+      const updatedCells = structuredClone(context.cells)
 
       if (isFormula(event.input)) {
         const { error, cleanTokens, result } = solveFormula(event.input.slice(1), context.cells)
@@ -44,9 +45,9 @@ export const cellsMachine = setup({
         } else {
           updatedCell.value = String(result)
           // updateCells referenced in formula
-          cleanTokens.forEach((cleanToken: CleanToken) => {
-            if (cleanToken.indexOfOriginCell > -1) {
-              // TODO: update all these cells as well
+          cleanTokens.forEach(({ indexOfOriginCell }) => {
+            if (indexOfOriginCell > -1) {
+              updatedCells[indexOfOriginCell].cellsThatDependOnMe.push(event.indexOfCell)
             }
           })
         }
@@ -55,8 +56,13 @@ export const cellsMachine = setup({
       }
       updatedCell.content = event.input
 
+      // TODO: Propagate changes 
+      updatedCell.cellsThatDependOnMe.forEach(cellIndex => {
+
+      })
+
       return {
-        cells: context.cells.toSpliced(event.cellID, 1, updatedCell)
+        cells: updatedCells.toSpliced(event.indexOfCell, 1, updatedCell)
       }
     }),
   }
