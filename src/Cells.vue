@@ -14,7 +14,7 @@ const { snapshot, send } = useMachine(cellsMachine, {
   inspect
 })
 const cells = computed(() => snapshot.value.context.cells)
-watch(cells, () => console.log(cells.value))
+// watch(cells, () => console.log(cells.value))
 </script>
 
 <template>
@@ -33,7 +33,7 @@ watch(cells, () => console.log(cells.value))
           </template>
           <template v-else>
             <div class="cell"><input
-                @change="event => send({ type: 'changeCell', cellID: (NUM_OF_ROWS * (x - 1) + y - 1), newValue: Number((event.target as HTMLInputElement).value) })"
+                @change.trim="event => send({ type: 'changeCell', cellID: (NUM_OF_ROWS * (x - 1) + y - 1), newValue: (event.target as HTMLInputElement).value })"
                 :value="cells[NUM_OF_ROWS * (x - 1) + y - 1]?.value"></input>
             </div>
           </template>
