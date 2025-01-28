@@ -14,12 +14,16 @@ export const solveFormula = (input: string): { error: string | undefined, result
     const validateTokens = (tokens: string[]): (string | undefined) => {
         let errorMessage = undefined
         for (const token of tokens) {
-            if (isNaN(token)) {
+            if (isNaN(Number(token))) {
                 errorMessage = `${token} is not a number!`
                 break
             }
             if (token === null) {
                 errorMessage = `null___null`
+                break
+            }
+            if (token === 'true') {
+                errorMessage = `true___true`
                 break
             }
         }

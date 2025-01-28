@@ -2,7 +2,7 @@
 import { useMachine } from '@xstate/vue'
 import { cellsMachine } from './cellsMachine'
 import { createBrowserInspector } from '@statelyai/inspect'
-import { computed, watch } from 'vue';
+import { computed } from 'vue';
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants";
 
 const { inspect } = createBrowserInspector({
