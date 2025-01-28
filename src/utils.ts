@@ -78,3 +78,16 @@ export const solveFormula = (input: string, cells: Cell[]): { error: string | un
 export const isFormula = (input: string): boolean => {
     return input[0] === '='
 }
+
+export function propagateChanges(cells: Cell[], indexOfChangedCell: number) {
+    let updatedCells = structuredClone(cells)
+
+    updatedCells[indexOfChangedCell].cellsThatDependOnMe.forEach((indexOfCell) => {
+        const cellToUpdate = updatedCells[indexOfCell]
+        const { error, cleanTokens, result } = solveFormula(cellToUpdate.content, updatedCells)
+        cellToUpdate.value = result
+        updatedCells = propagateChanges(updatedCells, indexOfCell)
+    })
+
+    return updatedCells
+}

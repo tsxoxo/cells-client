@@ -1,7 +1,7 @@
 import { setup, assign, assertEvent } from 'xstate'
 import type { Cell } from './types'
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants"
-import { solveFormula, isFormula } from "./utils"
+import { solveFormula, isFormula, propagateChanges } from "./utils"
 
 const INITIAL_CELLS = Array((ALPHABET_WITH_FILLER.length - 1) * NUM_OF_ROWS) as Cell[]
 INITIAL_CELLS[0] = {
@@ -34,7 +34,7 @@ export const cellsMachine = setup({
     "updateCell": assign(({ context, event }) => {
       assertEvent(event, 'changeCell');
       const updatedCell = structuredClone(context.cells[event.indexOfCell]) ?? {}
-      const updatedCells = structuredClone(context.cells)
+      let updatedCells = structuredClone(context.cells)
 
       if (isFormula(event.input)) {
         const { error, cleanTokens, result } = solveFormula(event.input.slice(1), context.cells)
@@ -44,7 +44,7 @@ export const cellsMachine = setup({
           updatedCell.value = event.input
         } else {
           updatedCell.value = String(result)
-          // updateCells referenced in formula
+          // update cells referenced in formula
           cleanTokens.forEach(({ indexOfOriginCell }) => {
             if (indexOfOriginCell > -1) {
               updatedCells[indexOfOriginCell].cellsThatDependOnMe.push(event.indexOfCell)
@@ -57,9 +57,7 @@ export const cellsMachine = setup({
       updatedCell.content = event.input
 
       // TODO: Propagate changes 
-      updatedCell.cellsThatDependOnMe.forEach(cellIndex => {
-
-      })
+      updatedCells = propagateChanges(updatedCells, event.indexOfCell)
 
       return {
         cells: updatedCells.toSpliced(event.indexOfCell, 1, updatedCell)
