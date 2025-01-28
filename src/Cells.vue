@@ -15,6 +15,12 @@ const { snapshot, send } = useMachine(cellsMachine, {
 })
 const cells = computed(() => snapshot.value.context.cells)
 // watch(cells, () => console.log(cells.value))
+function onFocus(event: Event, x: number, y: number) {
+  (event.target as HTMLInputElement).value = cells.value[NUM_OF_ROWS * (x - 1) + y - 1]?.content || ''
+}
+function onBlur(event: Event, x: number, y: number) {
+  (event.target as HTMLInputElement).value = String(cells.value[NUM_OF_ROWS * (x - 1) + y - 1]?.value || '')
+}
 </script>
 
 <template>
@@ -33,8 +39,9 @@ const cells = computed(() => snapshot.value.context.cells)
           </template>
           <template v-else>
             <div class="cell"><input
-                @change.trim="event => send({ type: 'changeCell', cellID: (NUM_OF_ROWS * (x - 1) + y - 1), newValue: (event.target as HTMLInputElement).value })"
-                :value="cells[NUM_OF_ROWS * (x - 1) + y - 1]?.value"></input>
+                @change.trim="event => send({ type: 'changeCell', cellID: (NUM_OF_ROWS * (x - 1) + y - 1), input: (event.target as HTMLInputElement).value })"
+                :value="cells[NUM_OF_ROWS * (x - 1) + y - 1]?.value" @focus="(e) => onFocus(e, x, y)"
+                @blur="(e) => onBlur(e, x, y)"></input>
             </div>
           </template>
         </template>

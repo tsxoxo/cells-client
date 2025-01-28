@@ -1,4 +1,5 @@
 export interface Cell {
-    value: string,
+    value: number | string,
+    content: string,
     cellsThatDependOnMe: number[]
 }
