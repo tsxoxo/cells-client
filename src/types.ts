@@ -1,5 +1,10 @@
 export interface Cell {
-    value: number | string,
+    value: string,
     content: string,
     cellsThatDependOnMe: number[]
+}
+
+export interface CleanToken {
+    value: number,
+    indexOfOriginCell: number
 }

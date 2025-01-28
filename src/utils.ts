@@ -1,4 +1,19 @@
-export const solveFormula = (input: string): { error: string | undefined, result: number | undefined } => {
+import type { Cell, CleanToken } from './types'
+import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants"
+
+function isCellName(s: string) {
+    return /^\w\d\d?/.test(s.toLocaleLowerCase())
+}
+function getIndexFromCellName(cellName: string) {
+    // cellName examples: 'A1', 'B99'
+    // We call the letter x and the number y such as 'A0' === (1, 1)
+    const x = ALPHABET_WITH_FILLER.indexOf(cellName[0])
+    const y = Number(cellName.slice(1)) + 1
+
+    return NUM_OF_ROWS * (x - 1) + y - 1
+}
+
+export const solveFormula = (input: string, cells: Cell[]): { error: string | undefined, cleanTokens: CleanToken[], result: number | undefined } => {
     const tokenize = (input: string): string[] => {
         // remove whitespaces
         const sanitizedInput = (s: string) => {
@@ -9,39 +24,55 @@ export const solveFormula = (input: string): { error: string | undefined, result
         }
         const tokens = sanitizedInput(input).split('+')
 
-        return tokens
+        return tokens.map(token => token.trim())
     }
-    const validateTokens = (tokens: string[]): (string | undefined) => {
-        let errorMessage = undefined
+    const parseTokens = (tokens: string[]): { error: string | undefined, cleanTokens: CleanToken[] } => {
+        let error = undefined
+        const cleanTokens: CleanToken[] = []
+
         for (const token of tokens) {
-            if (isNaN(Number(token))) {
-                errorMessage = `${token} is not a number!`
-                break
-            }
-            if (token === null) {
-                errorMessage = `null___null`
-                break
-            }
-            if (token === 'true') {
-                errorMessage = `true___true`
-                break
+            if (!isNaN(Number(token))) {
+                // token evaluates to a number
+                cleanTokens.push({
+                    indexOfOriginCell: -1,
+                    value: Number(token)
+                })
+            } else {
+                // token is a string
+                if (isCellName(token)) {
+                    const index = getIndexFromCellName(token)
+                    const value = cells[index].value
+
+                    if (isNaN(Number(value))) {
+                        error = `Sorry, the referenced cell ${token} doesn't contain a valid number ¯\_(ツ)_/¯`
+                    } else {
+                        // referenced cell contains a number
+                        cleanTokens.push({
+                            indexOfOriginCell: index,
+                            value: Number(cells[index].value)
+                        })
+                    }
+                } else {
+                    //token is string but not a cell name
+                    error = `Sorry, I can't work with '${token}' ¯\_(ツ)_/¯`
+                }
             }
         }
 
-        return errorMessage
+        return { error, cleanTokens }
     }
 
     let result: number | undefined = undefined;
-    let error: string | undefined = undefined
+    // let error: string | undefined = undefined
 
     const tokens: string[] = tokenize(input)
-    error = validateTokens(tokens)
+    const { error, cleanTokens }: { error: string | undefined, cleanTokens: CleanToken[] } = parseTokens(tokens)
 
     if (error === undefined) {
-        result = tokens.reduce((sum, token) => sum += Number(token), 0)
+        result = cleanTokens.reduce((sum, cleanToken: CleanToken) => sum += cleanToken.value, 0)
     }
 
-    return { error, result }
+    return { error, cleanTokens, result }
 }
 
 export const isFormula = (input: string): boolean => {
