@@ -116,18 +116,19 @@ export function propagateChanges(cells: Cell[], indexOfChangedCell: number) {
     return updatedCells
 }
 
-export function withUpdatedCellDependencies(cells: Cell[], newTokens: CleanToken[] | [], indexOfCell: number): Cell[] {
+export function withUpdatedCellDependencies(cells: Cell[], oldTokens: CleanToken[] | [], indexOfChangedCell: number): Cell[] {
+    const newTokens = cells[indexOfChangedCell].tokens
     const updatedCells = structuredClone(cells)
     const newCellsReferences: number[] | [] = newTokens.filter((token: CleanToken) => token.indexOfOriginCell > -1).map(token => token.indexOfOriginCell)
-    const oldCellsReferences: number[] | [] = cells[indexOfCell].tokens.filter((token: CleanToken) => token.indexOfOriginCell > -1).map(token => token.indexOfOriginCell)
+    const oldCellsReferences: number[] | [] = oldTokens.filter((token: CleanToken) => token.indexOfOriginCell > -1).map(token => token.indexOfOriginCell)
     const cellsThatLostDep: number[] | [] = oldCellsReferences.filter(index => !newCellsReferences.includes(index))
     const cellsThatGainedDep: number[] | [] = newCellsReferences.filter(index => !oldCellsReferences.includes(index))
 
     cellsThatLostDep.forEach((index) => {
-        updatedCells[index].cellsThatDependOnMe.splice(updatedCells[index].cellsThatDependOnMe.indexOf(indexOfCell), 1)
+        updatedCells[index].cellsThatDependOnMe.splice(updatedCells[index].cellsThatDependOnMe.indexOf(indexOfChangedCell), 1)
     })
     cellsThatGainedDep.forEach((index) => {
-        updatedCells[index].cellsThatDependOnMe.push(indexOfCell)
+        updatedCells[index].cellsThatDependOnMe.push(indexOfChangedCell)
     })
 
     return updatedCells

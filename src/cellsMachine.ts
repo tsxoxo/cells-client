@@ -54,12 +54,14 @@ export const cellsMachine = setup({
         tokens,
         cellsThatDependOnMe: context.cells[event.indexOfCell].cellsThatDependOnMe,
       }
-      let updatedCells = context.cells.toSpliced(event.indexOfCell, 1, updatedCell)
-      updatedCells = withUpdatedCellDependencies(updatedCells, tokens, event.indexOfCell)
+      const updatedCells = withUpdatedCellDependencies(context.cells.toSpliced(event.indexOfCell, 1, updatedCell),
+        context.cells[event.indexOfCell].tokens,
+        event.indexOfCell)
 
       // TODO: Propagate changes 
       // A function that takes cells and the cell that just changed
-      // goes through cell.dependencies...
+      // goes through cell.cellsThatDependOnMe...
+      // forEach(cell) recalculate that cell => add to errors; go through cell.CellsThatDependOnMe...
       // and returns {errors, cells}
       updatedCells = propagateChanges(updatedCells, event.indexOfCell)
 
