@@ -12,71 +12,97 @@ function getIndexFromCellName(cellName: string) {
 
     return NUM_OF_ROWS * (x - 1) + y - 1
 }
-
-export const solveFormula = (input: string, cells: Cell[]): { error: string | undefined, cleanTokens: CleanToken[], result: number | undefined } => {
-    const tokenize = (input: string): string[] => {
-        // remove whitespaces
-        const sanitizedInput = (s: string) => {
-            // ...from edges
-            const trimmedString = s.trim()
-            const sanitizedString = trimmedString
-            return sanitizedString
-        }
-        const tokens = sanitizedInput(input).split('+')
-
-        return tokens.map(token => token.trim())
+function isFormula(input: string): boolean {
+    return input[0] === '='
+}
+function tokenize(input: string): string[] {
+    // remove whitespaces
+    const sanitizedInput = (s: string) => {
+        // ...from edges
+        const trimmedString = s.trim()
+        const sanitizedString = trimmedString
+        return sanitizedString
     }
-    const parseTokens = (tokens: string[]): { error: string | undefined, cleanTokens: CleanToken[] } => {
-        let error = undefined
-        const cleanTokens: CleanToken[] = []
+    const tokens = sanitizedInput(input).split('+')
 
-        for (const token of tokens) {
-            if (!isNaN(Number(token))) {
-                // token evaluates to a number
-                cleanTokens.push({
-                    indexOfOriginCell: -1,
-                    value: Number(token)
-                })
+    return tokens.map(token => token.trim())
+}
+function parseToken(token: string, cells: Cell[]): { cleanToken: CleanToken, error: string | undefined } {
+    let error = undefined;
+    let indexOfOriginCell = -1
+    let value: number = 0
+    // let indexOfOriginCell = getIndexFromCellName(token)
+    // let value = calculateValueOfToken(token)
+
+    if (!isNaN(Number(token))) {
+        // token evaluates to a number
+        value = Number(token)
+    } else {
+        // token is a string
+        if (isCellName(token)) {
+            const index = getIndexFromCellName(token)
+
+            if (isNaN(Number(cells[index].value))) {
+                error = `Sorry, the referenced cell ${token} doesn't contain a valid number ¯\_(ツ)_/¯`
             } else {
-                // token is a string
-                if (isCellName(token)) {
-                    const index = getIndexFromCellName(token)
-                    const value = cells[index].value
-
-                    if (isNaN(Number(value))) {
-                        error = `Sorry, the referenced cell ${token} doesn't contain a valid number ¯\_(ツ)_/¯`
-                    } else {
-                        // referenced cell contains a number
-                        cleanTokens.push({
-                            indexOfOriginCell: index,
-                            value: Number(cells[index].value)
-                        })
-                    }
-                } else {
-                    //token is string but not a cell name
-                    error = `Sorry, I can't work with '${token}' ¯\_(ツ)_/¯`
-                }
+                // referenced cell contains a number
+                indexOfOriginCell = index
+                value = Number(cells[index].value)
             }
+        } else {
+            //token is string but not a cell name
+            error = `Sorry, I can't work with '${token}' ¯\_(ツ)_/¯`
         }
-
-        return { error, cleanTokens }
     }
 
-    let result: number | undefined = undefined;
-    // let error: string | undefined = undefined
+    return {
+        error,
+        cleanToken: {
+            value,
+            indexOfOriginCell
+        }
+    }
+}
+function parseTokens(tokens: string[], cells: Cell[]): { error: string | undefined, cleanTokens: CleanToken[] } {
+    let error = undefined
+    // let cleanToken = undefined as CleanToken
+    const cleanTokens: CleanToken[] = []
 
+    for (const token of tokens) {
+        const { error: tokenError, cleanToken } = parseToken(token, cells)
+
+        if (tokenError !== undefined) {
+            error = tokenError
+            break
+        } else {
+            cleanTokens.push(cleanToken)
+        }
+    }
+
+    return { error, cleanTokens }
+}
+function calculateResult(tokens: CleanToken[]) {
+    return tokens.reduce((sum, cleanToken) => sum += cleanToken.value, 0)
+}
+
+export const parseInput = (input: string, cells: Cell[]): { error: string | undefined, cleanTokens: CleanToken[], result: string | number } => {
+    if (!isFormula(input)) {
+        return {
+            error: undefined,
+            cleanTokens: [],
+            result: input
+        }
+    }
+
+    let result = 0;
     const tokens: string[] = tokenize(input)
-    const { error, cleanTokens }: { error: string | undefined, cleanTokens: CleanToken[] } = parseTokens(tokens)
+    const { error, cleanTokens } = parseTokens(tokens, cells)
 
     if (error === undefined) {
-        result = cleanTokens.reduce((sum, cleanToken: CleanToken) => sum += cleanToken.value, 0)
+        result = calculateResult(cleanTokens)
     }
 
     return { error, cleanTokens, result }
-}
-
-export const isFormula = (input: string): boolean => {
-    return input[0] === '='
 }
 
 export function propagateChanges(cells: Cell[], indexOfChangedCell: number) {
@@ -84,7 +110,7 @@ export function propagateChanges(cells: Cell[], indexOfChangedCell: number) {
 
     updatedCells[indexOfChangedCell].cellsThatDependOnMe.forEach((indexOfCell) => {
         const cellToUpdate = updatedCells[indexOfCell]
-        const { error, cleanTokens, result } = solveFormula(cellToUpdate.content, updatedCells)
+        const { error, cleanTokens, result } = parseInput(cellToUpdate.content, updatedCells)
         cellToUpdate.value = result
         updatedCells = propagateChanges(updatedCells, indexOfCell)
     })

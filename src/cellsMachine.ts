@@ -1,7 +1,7 @@
 import { setup, assign, assertEvent } from 'xstate'
 import type { Cell } from './types'
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants"
-import { solveFormula, isFormula, updateCellDependencies, propagateChanges } from "./utils"
+import { parseInput, updateCellDependencies, propagateChanges } from "./utils"
 
 const INITIAL_CELLS = Array((ALPHABET_WITH_FILLER.length - 1) * NUM_OF_ROWS) as Cell[]
 INITIAL_CELLS[0] = {
@@ -37,7 +37,6 @@ INITIAL_CELLS[102] = {
 
 interface Context { 'cells': Cell[] }
 
-
 export const cellsMachine = setup({
   "types": {
     "context": {} as Context,
@@ -50,22 +49,19 @@ export const cellsMachine = setup({
       assertEvent(event, 'changeCell');
       const updatedCell = structuredClone(context.cells[event.indexOfCell]) ?? {}
       let updatedCells = structuredClone(context.cells)
+      const { error, cleanTokens, result } = parseInput(event.input, context.cells)
 
-      if (isFormula(event.input)) {
-        const { error, cleanTokens, result } = solveFormula(event.input.slice(1), context.cells)
-        if (error !== undefined) {
-          console.log(`We've got an error -- keep calm and carry on!\nHere's the error message: ${error}`);
-          updatedCell.value = event.input
-        } else {
-          updatedCell.value = String(result)
-          updatedCell.tokens = cleanTokens
-          // update cells referenced in formula
-          updatedCells = updateCellDependencies(updatedCells, cleanTokens, event.indexOfCell)
-        }
-      } else {
-        updatedCell.value = String(event.input)
-      }
       updatedCell.content = event.input
+
+      if (error !== undefined) {
+        console.log(`We've got an error -- keep calm and carry on!\nHere's the error message: ${error}`);
+        updatedCell.value = event.input
+      } else {
+        updatedCell.value = String(result)
+        updatedCell.tokens = cleanTokens
+        // update cells referenced in formula
+        updatedCells = updateCellDependencies(updatedCells, cleanTokens, event.indexOfCell)
+      }
 
       // TODO: Propagate changes 
       // updatedCells = propagateChanges(updatedCells, event.indexOfCell)
@@ -77,6 +73,7 @@ export const cellsMachine = setup({
   }
 })
   .createMachine({
+    /** @xstate-layout N4IgpgJg5mDOIC5QGEwBs2wHQCcwEMIBPAYgGMALfAOxlQwG0AGAXUVAAcB7WASwBdeXauxAAPRABYATABoQRRAA4AjFgCsAX23zqXCHFH1Mo7n0HDREhAFoAbPMW27OkMex5CTzjwFCRSOKIdgDMWEoAnEqSIQDs6o6IKkrSGrGq0lramkA */
     "context": {
       "cells": INITIAL_CELLS,
     },
