@@ -3,8 +3,8 @@ export interface CleanToken {
     indexOfOriginCell: number
 }
 export interface Cell {
-    value: string,
+    value: string | number,
     content: string,
-    tokens: CleanToken[],
+    tokens: CleanToken[] | [],
     cellsThatDependOnMe: number[]
 }

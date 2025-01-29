@@ -1,7 +1,7 @@
 import { setup, assign, assertEvent } from 'xstate'
 import type { Cell } from './types'
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants"
-import { parseInput, updateCellDependencies, propagateChanges } from "./utils"
+import { parseInput, withUpdatedCellDependencies, propagateChanges } from "./utils"
 
 const INITIAL_CELLS = Array((ALPHABET_WITH_FILLER.length - 1) * NUM_OF_ROWS) as Cell[]
 INITIAL_CELLS[0] = {
@@ -47,27 +47,28 @@ export const cellsMachine = setup({
   "actions": {
     "updateCell": assign(({ context, event }) => {
       assertEvent(event, 'changeCell');
-      const updatedCell = structuredClone(context.cells[event.indexOfCell]) ?? {}
-      let updatedCells = structuredClone(context.cells)
-      const { error, cleanTokens, result } = parseInput(event.input, context.cells)
+      const { error, cleanTokens: tokens, value } = parseInput(event.input, context.cells)
+      const updatedCell: Cell = {
+        content: event.input,
+        value,
+        tokens,
+        cellsThatDependOnMe: context.cells[event.indexOfCell].cellsThatDependOnMe,
+      }
+      let updatedCells = context.cells.toSpliced(event.indexOfCell, 1, updatedCell)
+      updatedCells = withUpdatedCellDependencies(updatedCells, tokens, event.indexOfCell)
 
-      updatedCell.content = event.input
+      // TODO: Propagate changes 
+      // A function that takes cells and the cell that just changed
+      // goes through cell.dependencies...
+      // and returns {errors, cells}
+      updatedCells = propagateChanges(updatedCells, event.indexOfCell)
 
       if (error !== undefined) {
         console.log(`We've got an error -- keep calm and carry on!\nHere's the error message: ${error}`);
-        updatedCell.value = event.input
-      } else {
-        updatedCell.value = String(result)
-        updatedCell.tokens = cleanTokens
-        // update cells referenced in formula
-        updatedCells = updateCellDependencies(updatedCells, cleanTokens, event.indexOfCell)
       }
 
-      // TODO: Propagate changes 
-      // updatedCells = propagateChanges(updatedCells, event.indexOfCell)
-
       return {
-        cells: updatedCells.toSpliced(event.indexOfCell, 1, updatedCell)
+        cells: updatedCells
       }
     }),
   }

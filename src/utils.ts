@@ -81,28 +81,26 @@ function parseTokens(tokens: string[], cells: Cell[]): { error: string | undefin
 
     return { error, cleanTokens }
 }
-function calculateResult(tokens: CleanToken[]) {
+function calculateResult(tokens: CleanToken[]): number {
     return tokens.reduce((sum, cleanToken) => sum += cleanToken.value, 0)
 }
 
-export const parseInput = (input: string, cells: Cell[]): { error: string | undefined, cleanTokens: CleanToken[], result: string | number } => {
-    if (!isFormula(input)) {
-        return {
-            error: undefined,
-            cleanTokens: [],
-            result: input
+export const parseInput = (input: string, cells: Cell[]): { error: string | undefined, cleanTokens: CleanToken[] | [], value: string | number } => {
+    let error: string | undefined = undefined
+    let cleanTokens: CleanToken[] | [] = []
+    let value: string | number = input
+
+    if (isFormula(input)) {
+        // Skip the starting '=' of the formula
+        const tokens: string[] = tokenize(input.slice(1));
+        ({ error, cleanTokens } = parseTokens(tokens, cells))
+
+        if (error === undefined) {
+            value = calculateResult(cleanTokens)
         }
     }
 
-    let result = 0;
-    const tokens: string[] = tokenize(input)
-    const { error, cleanTokens } = parseTokens(tokens, cells)
-
-    if (error === undefined) {
-        result = calculateResult(cleanTokens)
-    }
-
-    return { error, cleanTokens, result }
+    return { error, cleanTokens, value }
 }
 
 export function propagateChanges(cells: Cell[], indexOfChangedCell: number) {
@@ -118,12 +116,12 @@ export function propagateChanges(cells: Cell[], indexOfChangedCell: number) {
     return updatedCells
 }
 
-export function updateCellDependencies(cells: Cell[], newTokens: CleanToken[], indexOfCell: number): Cell[] {
+export function withUpdatedCellDependencies(cells: Cell[], newTokens: CleanToken[] | [], indexOfCell: number): Cell[] {
     const updatedCells = structuredClone(cells)
-    const newCellsReferences: number[] = newTokens.filter((token: CleanToken) => token.indexOfOriginCell > -1).map(token => token.indexOfOriginCell)
-    const oldCellsReferences: number[] = cells[indexOfCell].tokens.filter((token: CleanToken) => token.indexOfOriginCell > -1).map(token => token.indexOfOriginCell)
-    const cellsThatLostDep: number[] = oldCellsReferences.filter(index => !newCellsReferences.includes(index))
-    const cellsThatGainedDep: number[] = newCellsReferences.filter(index => !oldCellsReferences.includes(index))
+    const newCellsReferences: number[] | [] = newTokens.filter((token: CleanToken) => token.indexOfOriginCell > -1).map(token => token.indexOfOriginCell)
+    const oldCellsReferences: number[] | [] = cells[indexOfCell].tokens.filter((token: CleanToken) => token.indexOfOriginCell > -1).map(token => token.indexOfOriginCell)
+    const cellsThatLostDep: number[] | [] = oldCellsReferences.filter(index => !newCellsReferences.includes(index))
+    const cellsThatGainedDep: number[] | [] = newCellsReferences.filter(index => !oldCellsReferences.includes(index))
 
     cellsThatLostDep.forEach((index) => {
         updatedCells[index].cellsThatDependOnMe.splice(updatedCells[index].cellsThatDependOnMe.indexOf(indexOfCell), 1)
