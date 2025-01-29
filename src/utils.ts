@@ -31,8 +31,6 @@ function parseToken(token: string, cells: Cell[]): { cleanToken: CleanToken, err
     let errorMessage = '';
     let indexOfOriginCell = -1
     let value: number = 0
-    // let indexOfOriginCell = getIndexFromCellName(token)
-    // let value = calculateValueOfToken(token)
 
     if (!isNaN(Number(token))) {
         // token evaluates to a number
@@ -123,7 +121,6 @@ export function withPropagatedChanges(cells: Cell[], indexOfChangedCell: number)
                     message: errorMessage
                 }]
             }
-            console.log(`cellToUpdate: ${JSON.stringify(cellToUpdate)}`);
             propagate(indexOfCellToRecalculate)
         })
     }

@@ -78,7 +78,6 @@ export const cellsMachine = setup({
         }]
       }
       errors = [...errors, ...propagationErrors]
-      console.log(`cellsAfterPropagation: ${JSON.stringify(cellsAfterPropagation)}`);
 
       return {
         cells: cellsAfterPropagation,
