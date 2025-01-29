@@ -2,7 +2,7 @@ import type { AppError, Cell, CleanToken } from './types'
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants"
 
 function isCellName(s: string) {
-    return /^\w{1}\d\d?/.test(s.toLocaleLowerCase())
+    return /^\w{1}\d\d?$/.test(s.toLocaleLowerCase())
 }
 function getIndexFromCellName(cellName: string) {
     // cellName examples: 'A1', 'B99'
@@ -41,13 +41,16 @@ function parseToken(token: string, cells: Cell[]): { cleanToken: CleanToken, err
         // token is a string
         if (isCellName(token)) {
             const index = getIndexFromCellName(token)
-
-            if (isNaN(Number(cells[index].value))) {
-                errorMessage = `Sorry, the referenced cell ${token} doesn't contain a valid number ¯\_(ツ)_/¯`
+            if (cells[index] === undefined) {
+                errorMessage = `Sorry, something went wrong! Please try something else ¯\_(ツ)_/¯`
             } else {
-                // referenced cell contains a number
-                indexOfOriginCell = index
-                value = Number(cells[index].value)
+                if (isNaN(Number(cells[index].value))) {
+                    errorMessage = `Sorry, the referenced cell ${token} doesn't contain a valid number ¯\_(ツ)_/¯`
+                } else {
+                    // referenced cell contains a number
+                    indexOfOriginCell = index
+                    value = Number(cells[index].value)
+                }
             }
         } else {
             //token is string but not a cell name
@@ -102,19 +105,33 @@ export const parseInput = (input: string, cells: Cell[]): { errorMessage: string
     return { errorMessage, cleanTokens, value }
 }
 
-// export function propagateChanges(cells: Cell[], indexOfChangedCell: number) {
-//     let updatedCells = structuredClone(cells)
-//     let errors: string[] | [] = [];
+export function withPropagatedChanges(cells: Cell[], indexOfChangedCell: number): { errors: AppError[] | [], cellsAfterPropagation: Cell[] } {
+    let cellsAfterPropagation = structuredClone(cells)
+    let errors: AppError[] | [] = [];
 
-//     updatedCells[indexOfChangedCell].cellsThatDependOnMe.forEach((indexOfCell) => {
-//         const cellToUpdate = updatedCells[indexOfCell]
-//         const { error, cleanTokens, result } = parseInput(cellToUpdate.content, updatedCells)
-//         cellToUpdate.value = result
-//         updatedCells = propagateChanges(updatedCells, indexOfCell)
-//     })
+    function propagate(fromThisIndex: number) {
+        cellsAfterPropagation[fromThisIndex].cellsThatDependOnMe.forEach((indexOfCellToRecalculate) => {
+            const cellToUpdate = cellsAfterPropagation[indexOfCellToRecalculate]
+            const { errorMessage, cleanTokens, value } = parseInput(cellToUpdate.content, cellsAfterPropagation)
+            cellToUpdate.value = value
+            cellToUpdate.tokens = cleanTokens
+            if (errorMessage !== '') {
+                console.log(`errorMessage: ${errorMessage}`);
 
-//     return { errors, updatedCells }
-// }
+                errors = [...errors, {
+                    indexOfCell: indexOfCellToRecalculate,
+                    message: errorMessage
+                }]
+            }
+            console.log(`cellToUpdate: ${JSON.stringify(cellToUpdate)}`);
+            propagate(indexOfCellToRecalculate)
+        })
+    }
+
+    propagate(indexOfChangedCell)
+
+    return { errors, cellsAfterPropagation }
+}
 
 export function withUpdatedCellDependencies(cells: Cell[], oldTokens: CleanToken[] | [], indexOfChangedCell: number): Cell[] {
     const newTokens = cells[indexOfChangedCell].tokens
