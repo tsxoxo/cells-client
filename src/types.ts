@@ -8,3 +8,8 @@ export interface Cell {
     tokens: CleanToken[] | [],
     cellsThatDependOnMe: number[]
 }
+
+export interface AppError {
+    indexOfCell: number,
+    message: string
+}

@@ -1,4 +1,4 @@
-import type { Cell, CleanToken } from './types'
+import type { AppError, Cell, CleanToken } from './types'
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants"
 
 function isCellName(s: string) {
@@ -27,8 +27,8 @@ function tokenize(input: string): string[] {
 
     return tokens.map(token => token.trim())
 }
-function parseToken(token: string, cells: Cell[]): { cleanToken: CleanToken, error: string | undefined } {
-    let error = undefined;
+function parseToken(token: string, cells: Cell[]): { cleanToken: CleanToken, errorMessage: string } {
+    let errorMessage = '';
     let indexOfOriginCell = -1
     let value: number = 0
     // let indexOfOriginCell = getIndexFromCellName(token)
@@ -43,7 +43,7 @@ function parseToken(token: string, cells: Cell[]): { cleanToken: CleanToken, err
             const index = getIndexFromCellName(token)
 
             if (isNaN(Number(cells[index].value))) {
-                error = `Sorry, the referenced cell ${token} doesn't contain a valid number ¯\_(ツ)_/¯`
+                errorMessage = `Sorry, the referenced cell ${token} doesn't contain a valid number ¯\_(ツ)_/¯`
             } else {
                 // referenced cell contains a number
                 indexOfOriginCell = index
@@ -51,70 +51,70 @@ function parseToken(token: string, cells: Cell[]): { cleanToken: CleanToken, err
             }
         } else {
             //token is string but not a cell name
-            error = `Sorry, I can't work with '${token}' ¯\_(ツ)_/¯`
+            errorMessage = `Sorry, I can't work with '${token}' ¯\_(ツ)_/¯`
         }
     }
 
     return {
-        error,
+        errorMessage,
         cleanToken: {
             value,
             indexOfOriginCell
         }
     }
 }
-function parseTokens(tokens: string[], cells: Cell[]): { error: string | undefined, cleanTokens: CleanToken[] } {
-    let error = undefined
-    // let cleanToken = undefined as CleanToken
+function parseTokens(tokens: string[], cells: Cell[]): { errorMessage: string, cleanTokens: CleanToken[] } {
+    let errorMessage = ''
     const cleanTokens: CleanToken[] = []
 
     for (const token of tokens) {
-        const { error: tokenError, cleanToken } = parseToken(token, cells)
+        const { errorMessage: tokenErrorMessage, cleanToken } = parseToken(token, cells)
 
-        if (tokenError !== undefined) {
-            error = tokenError
+        if (tokenErrorMessage !== '') {
+            errorMessage = tokenErrorMessage
             break
         } else {
             cleanTokens.push(cleanToken)
         }
     }
 
-    return { error, cleanTokens }
+    return { errorMessage, cleanTokens }
 }
 function calculateResult(tokens: CleanToken[]): number {
     return tokens.reduce((sum, cleanToken) => sum += cleanToken.value, 0)
 }
 
-export const parseInput = (input: string, cells: Cell[]): { error: string | undefined, cleanTokens: CleanToken[] | [], value: string | number } => {
-    let error: string | undefined = undefined
+export const parseInput = (input: string, cells: Cell[]): { errorMessage: string, cleanTokens: CleanToken[] | [], value: string | number } => {
+    let errorMessage: string = ''
     let cleanTokens: CleanToken[] | [] = []
     let value: string | number = input
 
     if (isFormula(input)) {
         // Skip the starting '=' of the formula
         const tokens: string[] = tokenize(input.slice(1));
-        ({ error, cleanTokens } = parseTokens(tokens, cells))
+        ({ errorMessage, cleanTokens } = parseTokens(tokens, cells))
 
-        if (error === undefined) {
+        if (errorMessage === '') {
             value = calculateResult(cleanTokens)
         }
     }
 
-    return { error, cleanTokens, value }
+    return { errorMessage, cleanTokens, value }
 }
 
-export function propagateChanges(cells: Cell[], indexOfChangedCell: number) {
-    let updatedCells = structuredClone(cells)
+// export function propagateChanges(cells: Cell[], indexOfChangedCell: number) {
+//     let updatedCells = structuredClone(cells)
+//     let errors: string[] | [] = [];
 
-    updatedCells[indexOfChangedCell].cellsThatDependOnMe.forEach((indexOfCell) => {
-        const cellToUpdate = updatedCells[indexOfCell]
-        const { error, cleanTokens, result } = parseInput(cellToUpdate.content, updatedCells)
-        cellToUpdate.value = result
-        updatedCells = propagateChanges(updatedCells, indexOfCell)
-    })
+//     updatedCells[indexOfChangedCell].cellsThatDependOnMe.forEach((indexOfCell) => {
+//         const cellToUpdate = updatedCells[indexOfCell]
+//         const { error, cleanTokens, result } = parseInput(cellToUpdate.content, updatedCells)
+//         cellToUpdate.value = result
+//         updatedCells = propagateChanges(updatedCells, indexOfCell)
+//     })
 
-    return updatedCells
-}
+//     return { errors, updatedCells }
+// }
 
 export function withUpdatedCellDependencies(cells: Cell[], oldTokens: CleanToken[] | [], indexOfChangedCell: number): Cell[] {
     const newTokens = cells[indexOfChangedCell].tokens
@@ -132,4 +132,11 @@ export function withUpdatedCellDependencies(cells: Cell[], oldTokens: CleanToken
     })
 
     return updatedCells
+}
+
+export function handleErrors(errors: AppError[] | []) {
+    errors.length > 1 && errors.forEach(error => {
+        console.log(`We've got an error in cell ${error.indexOfCell} -- keep calm and carry on!\nHere's the error message: ${error.message}`)
+    }
+    )
 }

@@ -1,5 +1,5 @@
 import { setup, assign, assertEvent } from 'xstate'
-import type { Cell } from './types'
+import type { Cell, AppError } from './types'
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants"
 import { parseInput, withUpdatedCellDependencies, propagateChanges } from "./utils"
 
@@ -35,7 +35,7 @@ INITIAL_CELLS[102] = {
   cellsThatDependOnMe: []
 }
 
-interface Context { 'cells': Cell[] }
+interface Context { 'cells': Cell[], errors: AppError[] | [] }
 
 export const cellsMachine = setup({
   "types": {
@@ -47,7 +47,15 @@ export const cellsMachine = setup({
   "actions": {
     "updateCell": assign(({ context, event }) => {
       assertEvent(event, 'changeCell');
-      const { error, cleanTokens: tokens, value } = parseInput(event.input, context.cells)
+
+      const errors: AppError[] = []
+      const { errorMessage: inputErrorMessage, cleanTokens: tokens, value } = parseInput(event.input, context.cells)
+      if (inputErrorMessage !== '') {
+        errors[0] = {
+          indexOfCell: event.indexOfCell,
+          message: inputErrorMessage
+        }
+      }
       const updatedCell: Cell = {
         content: event.input,
         value,
@@ -63,14 +71,11 @@ export const cellsMachine = setup({
       // goes through cell.cellsThatDependOnMe...
       // forEach(cell) recalculate that cell => add to errors; go through cell.CellsThatDependOnMe...
       // and returns {errors, cells}
-      updatedCells = propagateChanges(updatedCells, event.indexOfCell)
-
-      if (error !== undefined) {
-        console.log(`We've got an error -- keep calm and carry on!\nHere's the error message: ${error}`);
-      }
+      // updatedCells = propagateChanges(updatedCells, event.indexOfCell)
 
       return {
-        cells: updatedCells
+        cells: updatedCells,
+        errors
       }
     }),
   }
@@ -79,6 +84,7 @@ export const cellsMachine = setup({
     /** @xstate-layout N4IgpgJg5mDOIC5QGEwBs2wHQCcwEMIBPAYgGMALfAOxlQwG0AGAXUVAAcB7WASwBdeXauxAAPRABYATABoQRRAA4AjFgCsAX23zqXCHFH1Mo7n0HDREhAFoAbPMW27OkMex5CTzjwFCRSOKIdgDMWEoAnEqSIQDs6o6IKkrSGrGq0lramkA */
     "context": {
       "cells": INITIAL_CELLS,
+      "errors": []
     },
     "id": "Cells",
     "initial": "ready",

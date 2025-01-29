@@ -2,8 +2,9 @@
 import { useMachine } from '@xstate/vue'
 import { cellsMachine } from './cellsMachine'
 import { createBrowserInspector } from '@statelyai/inspect'
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants";
+import { handleErrors } from './utils';
 
 const { inspect } = createBrowserInspector({
   // Comment out the line below to start the inspector
@@ -21,6 +22,7 @@ function onFocus(event: Event, x: number, y: number) {
 function onBlur(event: Event, x: number, y: number) {
   (event.target as HTMLInputElement).value = String(cells.value[NUM_OF_ROWS * (x - 1) + y - 1]?.value || '')
 }
+watch(snapshot.value.context.errors, () => handleErrors(snapshot.value.context.errors))
 </script>
 
 <template>
