@@ -41,7 +41,7 @@ function onBlur(event: Event, x: number, y: number) {
             <div class="cell"><input
                 @change.trim="event => send({ type: 'changeCell', indexOfCell: (NUM_OF_ROWS * (x - 1) + y - 1), input: (event.target as HTMLInputElement).value })"
                 :value="cells[NUM_OF_ROWS * (x - 1) + y - 1]?.value" @focus="(e) => onFocus(e, x, y)"
-                @blur="(e) => onBlur(e, x, y)"></input>
+                @blur="(e) => onBlur(e, x, y)" @click="() => console.log(cells[NUM_OF_ROWS * (x - 1) + y - 1])"></input>
             </div>
           </template>
         </template>

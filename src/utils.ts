@@ -91,3 +91,20 @@ export function propagateChanges(cells: Cell[], indexOfChangedCell: number) {
 
     return updatedCells
 }
+
+export function updateCellDependencies(cells: Cell[], newTokens: CleanToken[], indexOfCell: number): Cell[] {
+    const updatedCells = structuredClone(cells)
+    const newCellsReferences: number[] = newTokens.filter((token: CleanToken) => token.indexOfOriginCell > -1).map(token => token.indexOfOriginCell)
+    const oldCellsReferences: number[] = cells[indexOfCell].tokens.filter((token: CleanToken) => token.indexOfOriginCell > -1).map(token => token.indexOfOriginCell)
+    const cellsThatLostDep: number[] = oldCellsReferences.filter(index => !newCellsReferences.includes(index))
+    const cellsThatGainedDep: number[] = newCellsReferences.filter(index => !oldCellsReferences.includes(index))
+
+    cellsThatLostDep.forEach((index) => {
+        updatedCells[index].cellsThatDependOnMe.splice(updatedCells[index].cellsThatDependOnMe.indexOf(indexOfCell), 1)
+    })
+    cellsThatGainedDep.forEach((index) => {
+        updatedCells[index].cellsThatDependOnMe.push(indexOfCell)
+    })
+
+    return updatedCells
+}

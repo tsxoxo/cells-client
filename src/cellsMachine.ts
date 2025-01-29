@@ -1,23 +1,38 @@
 import { setup, assign, assertEvent } from 'xstate'
 import type { Cell } from './types'
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants"
-import { solveFormula, isFormula, propagateChanges } from "./utils"
+import { solveFormula, isFormula, updateCellDependencies, propagateChanges } from "./utils"
 
 const INITIAL_CELLS = Array((ALPHABET_WITH_FILLER.length - 1) * NUM_OF_ROWS) as Cell[]
 INITIAL_CELLS[0] = {
   value: '10',
   content: '10',
-  cellsThatDependOnMe: []
+  tokens: [{ value: 10, indexOfOriginCell: -1 }],
+  cellsThatDependOnMe: [2]
 }
 INITIAL_CELLS[1] = {
   value: '11',
   content: '11',
-  cellsThatDependOnMe: []
+  tokens: [{ value: 11, indexOfOriginCell: -1 }],
+  cellsThatDependOnMe: [2]
 }
-INITIAL_CELLS[100] = {
+INITIAL_CELLS[2] = {
   value: '21',
   content: '=A0+A1',
-  cellsThatDependOnMe: [0, 1]
+  tokens: [
+    { value: 10, indexOfOriginCell: 0 },
+    { value: 11, indexOfOriginCell: 1 },
+  ],
+  cellsThatDependOnMe: [102]
+}
+INITIAL_CELLS[102] = {
+  value: '31',
+  content: '=A2+10',
+  tokens: [
+    { value: 21, indexOfOriginCell: 2 },
+    { value: 10, indexOfOriginCell: -1 }
+  ],
+  cellsThatDependOnMe: []
 }
 
 interface Context { 'cells': Cell[] }
@@ -38,18 +53,14 @@ export const cellsMachine = setup({
 
       if (isFormula(event.input)) {
         const { error, cleanTokens, result } = solveFormula(event.input.slice(1), context.cells)
-
         if (error !== undefined) {
           console.log(`We've got an error -- keep calm and carry on!\nHere's the error message: ${error}`);
           updatedCell.value = event.input
         } else {
           updatedCell.value = String(result)
+          updatedCell.tokens = cleanTokens
           // update cells referenced in formula
-          cleanTokens.forEach(({ indexOfOriginCell }) => {
-            if (indexOfOriginCell > -1) {
-              updatedCells[indexOfOriginCell].cellsThatDependOnMe.push(event.indexOfCell)
-            }
-          })
+          updatedCells = updateCellDependencies(updatedCells, cleanTokens, event.indexOfCell)
         }
       } else {
         updatedCell.value = String(event.input)
@@ -57,7 +68,7 @@ export const cellsMachine = setup({
       updatedCell.content = event.input
 
       // TODO: Propagate changes 
-      updatedCells = propagateChanges(updatedCells, event.indexOfCell)
+      // updatedCells = propagateChanges(updatedCells, event.indexOfCell)
 
       return {
         cells: updatedCells.toSpliced(event.indexOfCell, 1, updatedCell)
