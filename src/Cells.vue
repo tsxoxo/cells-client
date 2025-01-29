@@ -15,14 +15,13 @@ const { snapshot, send } = useMachine(cellsMachine, {
   inspect
 })
 const cells = computed(() => snapshot.value.context.cells)
-// watch(cells, () => console.log(cells.value))
 function onFocus(event: Event, x: number, y: number) {
   (event.target as HTMLInputElement).value = cells.value[NUM_OF_ROWS * (x - 1) + y - 1]?.content || ''
 }
 function onBlur(event: Event, x: number, y: number) {
   (event.target as HTMLInputElement).value = String(cells.value[NUM_OF_ROWS * (x - 1) + y - 1]?.value || '')
 }
-watch(snapshot.value.context.errors, () => handleErrors(snapshot.value.context.errors))
+watch(() => snapshot.value.context.errors, () => handleErrors(snapshot.value.context.errors))
 </script>
 
 <template>

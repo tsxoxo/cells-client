@@ -16,6 +16,8 @@ TODO:
 
 -   UX: dragging
 -   UX: mb ignore empty cells in formula instead of throwing
+-   UX: Error -- only keep 1 error/newest error per cell (?)
+-   UX: Error -- log cell name instead of raw index in error message 'we got a problem in cell 123'
 -   UI: cell expands when focused: easier to read content
 -   edgecase: it's a formula but it's just a single referenced cell that contains string. So: A0='foo', A1='=A0'
 -   UI: highlight dependencies

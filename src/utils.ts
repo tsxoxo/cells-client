@@ -2,7 +2,7 @@ import type { AppError, Cell, CleanToken } from './types'
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants"
 
 function isCellName(s: string) {
-    return /^\w\d\d?/.test(s.toLocaleLowerCase())
+    return /^\w{1}\d\d?/.test(s.toLocaleLowerCase())
 }
 function getIndexFromCellName(cellName: string) {
     // cellName examples: 'A1', 'B99'
@@ -135,7 +135,7 @@ export function withUpdatedCellDependencies(cells: Cell[], oldTokens: CleanToken
 }
 
 export function handleErrors(errors: AppError[] | []) {
-    errors.length > 1 && errors.forEach(error => {
+    errors.length > 0 && errors.forEach(error => {
         console.log(`We've got an error in cell ${error.indexOfCell} -- keep calm and carry on!\nHere's the error message: ${error.message}`)
     }
     )

@@ -48,14 +48,15 @@ export const cellsMachine = setup({
     "updateCell": assign(({ context, event }) => {
       assertEvent(event, 'changeCell');
 
-      const errors: AppError[] = []
+      const errors = structuredClone(context.errors) as AppError[]
       const { errorMessage: inputErrorMessage, cleanTokens: tokens, value } = parseInput(event.input, context.cells)
       if (inputErrorMessage !== '') {
-        errors[0] = {
+        errors.push({
           indexOfCell: event.indexOfCell,
           message: inputErrorMessage
-        }
+        } as AppError)
       }
+
       const updatedCell: Cell = {
         content: event.input,
         value,
