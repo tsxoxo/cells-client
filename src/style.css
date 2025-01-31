@@ -63,6 +63,8 @@ main div {
 }
 
 main div input {
+    display: inline-block;
+    position: absolute;
     appearance: none;
     border: none;
     width: 100%;

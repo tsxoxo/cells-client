@@ -139,10 +139,26 @@ export function withUpdatedCellDependencies(cells: Cell[], oldTokens: CleanToken
     const cellsThatGainedDep: number[] | [] = newCellsReferences.filter(index => !oldCellsReferences.includes(index))
 
     cellsThatLostDep.forEach((index) => {
-        updatedCells[index].cellsThatDependOnMe.splice(updatedCells[index].cellsThatDependOnMe.indexOf(indexOfChangedCell), 1)
+        const cellToUpdate = updatedCells[index]
+        const indexOfElementToRemove = cellToUpdate.cellsThatDependOnMe.indexOf(indexOfChangedCell)
+
+        if (indexOfElementToRemove === -1) {
+            return
+        }
+
+        cellToUpdate.cellsThatDependOnMe.splice(indexOfElementToRemove, 1)
     })
+
     cellsThatGainedDep.forEach((index) => {
-        updatedCells[index].cellsThatDependOnMe.push(indexOfChangedCell)
+        const cellToUpdate = updatedCells[index]
+
+        // Check for duplicates. TODO: mb make this a Set
+        const indexOfElementToAdd = cellToUpdate.cellsThatDependOnMe.indexOf(indexOfChangedCell)
+        if (indexOfElementToAdd !== -1) {
+            return
+        }
+
+        cellToUpdate.cellsThatDependOnMe.push(indexOfChangedCell)
     })
 
     return updatedCells

@@ -5,7 +5,7 @@ export interface CleanToken {
 export interface Cell {
     value: string | number,
     content: string,
-    tokens: CleanToken[] | [],
+    tokens: CleanToken[],
     cellsThatDependOnMe: number[]
 }
 

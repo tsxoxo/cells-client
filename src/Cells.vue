@@ -56,11 +56,6 @@ watch(() => snapshot.value.context.errors, () => handleErrors(snapshot.value.con
 </template>
 
 <style>
-input {
-  display: inline-block;
-  position: absolute;
-}
-
 .update-value-enter-active,
 .update-value-leave-active {
   transition: opacity 0.2s ease,
@@ -69,7 +64,7 @@ input {
 
 .update-value-enter-from,
 .update-value-leave-to {
-  /* opacity: 0; */
+  opacity: 0;
   background-color: #f8fbc5;
 }
 </style>
