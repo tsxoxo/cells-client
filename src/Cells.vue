@@ -39,10 +39,14 @@ watch(() => snapshot.value.context.errors, () => handleErrors(snapshot.value.con
             </div>
           </template>
           <template v-else>
-            <div class="cell"><input
-                @change.trim="event => send({ type: 'changeCell', indexOfCell: (NUM_OF_ROWS * (x - 1) + y - 1), input: (event.target as HTMLInputElement).value })"
-                :value="cells[NUM_OF_ROWS * (x - 1) + y - 1]?.value" @focus="(e) => onFocus(e, x, y)"
-                @blur="(e) => onBlur(e, x, y)" @click="() => console.log(cells[NUM_OF_ROWS * (x - 1) + y - 1])"></input>
+            <div class="cell">
+              <Transition name="update-value">
+                <input :key="cells[NUM_OF_ROWS * (x - 1) + y - 1]?.value"
+                  @change.trim="event => send({ type: 'changeCell', indexOfCell: (NUM_OF_ROWS * (x - 1) + y - 1), input: (event.target as HTMLInputElement).value })"
+                  :value="cells[NUM_OF_ROWS * (x - 1) + y - 1]?.value" @focus="(e) => onFocus(e, x, y)"
+                  @blur="(e) => onBlur(e, x, y)" @click="() => console.log(cells[NUM_OF_ROWS * (x - 1) + y - 1])">
+                </input>
+              </Transition>
             </div>
           </template>
         </template>
@@ -50,3 +54,22 @@ watch(() => snapshot.value.context.errors, () => handleErrors(snapshot.value.con
     </template>
   </main>
 </template>
+
+<style>
+input {
+  display: inline-block;
+  position: absolute;
+}
+
+.update-value-enter-active,
+.update-value-leave-active {
+  transition: opacity 0.2s ease,
+    background-color 0.4s ease-out;
+}
+
+.update-value-enter-from,
+.update-value-leave-to {
+  /* opacity: 0; */
+  background-color: #f8fbc5;
+}
+</style>
