@@ -1,48 +1,7 @@
 import { setup, assign, assertEvent } from 'xstate'
 import type { Cell, AppError } from './types'
-import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants"
+import { INITIAL_CELLS } from "./INITIAL_DATA";
 import { parseInput, withUpdatedCellDependencies, withPropagatedChanges } from "./utils"
-
-const EMPTY_CELL: Cell = {
-  value: '',
-  content: '',
-  tokens: [],
-  cellsThatDependOnMe: []
-}
-const NUMBER_OF_CELLS = (ALPHABET_WITH_FILLER.length - 1) * NUM_OF_ROWS
-
-const INITIAL_CELLS: Cell[] = [...new Array(NUMBER_OF_CELLS)].map(() => EMPTY_CELL)
-
-INITIAL_CELLS[0] = {
-  value: '10',
-  content: '10',
-  tokens: [{ value: 10, indexOfOriginCell: -1 }],
-  cellsThatDependOnMe: [2]
-}
-INITIAL_CELLS[1] = {
-  value: '11',
-  content: '11',
-  tokens: [{ value: 11, indexOfOriginCell: -1 }],
-  cellsThatDependOnMe: [2]
-}
-INITIAL_CELLS[2] = {
-  value: '21',
-  content: '=A0+A1',
-  tokens: [
-    { value: 10, indexOfOriginCell: 0 },
-    { value: 11, indexOfOriginCell: 1 },
-  ],
-  cellsThatDependOnMe: [102]
-}
-INITIAL_CELLS[102] = {
-  value: '31',
-  content: '=A2+10',
-  tokens: [
-    { value: 21, indexOfOriginCell: 2 },
-    { value: 10, indexOfOriginCell: -1 }
-  ],
-  cellsThatDependOnMe: []
-}
 
 interface Context { 'cells': Cell[], errors: AppError[] | [] }
 
@@ -59,8 +18,6 @@ export const cellsMachine = setup({
 
       let errors = structuredClone(context.errors)
       const { errorMessage: inputErrorMessage, cleanTokens: tokens, value } = parseInput(event.input, context.cells)
-      console.log(`indexofCell: ${event.indexOfCell}`);
-      console.log(`cell: ${context.cells}`);
 
       const updatedCell: Cell = {
         content: event.input,
@@ -75,11 +32,6 @@ export const cellsMachine = setup({
         event.indexOfCell
       )
 
-      // TODO: Propagate changes 
-      // A function that takes cells and the cell that just changed
-      // goes through cell.cellsThatDependOnMe...
-      // forEach(cell) recalculate that cell => add to errors; go through cell.CellsThatDependOnMe...
-      // and returns {errors, cells}
       const { errors: propagationErrors, cellsAfterPropagation } = withPropagatedChanges(cellsWithUpdatedCellAndDependencies, event.indexOfCell)
 
       if (inputErrorMessage !== '') {
