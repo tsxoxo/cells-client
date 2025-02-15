@@ -51,4 +51,4 @@ TODO:
 
 ## TESTS
 
--   Add tests
+-   Add tests. Slightly hidden resource: https://graph-docs.vercel.app/model-based-testing/intro
