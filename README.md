@@ -17,7 +17,7 @@ Made with [Vue](https://vuejs.org/) and [Xstate](https://stately.ai/docs) -- a f
 
 # Resources
 ## Testing
-* [Youtube tutorial]([url](https://www.youtube.com/watch?v=SauvYKQGzXE))
+* [https://www.youtube.com/watch?v=SauvYKQGzXE](Youtube tutorial)
 * [Slightly hidden Xstate docs?]([url](https://graph-docs.vercel.app/model-based-testing/intro))
 
 ## Going Further
