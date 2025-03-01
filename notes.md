@@ -23,8 +23,9 @@ TODO:
 -   cell expands when focused: easier to read content
 -   edgecase: it's a formula but it's just a single referenced cell that contains string. So: A0='foo', A1='=A0'
 -   highlight dependencies; errors
-    [x] animate propagated changes
+-   [x] animate propagated changes
 -   animate errors differently
+-   stagger animations -- when multiple cell get updated.
 
 -   think about how to make things easier on mobile: e.g. break up the input of a formula into steps: 1. select operation: =, -, \*, /, 2. select cells: enter a selecting mode where you can tap on cells or even drag over the cells to select a field of cells.
 
