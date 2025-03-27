@@ -2,8 +2,6 @@
 // CRUD b: User deletes content of cell => <Cell> is correctly updated and '' is displayed
 // CRUD c: User updates cell => updates happen in context and page 
 
-
-
 // Formula recognition
 // With primitives: User enters '=3+4' => display shows 7
 // With errors: User enters '=3+foo' => display shows '=3+foo'
@@ -17,3 +15,14 @@
 // Animation?
 
 // Model this with more states?
+//
+
+import { assert, describe, it } from 'vitest'
+
+describe.skip('skipped suite', () => {
+  it('test', () => {
+    // Suite skipped, no error
+    assert.equal(Math.sqrt(4), 3)
+  })
+})
+
