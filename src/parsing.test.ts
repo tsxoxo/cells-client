@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest'
-import {atomize} from './parsing'
+import {makeAtoms} from './parsing'
 
 // # Test cases
 // ## Valid
@@ -11,6 +11,8 @@ const validWithCells = "11+2*(A1-B11)/7"
 // * Floating numbers
 //      * using '.' or ','
 //      * omitted 0 like 2+.5 = 2.5
+// TODO:
+//const validFloatsPeriod = 
 //
 // ### Edgecases
 // * starts with negative number
@@ -26,48 +28,61 @@ const singleValidValueCell = 'A99'
 //
 // ## Invalid
 // Types of errors:
+// * Invalid char(s)
+const invalidChars = "11^+2*(_3-}4)"
 // * Invalid operation
 // * Invalid operand
 // * Invalid operand from cell reference
 //    * i.e. A1 + A2 -> "cell 'A1' is not a number"
 // * Invalid cell reference
 //    * i.e. A999 + A2 -> "cell A999 does not exist"
+//
+// ### Syntax
 // * Invalid bracket placement
 //      * ())), )(, ()
+// * Ill-formed node/expression/molecule
+//      * ==, ++, etc.
+//      * firstChar === non-minus op
+//      * lastChar === any op
+
 describe('Atomize', () => {
   it('handles valid all ops', () => {
-    const result = atomize(validSimple)
+    const result = makeAtoms(validSimple)
 
     expect(result.atoms.length).toBe(11)
     expect(result.errors.length).toBe(0)
-
   })
   
   it('handles valid all ops with cells', () => {
-    const result = atomize(validWithCells)
+    const result = makeAtoms(validWithCells)
 
     expect(result.atoms.length).toBe(11)
     expect(result.errors.length).toBe(0)
-
   })
 
   // Edgecases
   it('handles single valid primitive value', () => {
-    const result = atomize(singleValidValueSimple)
+    const result = makeAtoms(singleValidValueSimple)
 
     expect(result.atoms.length).toBe(1)
     expect(result.errors.length).toBe(0)
-
   })
   
   it('handles single valid cell value', () => {
-    const result = atomize(singleValidValueCell)
+    const result = makeAtoms(singleValidValueCell)
 
     expect(result.atoms.length).toBe(1)
     expect(result.errors.length).toBe(0)
-
   })
 
+  // INVALID
+
+  it('invalid chars', () => {
+    const result = makeAtoms(invalidChars)
+
+    expect(result.atoms.length).toBe(9)
+    expect(result.errors.length).toBe(3)
+  })
   //it('handles whitespace', () => {
   //  const result = atomize('=      2   +9   ')
   //
