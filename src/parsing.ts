@@ -23,6 +23,62 @@ type Err_InvalidSyntax = {
   nodeIndex: number,
   msg: string
 }
+type Err_Parsing = {
+  nodeRaw: string,
+  nodeIndex: number,
+  msg: string
+}
+// # GRAMMAR
+//
+// ## First try
+// * expression ::= term ('+' | '-') term | term
+// * term ::= factor ('*' | '/') factor | factor
+// * factor ::= number | cell | '(' expression ')'
+// * number ::= [0-9]+
+// * cel ::= [a-zA-Z][0-9][0-9]?
+//
+// ## Second try
+// * expression ::= term (('+' | '-') term)*
+// * term ::= factor (('*' | '/') factor)*
+// * factor ::= number | cell | '(' expression ')'
+// * number ::= [0-9]+
+// * cell ::= [a-zA-Z][0-9][0-9]?
+//
+// ## RegEx
+// * Bracket: /[\(\)]*/
+// * Operator: /[+-\/\*]{1}/
+//      * Actually, '-' is both infix and prefix
+// * Number: /[0-9]+((,|\.)[0-9]+)?/
+// * Cell_ref: /[a-zA-Z]{1}[0-9]{1,2}
+ 
+// # GRAMMAR IMPLEMENTATION
+// Who calls this function?
+function start(atoms: Atom[]) {
+  for(let i = 0; i < atoms.length; i++) { 
+    const atom = atoms[i]
+    parseExpression(atom)
+  }
+}
+
+function parseExpression(atom: Atom): Res_Parsing {
+  const node = {} as Node
+  const err = {} as Err_Parsing
+
+  parseTerm(atom)
+
+  // or number?
+  return {node, err}
+}
+
+function parseTerm(atom: Atom): Res_Parsing {
+  const node = {} as Node
+  const err = {} as Err_Parsing
+
+  parseTerm(atom)
+
+  // or number?
+  return {node, err}
+}
 const ops = ['+', '-', '*', '/'] as const 
 const ALLOWED_SYMBOLS = {
   ops: ops,
@@ -47,6 +103,7 @@ type Node = {
 }
 
 // RESULT TYPES
+// Probably simplify this
 type Res_FirstPass = {
   errors: Err_InvalidChar[],
   atoms: Atom[]
@@ -55,6 +112,11 @@ type Res_SecondPass = {
   errors: Err_InvalidSyntax[],
   nodes: Node[]
 }
+type Res_Parsing = {
+  err: Err_Parsing,
+  node: Node
+}
+
 
 
 // UTILS
