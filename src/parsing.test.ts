@@ -1,8 +1,13 @@
 import {describe, expect, it} from 'vitest'
-import {makeAtoms} from './parsing'
+import {Parser, tokenize} from './parsing'
+import { Token } from './types/grammar'
 
 // # Test cases
 // ## Valid
+//const validExpression = "2+3"
+const validExpressionTokens = [{ type: 'value', value: '2' }, { type: 'op', value: '+' }, { type: 'value', value: '3' }] as Token[]
+const validExpressionTree = { type: 'binary_op', operator: '+', left: { type: 'number', value: 2 }, right: { type: 'number', value: 3 } }
+
 // * Buffet simple: 11+2*(3-4)/7
 const validSimple = "11+2*(3-4)/7"
 // * Buffet with cell reference: 11+2*(A1-B11)/7
@@ -12,7 +17,7 @@ const validWithCells = "11+2*(A1-B11)/7"
 //      * using '.' or ','
 //      * omitted 0 like 2+.5 = 2.5
 // TODO:
-//const validFloatsPeriod = 
+//const validFloatsPeriod = "1.5 + 2 * 8.9"
 //
 // ### Edgecases
 // * starts with negative number
@@ -45,16 +50,16 @@ const invalidChars = "11^+2*(_3-}4)"
 //      * firstChar === non-minus op
 //      * lastChar === any op
 
-describe('Atomize', () => {
+describe('tokenizer', () => {
   it('handles valid all ops', () => {
-    const result = makeAtoms(validSimple)
+    const result = tokenize(validSimple)
 
     expect(result.atoms.length).toBe(11)
     expect(result.errors.length).toBe(0)
   })
   
   it('handles valid all ops with cells', () => {
-    const result = makeAtoms(validWithCells)
+    const result = tokenize(validWithCells)
 
     expect(result.atoms.length).toBe(11)
     expect(result.errors.length).toBe(0)
@@ -62,14 +67,14 @@ describe('Atomize', () => {
 
   // Edgecases
   it('handles single valid primitive value', () => {
-    const result = makeAtoms(singleValidValueSimple)
+    const result = tokenize(singleValidValueSimple)
 
     expect(result.atoms.length).toBe(1)
     expect(result.errors.length).toBe(0)
   })
   
   it('handles single valid cell value', () => {
-    const result = makeAtoms(singleValidValueCell)
+    const result = tokenize(singleValidValueCell)
 
     expect(result.atoms.length).toBe(1)
     expect(result.errors.length).toBe(0)
@@ -78,7 +83,7 @@ describe('Atomize', () => {
   // INVALID
 
   it('invalid chars', () => {
-    const result = makeAtoms(invalidChars)
+    const result = tokenize(invalidChars)
 
     expect(result.atoms.length).toBe(9)
     expect(result.errors.length).toBe(3)
@@ -88,4 +93,14 @@ describe('Atomize', () => {
   //
   //  expect(result.errors).toHaveLength(0)
   //})
+})
+
+
+describe('Parser class', () => {
+  it('parses simple expression', () => {
+    // Input: [{ type: 'NUMBER', value: '2' }, { type: 'OPERATOR', value: '+' }, { type: 'NUMBER', value: '3' }]
+    // Output: { type: 'binary_op', operator: '+', left: { type: 'number', value: 2 }, right: { type: 'number', value: 3 } }
+    const parser = new Parser(validExpressionTokens)
+    expect(parser.parse()).toEqual(validExpressionTree)
+  })
 })

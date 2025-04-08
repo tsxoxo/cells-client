@@ -1,4 +1,5 @@
 import { Err_Parsing, Err_InvalidChar, Err_InvalidSyntax } from "./types/errors.ts";
+import { Node_Expr, Token } from "./types/grammar.ts";
 
 // TODO: Not sure if I need this
 // RESULT TYPES
@@ -17,59 +18,16 @@ type Res_FirstPass = {
 //}
 
 // =================================================
-// # GRAMMAR
+// # IMPLEMENTATION
 // =================================================
 //
+
+// GRAMMAR CHEATSHEET
 // * expression ::= term (('+' | '-') term)*
 // * term ::= factor (('*' | '/') factor)*
 // * factor ::= number | cell | '(' expression ')'
 // * number ::= [0-9]+ (( ',' | '.' ) [0-9]+)?
 // * cell ::= [a-zA-Z][0-9][0-9]?
-// TODO: Add negation, formulae
-//
-// ## RegEx
-// * Bracket: /[\(\)]*/
-// * Operator: /[+-\/\*]{1}/
-// * Number: /[0-9]+((,|\.)[0-9]+)?/
-// * Cell_ref: /[a-zA-Z]{1}[0-9]{1,2}
- 
-const ALLOWED_SYMBOLS = {
-  ops: ['+', '-', '*', '/'],
-  nums: ['1', '2', '.', ','],
-  brackets: ['(', ')'],
-  // and cell references...
-}
-
-type Token = {
-  value: string, 
-  type: 'value' | 'op' | 'brack' | undefined,
-  position?: {
-    start: number,
-    end: number
-  },
-}
-
-type Node_Expr = {
-  type: 'binary_op',
-  left: Token,
-  right: Token,
-}
-
-// Not sure if I need this
-//type Node = {
-//  value: number,
-//  left: number,
-//  right: number,
-//  op: typeof ops 
-//}
-
-// =================================================
-// # IMPLEMENTATION
-// =================================================
-//
-// Input: [{ type: 'NUMBER', value: '2' }, { type: 'OPERATOR', value: '+' }, { type: 'NUMBER', value: '3' }]
-// Expected output: { type: 'binary_op', operator: '+', left: { type: 'number', value: 2 }, right: { type: 'number', value: 3 } }
-
 
 export class Parser {
   tokens: Token[]
@@ -98,6 +56,7 @@ export class Parser {
   parseExpression() {
     const expr = this.parseTerm()
 
+    // How to loop?
     return expr
   }
 
@@ -108,18 +67,17 @@ export class Parser {
   }
 
   parseFactor() {
-    const factor = this.tokens[this.current]
-    // is it a number
+    const factor = this.peek()
+
+    if( isNumber(factor.value) ) {
+      return this.consume()
+    }
     // is it a cellref
     // smth smth error handling
 
-    // could be null
-    return factor
+    return null
   }
 }
-
-const parser = new Parser([{ type: 'value', value: '2' }, { type: 'op', value: '+' }, { type: 'value', value: '3' }])
-console.log(parser.parse())
 
 // =================================================
 // UTILS
@@ -127,6 +85,19 @@ console.log(parser.parse())
 //function isNumber(str: string) {
 //  return !isNaN(Number(str))
 //}
+// * Number: /[0-9]+((,|\.)[0-9]+)?/
+// * Cell_ref: /[a-zA-Z]{1}[0-9]{1,2}/
+function isNumber(tokenValue: string): boolean {
+  // Include float input using "," and "."
+  // TODO: Edgecases like "1.0000000000"
+  return /[0-9]+((,|\.)[0-9]+)?/.test(tokenValue)
+}
+
+function isCellRef(tokenValue: string): boolean {
+  // Allow both "A1" and "A01"
+  return /[a-zA-Z]{1}[0-9]{1,2}/.test(tokenValue)
+}
+
 function isValidValue(char: string): boolean {
   return /[a-zA-Z0-9\.\,]/.test(char)
 }
