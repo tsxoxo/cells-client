@@ -1,5 +1,5 @@
 import { Err_Parsing, Err_InvalidChar, Err_InvalidSyntax } from "./types/errors.ts";
-import { Node_Expr, Token } from "./types/grammar.ts";
+import { ALLOWED_SYMBOLS, Node_Binary, Token } from "./types/grammar.ts";
 
 // TODO: Not sure if I need this
 // RESULT TYPES
@@ -49,27 +49,86 @@ export class Parser {
     return this.tokens[this.current - 1]
   }
 
-  parse(): Node_Expr {
+  parse(): Node_Binary | Token | null {
     return this.parseExpression()
   }
 
-  parseExpression() {
-    const expr = this.parseTerm()
+  parseExpression(): Node_Binary | Token | null  {
+    let expr = this.parseTerm()
+
+    if (expr === null ) {
+      return null
+    }
 
     // How to loop?
+    while ( this.peek()?.type === 'op' ) {
+      if ( this.peek()?.value === '+' ||  this.peek()?.value === '-' ) {
+        const op = this.peek()?.value as string
+        this.consume()
+
+        const right = this.parseTerm()
+
+        if ( right === null ) {
+          return null
+        }
+
+        expr = {
+          type: 'binary_op',
+          op: op,
+          left: expr,
+          right: right
+        }
+      } else {
+        break
+      }
+    }
+
     return expr
   }
 
-  parseTerm() {
-    const term = this.parseFactor()
+  parseTerm(): Node_Binary | Token | null {
+    let term = this.parseFactor()
+
+    if( term === null ) {
+      return null
+    }
+
+    while ( this.peek()?.type === 'op' ) {
+      if ( this.peek()?.value === '*' ||  this.peek()?.value === '/' ) {
+        const op = this.peek()?.value as string
+        this.consume()
+
+        const right = this.parseFactor()
+
+        if ( right === null ) {
+          return null
+        }
+
+        term = {
+          type: 'binary_op',
+          op: op,
+          left: term,
+          right: right
+        }
+      } else { 
+      break
+      }
+    }
 
     return term
   }
 
-  parseFactor() {
+  parseFactor(): Token | null {
     const factor = this.peek()
 
+    // end of the line
+    // is this an error state?
+    if( factor === null ) {
+      return null
+    }
+
     if( isNumber(factor.value) ) {
+      
       return this.consume()
     }
     // is it a cellref
@@ -137,19 +196,17 @@ function createEmptyAtom(start: number): Token {
 // =================================================
 //
 // 1. tokenize()
-// Takes raw input.
+// Takes raw string.
 // Outputs a list of objects that
 // is easier to work with.
 //
 // Example
 // In: "11*(2+3)"
-// Out(approximation): {atoms: [{value: 11, position: {...}, ...}, ...], errors: []}
+// Out(approximation): {tokens: [{value: 11, position: {...}, ...}, ...], errors: []}
 export function tokenize(rawInput: string): Res_FirstPass {
   const atoms = [] as Token[]
   const errors = [] as Err_InvalidChar[]
 
-  // ALGO 1
-  // go char by char
   for(let ind = 0; ind < rawInput.length; ind++) {
     // if it's anything else (ideally, numbers, points for floats and cell references)
     // keep going until an op and add that whole chunk as an atom
@@ -168,6 +225,7 @@ export function tokenize(rawInput: string): Res_FirstPass {
       atom.position.end = ind
       atom.type = 'value'
       atom.value = rawInput.substring(atom.position.start, atom.position.end)
+      //atom.value = parseFloat(atom.value)
 
       atoms.push(atom)
 

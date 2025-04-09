@@ -31,10 +31,12 @@ export type Token = {
   },
 }
 
-export type Node_Expr = {
+export type Node_Binary = {
   type: 'binary_op',
-  left: Token,
-  right: Token,
+  //op: '+' | '-',
+  op: string,
+  left: Node_Binary | Token,
+  right: Node_Binary | Token,
 }
 
 // Not sure if I need this

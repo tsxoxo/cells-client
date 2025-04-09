@@ -2,11 +2,22 @@ import {describe, expect, it} from 'vitest'
 import {Parser, tokenize} from './parsing'
 import { Token } from './types/grammar'
 
-// # Test cases
-// ## Valid
-//const validExpression = "2+3"
+// =================================================
+// TEST CASES
+// =================================================
+//
+// # Valid formulae
+const validExpression = "2+3"
 const validExpressionTokens = [{ type: 'value', value: '2' }, { type: 'op', value: '+' }, { type: 'value', value: '3' }] as Token[]
-const validExpressionTree = { type: 'binary_op', operator: '+', left: { type: 'number', value: 2 }, right: { type: 'number', value: 3 } }
+const validExpressionTree = { type: 'binary_op', op: '+', left: { type: 'value', value: '2' }, right: { type: 'value', value: '3' } }
+
+const validTerm = "2*3"
+const validTermTokens = [{ type: 'value', value: '2' }, { type: 'op', value: '*' }, { type: 'value', value: '3' }] as Token[]
+const validTermTree = { type: 'binary_op', op: '*', left: { type: 'value', value: '2' }, right: { type: 'value', value: '3' } }
+
+const validExpressionWithTerm = "1+2*3"
+const validExpressionWithTermTokens = [{ type: 'value', value: '1' }, { type: 'op', value: '+' }, { type: 'value', value: '2' }, { type: 'op', value: '*' }, { type: 'value', value: '3' }] as Token[]
+const validExpressionWithTermTree = { type: 'binary_op', op: '*', left: { type: 'value', value: '2' }, right: { type: 'value', value: '3' } }
 
 // * Buffet simple: 11+2*(3-4)/7
 const validSimple = "11+2*(3-4)/7"
@@ -51,6 +62,13 @@ const invalidChars = "11^+2*(_3-}4)"
 //      * lastChar === any op
 
 describe('tokenizer', () => {
+  it('handles valid expression', () => {
+    const result = tokenize(validExpression)
+
+    expect(result.atoms.length).toBe(3)
+    expect(result.errors.length).toBe(0)
+  })
+
   it('handles valid all ops', () => {
     const result = tokenize(validSimple)
 
@@ -97,10 +115,24 @@ describe('tokenizer', () => {
 
 
 describe('Parser class', () => {
-  it('parses simple expression', () => {
-    // Input: [{ type: 'NUMBER', value: '2' }, { type: 'OPERATOR', value: '+' }, { type: 'NUMBER', value: '3' }]
-    // Output: { type: 'binary_op', operator: '+', left: { type: 'number', value: 2 }, right: { type: 'number', value: 3 } }
+  it('parses expression', () => {
+    console.log('hey');
     const parser = new Parser(validExpressionTokens)
+    
     expect(parser.parse()).toEqual(validExpressionTree)
+  })
+
+  it('parses term', () => {
+    const parser = new Parser(validTermTokens)
+    expect(parser.parse()).toEqual(validTermTree)
+  })
+
+  it('parses expression with term', () => {
+    const parser = new Parser(validExpressionWithTermTokens)
+    const tree = parser.parse()
+    expect(tree.left.value).toEqual("1")
+    expect(tree.op).toEqual("+")
+    expect(tree.right.type).toEqual("binary_op")
+    expect(tree.right.op).toEqual("*")
   })
 })
