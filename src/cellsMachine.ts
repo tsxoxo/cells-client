@@ -3,7 +3,7 @@ import type { Cell, AppError } from './types'
 import { INITIAL_CELLS } from "./INITIAL_DATA";
 import { parseInput, withUpdatedCellDependencies, withPropagatedChanges } from "./utils"
 
-interface Context { 'cells': Cell[], errors: AppError[] | [] }
+interface Context { 'cells': Cell[], errors: AppError[] }
 
 export const cellsMachine = setup({
   "types": {

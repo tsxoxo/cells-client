@@ -34,18 +34,30 @@
 // * write/refactor tests for parsing units
 // * write tests for UI
 
-export type Err_InvalidChar = {
-  char: string,
-  charIndex: number,
-  msg: string
+export type AppError = {
+  // 'char', 'syntax', etc.
+  type: string,
+  // mb pass the token
+  position?: {
+    start: number,
+    end: number
+  }
 }
-export type Err_InvalidSyntax = {
-  node: string,
-  nodeIndex: number,
-  msg: string
-}
-export type Err_Parsing = {
-  nodeRaw: string,
-  nodeIndex: number,
-  msg: string
-}
+
+//export type Err_InvalidChar = {
+//  char: string,
+//  charIndex: number,
+//  msg: string
+//}
+//
+//export type Err_InvalidSyntax = {
+//  node: string,
+//  nodeIndex: number,
+//  msg: string
+//}
+//
+//export type Err_Parsing = {
+//  nodeRaw: string,
+//  nodeIndex: number,
+//  msg: string
+//}
