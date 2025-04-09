@@ -1,7 +1,3 @@
-import { isNumber } from "./matchers.ts";
-import { Err_InvalidChar } from "./types/errors.ts";
-import { Node_Binary, Token } from "./types/grammar.ts";
-
 // =================================================
 // PARSER
 // =================================================
@@ -16,6 +12,9 @@ import { Node_Binary, Token } from "./types/grammar.ts";
 // * factor ::= number | cell | '(' expression ')'
 // * number ::= [0-9]+ (( ',' | '.' ) [0-9]+)?
 // * cell ::= [a-zA-Z][0-9][0-9]?
+
+import { isNumber } from "./matchers.ts";
+import { Node_Binary, Token } from "./types/grammar.ts";
 
 export class Parser {
   tokens: Token[]
@@ -48,7 +47,6 @@ export class Parser {
       return null
     }
 
-    // How to loop?
     while ( this.peek()?.type === 'op' ) {
       if ( this.peek()?.value === '+' ||  this.peek()?.value === '-' ) {
         const op = this.peek()?.value as string
