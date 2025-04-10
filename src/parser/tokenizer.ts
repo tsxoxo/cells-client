@@ -48,13 +48,13 @@ export function tokenize(rawInput: string): {tokens: Token[], errors: AppError[]
 
     // if it's a bracket, add char to atoms
     if(ALLOWED_SYMBOLS.brackets.includes(rawInput[ind])) {
-      const atom = createEmptyToken(ind)
+      const token = createEmptyToken(ind)
 
-      atom.position.end = ind + 1
-      atom.type = 'brack'
-      atom.value = rawInput[ind]
+      token.position.end = ind + 1
+      token.type = 'brack'
+      token.value = rawInput[ind]
 
-      tokens.push(atom)
+      tokens.push(token)
 
       continue
     }
@@ -82,7 +82,7 @@ export function tokenize(rawInput: string): {tokens: Token[], errors: AppError[]
   }
 
   //console.log(errors)
-  //console.log(atoms)
+  //console.log(tokens)
   return {
     tokens,
     errors
@@ -100,7 +100,7 @@ function createEmptyToken(start: number): Token {
       end: -1 // Will be filled in later
     },
     value: "",
-    type: undefined
+    type: ""
   };
 }
 
