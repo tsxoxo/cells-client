@@ -38,10 +38,7 @@ export type AppError = {
   // 'char', 'syntax', etc.
   type: string,
   // mb pass the token
-  position?: {
-    start: number,
-    end: number
-  }
+  position: number
 }
 
 //export type Err_InvalidChar = {

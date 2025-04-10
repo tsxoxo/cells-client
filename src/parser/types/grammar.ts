@@ -24,10 +24,9 @@ export const ALLOWED_SYMBOLS = {
 
 export type Token = {
   value: string, 
-  type: 'value' | 'op' | 'brack' | undefined,
-  // position optional to simplify testing.
-  // TODO: think of a better way cuz this is producing warning spam.
-  position?: {
+  //type: 'value' | 'op' | 'brack' | undefined,
+  type: string,
+  position: {
     start: number,
     end: number
   },

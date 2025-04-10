@@ -11,13 +11,13 @@
 //
 
 import { isValidValue } from "./matchers"
-import { Err_InvalidChar } from "./types/errors"
+import { AppError } from "./types/errors"
 import { ALLOWED_SYMBOLS, Token } from "./types/grammar"
 
 // Out(approximation): {tokens: [{value: 11, position: {...}, ...}, ...], errors: []}
-export function tokenize(rawInput: string): {tokens: Token[], errors: Err_InvalidChar[]} {
+export function tokenize(rawInput: string): {tokens: Token[], errors: AppError[]} {
   const tokens = [] as Token[]
-  const errors = [] as Err_InvalidChar[]
+  const errors = [] as AppError[]
 
   for(let ind = 0; ind < rawInput.length; ind++) {
     // if it's anything else (ideally, numbers, points for floats and cell references)
@@ -75,9 +75,8 @@ export function tokenize(rawInput: string): {tokens: Token[], errors: Err_Invali
     if( ind < rawInput.length ) {
       // Must be an invalid character.
       errors.push({
-        char: rawInput[ind],
-        charIndex: ind,
-        msg: `Invalid character ${rawInput[ind]} at ${ind}`,
+        type: 'char',
+        position: ind,
       })
     }
   }

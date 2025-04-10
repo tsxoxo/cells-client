@@ -1,17 +1,52 @@
-import { assert, assertType, describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 import { Parser } from "../parser";
-import { Node_Binary, Token } from "../types/grammar";
+import { Token } from "../types/grammar";
 
-const validExpressionTokens = [{ type: 'number', value: '2' }, { type: 'op', value: '+' }, { type: 'number', value: '3' }] as Token[]
+// =================================================
+// # UTILS
+// =================================================
+function makeTokens( simplifiedTokens: { type: string, value: string }[] ): Token[] {
+  const tokens = simplifiedTokens.map(( {type, value} ): Token => ({
+    type,
+    value,
+    // Dummy prop ignored in testing.
+    position: {
+      start: 0,
+      end: 0
+    }
+  }))
+
+  return tokens
+}
+
+// =================================================
+// # TEST DATA
+// =================================================
+
+// "2+3"
+const validExpressionTokens = makeTokens([
+  { type: 'number', value: '2' },
+  { type: 'op', value: '+' },
+  { type: 'number', value: '3' }
+])
 const validExpressionTree = { type: 'binary_op', value: '+', left: { type: 'number', value: '2' }, right: { type: 'number', value: '3' } }
 
-//const validTerm = "2*3"
-const validTermTokens = [{ type: 'number', value: '2' }, { type: 'op', value: '*' }, { type: 'number', value: '3' }] as Token[]
+// "2*3"
+const validTermTokens = makeTokens([
+  { type: 'number', value: '2' },
+  { type: 'op', value: '*' },
+  { type: 'number', value: '3' }
+])
 const validTermTree = { type: 'binary_op', value: '*', left: { type: 'number', value: '2' }, right: { type: 'number', value: '3' } }
 
-//const validExpressionWithTerm = "1+2*3"
-const validExpressionWithTermTokens = [{ type: 'number', value: '1' }, { type: 'op', value: '+' }, { type: 'number', value: '2' }, { type: 'op', value: '*' }, { type: 'value', value: '3' }] as Token[]
-//const validExpressionWithTermTree = { type: 'binary_op', op: '*', left: { type: 'number', value: '2' }, right: { type: 'number', value: '3' } }
+// "1+2*3"
+const validExpressionWithTermTokens = makeTokens([
+  { type: 'number', value: '1' },
+  { type: 'op', value: '+' },
+  { type: 'number', value: '2' },
+  { type: 'op', value: '*' },
+  { type: 'value', value: '3' }
+])
 
 describe('Parser', () => {
   it('parses expression', () => {
