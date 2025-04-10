@@ -17,7 +17,7 @@ import { isNumber } from "./matchers.ts";
 import { Node_Binary, Node_Number, Token, Tree } from "./types/grammar.ts";
 
 export class Parser {
-  tokens: Token[]
+  readonly tokens: Token[]
   current: number
 
   constructor (tokens: Token[]) {

@@ -39,18 +39,18 @@ interface Node_Base {
   value: string
 }
 
-interface Node_Binary extends Node_Base {
+export interface Node_Binary extends Node_Base {
   type: 'binary_op',
   // ['+', '-', '*', '/'],
   left: Node_Binary | Node_Number | Node_Cell,
   right: Node_Binary | Node_Number | Node_Cell,
 }
 
-interface Node_Number extends Node_Base  {
+export interface Node_Number extends Node_Base  {
   type: 'number',
 }
 
-interface Node_Cell extends Node_Base  {
+export interface Node_Cell extends Node_Base  {
   type: 'cell',
 }
 
