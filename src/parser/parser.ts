@@ -37,22 +37,20 @@ export class Parser {
   }
 
   parse(): Tree | null {
-    return this.parseExpression()
+    const result = this.parseExpression()
+
+    return result
   }
 
   parseExpression(): Node_Binary | Node_Number | null  {
     let expr = this.parseTerm()
-    console.log(`heyyyyyyyyy ${JSON.stringify( this.tokens )}`)
-    console.log(`heyyyyyyyyy ${JSON.stringify( expr )}`)
 
     if (expr === null ) {
       return null
     }
 
-    console.log(`this.peek()?.type: ${this.peek()?.type } `)
     while ( this.peek()?.type === 'op' ) {
       if ( this.peek()?.value === '+' ||  this.peek()?.value === '-' ) {
-        console.log('inside if')
         const op = this.peek()?.value as string
         this.consume()
 

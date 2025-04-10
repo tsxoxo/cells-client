@@ -35,21 +35,23 @@ export type Token = {
 
 export type Tree = Node_Binary | Node_Number | Node_Cell
 
-export type Node_Binary = {
+interface Node_Base {
+  type: string
+  value: string
+}
+
+interface Node_Binary extends Node_Base {
   type: 'binary_op',
   // ['+', '-', '*', '/'],
-  value: string,
   left: Node_Binary | Node_Number | Node_Cell,
   right: Node_Binary | Node_Number | Node_Cell,
 }
 
-export type Node_Number = {
+interface Node_Number extends Node_Base  {
   type: 'number',
-  value: string,
 }
 
-export type Node_Cell = {
+interface Node_Cell extends Node_Base  {
   type: 'cell',
-  value: string,
 }
 
