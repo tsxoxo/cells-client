@@ -33,18 +33,23 @@ export type Token = {
   },
 }
 
+export type Tree = Node_Binary | Node_Number | Node_Cell
+
 export type Node_Binary = {
   type: 'binary_op',
-  //op: '+' | '-',
-  op: string,
-  left: Node_Binary | Token,
-  right: Node_Binary | Token,
+  // ['+', '-', '*', '/'],
+  value: string,
+  left: Node_Binary | Node_Number | Node_Cell,
+  right: Node_Binary | Node_Number | Node_Cell,
 }
 
-// Not sure if I need this
-//type Node = {
-//  value: number,
-//  left: number,
-//  right: number,
-//  op: typeof ops 
-//}
+export type Node_Number = {
+  type: 'number',
+  value: string,
+}
+
+export type Node_Cell = {
+  type: 'cell',
+  value: string,
+}
+

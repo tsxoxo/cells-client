@@ -14,7 +14,7 @@
 // * cell ::= [a-zA-Z][0-9][0-9]?
 
 import { isNumber } from "./matchers.ts";
-import { Node_Binary, Token } from "./types/grammar.ts";
+import { Node_Binary, Node_Number, Token, Tree } from "./types/grammar.ts";
 
 export class Parser {
   tokens: Token[]
@@ -36,19 +36,23 @@ export class Parser {
     return this.tokens[this.current - 1]
   }
 
-  parse(): Node_Binary | Token | null {
+  parse(): Tree | null {
     return this.parseExpression()
   }
 
-  parseExpression(): Node_Binary | Token | null  {
+  parseExpression(): Node_Binary | Node_Number | null  {
     let expr = this.parseTerm()
+    console.log(`heyyyyyyyyy ${JSON.stringify( this.tokens )}`)
+    console.log(`heyyyyyyyyy ${JSON.stringify( expr )}`)
 
     if (expr === null ) {
       return null
     }
 
+    console.log(`this.peek()?.type: ${this.peek()?.type } `)
     while ( this.peek()?.type === 'op' ) {
       if ( this.peek()?.value === '+' ||  this.peek()?.value === '-' ) {
+        console.log('inside if')
         const op = this.peek()?.value as string
         this.consume()
 
@@ -60,7 +64,7 @@ export class Parser {
 
         expr = {
           type: 'binary_op',
-          op: op,
+          value: op,
           left: expr,
           right: right
         }
@@ -72,8 +76,9 @@ export class Parser {
     return expr
   }
 
-  parseTerm(): Node_Binary | Token | null {
+  parseTerm(): Node_Binary | Node_Number | null {
     let term = this.parseFactor()
+    let termBinary = null
 
     if( term === null ) {
       return null
@@ -90,21 +95,21 @@ export class Parser {
           return null
         }
 
-        term = {
-          type: 'binary_op',
-          op: op,
-          left: term,
+        termBinary = {
+          type: 'binary_op' as const,
+          value: op,
+          left: termBinary ? termBinary : term,
           right: right
         }
       } else { 
-      break
+        break
       }
     }
 
-    return term
+    return termBinary ? termBinary : term
   }
 
-  parseFactor(): Token | null {
+  parseFactor(): Node_Number | null {
     const factor = this.peek()
 
     // end of the line
@@ -114,8 +119,12 @@ export class Parser {
     }
 
     if( isNumber(factor.value) ) {
-      
-      return this.consume()
+      this.consume()
+
+      return ( {
+        type: 'number',
+        value: factor.value
+      } )
     }
     // is it a cellref
     // smth smth error handling
