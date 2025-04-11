@@ -1,4 +1,4 @@
-import {describe, expect, it} from 'vitest'
+import {assert, describe, expect, it} from 'vitest'
 import { tokenize } from '../tokenizer'
 
 // =================================================
@@ -10,16 +10,16 @@ const validExpression = "2+3"
 //const validTerm = "2*3"
 //const validExpressionWithTerm = "1+2*3"
 
-// * Buffet simple: 11+2*(3-4)/7
+// tokens.length === 11
 const validSimple = "11+2*(3-4)/7"
-// * Buffet with cell reference: 11+2*(A1-B11)/7
+// tokens.length === 11
 const validWithCells = "11+2*(A1-B11)/7" 
 //
 // * Floating numbers
 //      * using '.' or ','
 //      * omitted 0 like 2+.5 = 2.5
 // TODO:
-//const validFloatsPeriod = "1.5 + 2 * 8.9"
+// const validFloatsPeriod = "1.5 + 2 * 8.9"
 //
 // ### Edgecases
 // * starts with negative number
@@ -56,37 +56,39 @@ describe('tokenizer', () => {
   it('handles valid expression', () => {
     const result = tokenize(validExpression)
 
-    expect(result.tokens.length).toBe(3)
-    expect(result.errors.length).toBe(0)
+    assert(result.ok === true)
+    expect(result.value.length).toBe(3)
   })
 
   it('handles valid all ops', () => {
     const result = tokenize(validSimple)
 
-    expect(result.tokens.length).toBe(11)
-    expect(result.errors.length).toBe(0)
+    assert(result.ok === true)
+    expect(result.value.length).toBe(11)
   })
   
   it('handles valid all ops with cells', () => {
     const result = tokenize(validWithCells)
 
-    expect(result.tokens.length).toBe(11)
-    expect(result.errors.length).toBe(0)
+    assert(result.ok === true)
+    expect(result.value.length).toBe(11)
   })
 
   // Edgecases
   it('handles single valid primitive value', () => {
     const result = tokenize(singleValidValueSimple)
 
-    expect(result.tokens.length).toBe(1)
-    expect(result.errors.length).toBe(0)
+    assert(result.ok === true)
+    expect(result.value.length).toBe(1)
+    expect(result.value[0].value).toBe("666")
   })
   
   it('handles single valid cell value', () => {
     const result = tokenize(singleValidValueCell)
 
-    expect(result.tokens.length).toBe(1)
-    expect(result.errors.length).toBe(0)
+    assert(result.ok === true)
+    expect(result.value.length).toBe(1)
+    expect(result.value[0].value).toBe("A99")
   })
 
   // INVALID
@@ -94,8 +96,8 @@ describe('tokenizer', () => {
   it('invalid chars', () => {
     const result = tokenize(invalidChars)
 
-    expect(result.tokens.length).toBe(9)
-    expect(result.errors.length).toBe(3)
+    assert(result.ok === false)
+    expect(result.error).toBe("char")
   })
   //it('handles whitespace', () => {
   //  const result = atomize('=      2   +9   ')

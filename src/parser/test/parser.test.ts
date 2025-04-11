@@ -1,11 +1,11 @@
 import { assert, describe, expect, it } from "vitest";
 import { Parser } from "../parser";
-import { Token } from "../types/grammar";
+import { Token, TokenType } from "../types/grammar";
 
 // =================================================
 // # UTILS
 // =================================================
-function makeTokens( simplifiedTokens: { type: string, value: string }[] ): Token[] {
+function makeTokens( simplifiedTokens: { type: TokenType, value: string }[] ): Token[] {
   const tokens = simplifiedTokens.map(( {type, value} ): Token => ({
     type,
     value,
@@ -45,7 +45,7 @@ const validExpressionWithTermTokens = makeTokens([
   { type: 'op', value: '+' },
   { type: 'number', value: '2' },
   { type: 'op', value: '*' },
-  { type: 'value', value: '3' }
+  { type: 'number', value: '3' }
 ])
 
 describe('Parser', () => {

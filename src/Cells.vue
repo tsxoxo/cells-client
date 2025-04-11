@@ -42,7 +42,7 @@ watch(() => snapshot.value.context.errors, () => handleErrors(snapshot.value.con
             <div class="cell">
               <Transition name="update-value">
                 <input :key="cells[NUM_OF_ROWS * (x - 1) + y - 1]?.value"
-                  @change.trim="event => send({ type: 'changeCell', indexOfCell: (NUM_OF_ROWS * (x - 1) + y - 1), input: (event.target as HTMLInputElement).value })"
+                  @change.trim="event => send({ type: 'changeCellContent', indexOfCell: (NUM_OF_ROWS * (x - 1) + y - 1), value: (event.target as HTMLInputElement).value })"
                   :value="cells[NUM_OF_ROWS * (x - 1) + y - 1]?.value" @focus="(e) => onFocus(e, x, y)"
                   @blur="(e) => onBlur(e, x, y)" @click="() => console.log(cells[NUM_OF_ROWS * (x - 1) + y - 1])">
                 </input>

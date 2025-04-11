@@ -22,10 +22,11 @@ export const ALLOWED_SYMBOLS = {
   // and cell references...
 }
 
+export type TokenType = 'number' | 'cell' | 'op' | 'parens' | 'formula' | undefined
 export type Token = {
   value: string, 
-  //type: 'value' | 'op' | 'brack' | undefined,
-  type: string,
+  type: TokenType, 
+  //type: string,
   position: {
     start: number,
     end: number

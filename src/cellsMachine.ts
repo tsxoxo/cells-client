@@ -9,18 +9,20 @@ export const cellsMachine = setup({
   "types": {
     "context": {} as Context,
     "events": {} as {
-      type: 'changeCell', indexOfCell: number, input: string
+      type: 'changeCellContent', indexOfCell: number, value: string
     }
   },
   "actions": {
-    "updateCell": assign(({ context, event }) => {
-      assertEvent(event, 'changeCell');
+    "updateCellContent": assign(({ context, event }) => {
+      assertEvent(event, 'changeCellContent');
 
+      // is this different from {...errors}?
       let errors = structuredClone(context.errors)
-      const { errorMessage: inputErrorMessage, cleanTokens: tokens, value } = parseInput(event.input, context.cells)
+      // Parse user input
+      const { errorMessage: inputErrorMessage, cleanTokens: tokens, value } = parseInput(event.value, context.cells)
 
       const updatedCell: Cell = {
-        content: event.input,
+        content: event.value,
         value,
         dependencies: tokens,
         dependents: context.cells[event.indexOfCell]?.dependents || [],
@@ -60,10 +62,10 @@ export const cellsMachine = setup({
     "states": {
       "ready": {
         "on": {
-          "changeCell": {
+          "changeCellContent": {
             "target": "ready",
             "actions": {
-              "type": "updateCell"
+              "type": "updateCellContent"
             }
           },
         }

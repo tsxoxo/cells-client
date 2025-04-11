@@ -1,9 +1,10 @@
+import { Result, fail, isSuccess, success } from "./types/errors"
 import { Tree } from "./types/grammar"
 
-export function interpreter( tree: Tree ): EvalResult {
+export function interpreter( tree: Tree ): Result<number> {
   //let result = 0
 
-  function solveNode( node: Tree ): EvalResult {
+  function solveNode( node: Tree ): Result<number> {
     let result
 
     // base case
@@ -33,32 +34,13 @@ export function interpreter( tree: Tree ): EvalResult {
           result = leftResult.value / rightResult.value
           return success( result )
         default: 
-          return failure( 'unknown operator!' )
+          return fail( 'unknown operator!' )
       }
     }
 
-    return failure( 'neither a number nor an op!' )
+    return fail( 'neither a number nor an op!' )
   }
 
   return solveNode(tree)
 }
 
-// ERROR HANDLING
- // Define result types
-type EvalSuccess = { ok: true; value: number }
-type EvalError = { ok: false; error: string; location?: any }
-type EvalResult = EvalSuccess | EvalError
-
-// Helper functions
-function success(value: number): EvalSuccess {
-  return { ok: true, value }
-}
-
-function failure(error: string): EvalError {
-  return { ok: false, error }
-}
-
-// Type guard
-function isSuccess(result: EvalResult): result is EvalSuccess {
-  return result.ok === true
-}

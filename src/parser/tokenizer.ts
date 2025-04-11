@@ -8,84 +8,98 @@
 //
 // Example
 // In: "11*(2+3)"
-//
+// Out (simplified): [{ value: "11"}, {value: "*"}, ...]
 
-import { isValidValue } from "./matchers"
-import { AppError } from "./types/errors"
-import { ALLOWED_SYMBOLS, Token } from "./types/grammar"
+import { isCellRef, isNumber, isOp, isParens } from "./matchers"
+import { Result, fail, success } from "./types/errors"
+import { Token } from "./types/grammar"
 
-// Out(approximation): {tokens: [{value: 11, position: {...}, ...}, ...], errors: []}
-export function tokenize(rawInput: string): {tokens: Token[], errors: AppError[]} {
+export function tokenize(rawInput: string): Result<Token[]> {
   const tokens = [] as Token[]
-  const errors = [] as AppError[]
 
-  for(let ind = 0; ind < rawInput.length; ind++) {
-    // if it's anything else (ideally, numbers, points for floats and cell references)
-    // keep going until an op and add that whole chunk as an atom
-    if(isValidValue(rawInput[ind])) {
-      const token = createEmptyToken(ind)
-
-      while(isValidValue(rawInput[ind])) {
-        if( ind < rawInput.length ) {
-          ind++
-        } else {
-          break
-        }
-      }
-      // Outside of the while loop so it's not a valid *value* char.
-      // We take the hunk we have accumulated so far.
-      token.position.end = ind
-      token.type = 'value'
-      token.value = rawInput.substring(token.position.start, token.position.end)
-      //atom.value = parseFloat(atom.value)
-
-      tokens.push(token)
-
-      // After that, we are on a new index so we 
-      // continue with the iteration
-      // instead of using continue ;)
-    }
-
-    // if it's a bracket, add char to atoms
-    if(ALLOWED_SYMBOLS.brackets.includes(rawInput[ind])) {
-      const token = createEmptyToken(ind)
-
-      token.position.end = ind + 1
-      token.type = 'brack'
-      token.value = rawInput[ind]
-
-      tokens.push(token)
-
-      continue
-    }
-
-    // if it's an op, add char to atoms
-    if(ALLOWED_SYMBOLS.ops.includes(rawInput[ind])) {
-      const atom = createEmptyToken(ind)
-
-      atom.position.end = ind + 1
-      atom.type = 'op'
-      atom.value = rawInput[ind]
-
-      tokens.push(atom)
-
-      continue
-    }
-
-    if( ind < rawInput.length ) {
-      // Must be an invalid character.
-      errors.push({
-        type: 'char',
-        position: ind,
-      })
+  let ind = 0
+  
+  while( ind < rawInput.length ) {
+    const result =  getNextToken( ind )
+    //console.log(result)
+    if( result.ok === true ) {
+      tokens.push(result.value)
+    } else {
+      // error state
+      return result
     }
   }
 
-  //console.log(errors)
-  //console.log(tokens)
-  return {
-    tokens,
-    errors
+  return success( tokens )
+
+  function getNextToken(start: number): Result<Token> {
+    const token = createEmptyToken(ind)
+    const char = rawInput[start]
+
+    if( isOp(char) ) {
+      token.type = "op"
+      token.value = char
+      // TODO: start + 1?
+      token.position.end = start
+      ind++
+      return success(token)
+    }
+    if( isParens(char) ) {
+      token.type = "parens"
+      token.value = char
+      // TODO: start + 1?
+      token.position.end = start
+      ind++
+      return success(token)
+    }
+    if( /[a-zA-Z0-9,\.]/.test(char) ) {
+      token.value = char
+      ind++
+
+      while( ind < rawInput.length ) {
+        const char = rawInput[ind]
+
+        // NOTE: This seems redundant.
+        // "Simplify" with recursion?
+        if( isOp(char)) {
+          break
+        }
+        if( isParens(char)) {
+          break
+        }
+        if( /[a-zA-Z0-9,\.]/.test(char) ) {
+          token.value += char
+          ind++
+          continue
+        } 
+        
+        // invalid char
+        return fail(`char`)
+      }
+      
+      // Potential token has been collected
+      // and can be evaluated.
+      if( isNumber(token.value) ) {
+        token.type = "number"
+        token.position.end = ind
+        return success(token)
+      }
+      if( isCellRef(token.value) ) {
+        token.type = "cell"
+        token.position.end = ind
+        return success(token)
+      }
+      // TODO: isFormula
+
+      
+      // Error: invalid structure 
+      // (Valid chars in wrong order)
+      return fail(`structure`)
+    }
+
+    // Error: Invalid char
+    // (Neither an op, nor a parens, nor a number or a cell)
+    return fail( 'char' )
   }
 }
 
@@ -94,13 +108,14 @@ export function tokenize(rawInput: string): {tokens: Token[], errors: AppError[]
 // =================================================
 // Factory
 function createEmptyToken(start: number): Token {
+  // Initialize with start pos and dummy values.
   return {
     position: {
       start: start,
-      end: -1 // Will be filled in later
+      end: -1 
     },
     value: "",
-    type: ""
+    type: undefined
   };
 }
 

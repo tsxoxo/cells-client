@@ -1,5 +1,5 @@
 // =================================================
-// ERRORS
+// ERROR HANDLING
 // =================================================
 //
 // ## Design pillar
@@ -33,6 +33,25 @@
 // * develop testing strategy. look at .each syntax
 // * write/refactor tests for parsing units
 // * write tests for UI
+
+// Define result types
+export type Success<T> = { ok: true; value: T }
+export type Error = { ok: false; error: string; position?: number }
+export type Result<T> = Success<T> | Error
+
+// Helper functions
+export function success<T>(value: T): Success<T> {
+  return { ok: true, value }
+}
+
+export function fail(error: string, position?: number): Error {
+  return { ok: false, error, position }
+}
+
+// Type guard
+export function isSuccess<T>(result: Result<T>): result is Success<T> {
+  return result.ok === true
+}
 
 export type AppError = {
   // 'char', 'syntax', etc.
