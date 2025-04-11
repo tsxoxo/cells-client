@@ -97,7 +97,7 @@ describe('tokenizer', () => {
     const result = tokenize(invalidChars)
 
     assert(result.ok === false)
-    expect(result.error).toBe("char")
+    expect(result.error).toBe("token")
   })
   //it('handles whitespace', () => {
   //  const result = atomize('=      2   +9   ')

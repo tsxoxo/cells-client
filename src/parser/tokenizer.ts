@@ -21,9 +21,13 @@ export function tokenize(rawInput: string): Result<Token[]> {
   
   while( ind < rawInput.length ) {
     const result =  getNextToken( ind )
-    //console.log(result)
+
     if( result.ok === true ) {
-      tokens.push(result.value)
+      const token = result.value
+      token.position.end = token.position.start + ind
+
+      tokens.push(token)
+      ind += token.value.length
     } else {
       // error state
       return result
@@ -39,67 +43,44 @@ export function tokenize(rawInput: string): Result<Token[]> {
     if( isOp(char) ) {
       token.type = "op"
       token.value = char
-      // TODO: start + 1?
-      token.position.end = start
-      ind++
       return success(token)
     }
+
     if( isParens(char) ) {
       token.type = "parens"
       token.value = char
-      // TODO: start + 1?
-      token.position.end = start
-      ind++
       return success(token)
     }
+
+    // Lump all other valid symbols together for simplicity. We differentiate below.
     if( /[a-zA-Z0-9,\.]/.test(char) ) {
-      token.value = char
-      ind++
-
-      while( ind < rawInput.length ) {
-        const char = rawInput[ind]
-
-        // NOTE: This seems redundant.
-        // "Simplify" with recursion?
-        if( isOp(char)) {
+      let _ind = ind
+      while( _ind < rawInput.length ) {
+        if( /[a-zA-Z0-9,\.]/.test(rawInput[_ind]) ) {
+          token.value += rawInput[_ind]
+          _ind++
+        } else {
           break
         }
-        if( isParens(char)) {
-          break
-        }
-        if( /[a-zA-Z0-9,\.]/.test(char) ) {
-          token.value += char
-          ind++
-          continue
-        } 
-        
-        // invalid char
-        return fail(`char`)
       }
       
-      // Potential token has been collected
-      // and can be evaluated.
+      // Potential token has been collected and can be evaluated.
       if( isNumber(token.value) ) {
         token.type = "number"
-        token.position.end = ind
         return success(token)
       }
       if( isCellRef(token.value) ) {
         token.type = "cell"
-        token.position.end = ind
         return success(token)
       }
       // TODO: isFormula
-
       
-      // Error: invalid structure 
-      // (Valid chars in wrong order)
-      return fail(`structure`)
+      // Invalid char or valid chars in wrong order.
+      return fail( "token" )
     }
 
-    // Error: Invalid char
-    // (Neither an op, nor a parens, nor a number or a cell)
-    return fail( 'char' )
+    // Neither an op, nor a parens, nor a number or a cell.
+    return fail( "token" )
   }
 }
 
