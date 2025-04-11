@@ -3,10 +3,14 @@ export interface CleanToken {
     indexOfOriginCell: number
 }
 export interface Cell {
-    value: string | number,
-    content: string,
-    tokens: CleanToken[],
-    cellsThatDependOnMe: number[]
+  // raw user input
+  content: string,
+  // what is displayed: raw input or result of formula 
+  value: string | number,
+  // indices of cells used in formula
+  dependencies: CleanToken[],
+  // cells that reference this cell
+  dependents: number[]
 }
 
 export interface AppError {

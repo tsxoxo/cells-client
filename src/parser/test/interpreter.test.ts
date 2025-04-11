@@ -39,3 +39,4 @@ describe('Interpreter', () => {
     expect(result.value).toEqual(7)
   })
 })
+

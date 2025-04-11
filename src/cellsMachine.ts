@@ -22,13 +22,13 @@ export const cellsMachine = setup({
       const updatedCell: Cell = {
         content: event.input,
         value,
-        tokens,
-        cellsThatDependOnMe: context.cells[event.indexOfCell]?.cellsThatDependOnMe || [],
+        dependencies: tokens,
+        dependents: context.cells[event.indexOfCell]?.dependents || [],
       }
       const cellsWithUpdatedCell = context.cells.toSpliced(event.indexOfCell, 1, updatedCell)
       const cellsWithUpdatedCellAndDependencies = withUpdatedCellDependencies(
         cellsWithUpdatedCell,
-        context.cells[event.indexOfCell]?.tokens || [],
+        context.cells[event.indexOfCell]?.dependencies || [],
         event.indexOfCell
       )
 

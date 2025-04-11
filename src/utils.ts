@@ -108,11 +108,11 @@ export function withPropagatedChanges(cells: Cell[], indexOfChangedCell: number)
     let errors: AppError[] | [] = [];
 
     function propagate(fromThisIndex: number) {
-        cellsAfterPropagation[fromThisIndex].cellsThatDependOnMe.forEach((indexOfCellToRecalculate) => {
+        cellsAfterPropagation[fromThisIndex].dependents.forEach((indexOfCellToRecalculate) => {
             const cellToUpdate = cellsAfterPropagation[indexOfCellToRecalculate]
             const { errorMessage, cleanTokens, value } = parseInput(cellToUpdate.content, cellsAfterPropagation)
             cellToUpdate.value = value
-            cellToUpdate.tokens = cleanTokens
+            cellToUpdate.dependencies = cleanTokens
             if (errorMessage !== '') {
                 console.log(`errorMessage: ${errorMessage}`);
 
@@ -131,7 +131,7 @@ export function withPropagatedChanges(cells: Cell[], indexOfChangedCell: number)
 }
 
 export function withUpdatedCellDependencies(cells: Cell[], oldTokens: CleanToken[] | [], indexOfChangedCell: number): Cell[] {
-    const newTokens = cells[indexOfChangedCell].tokens
+    const newTokens = cells[indexOfChangedCell].dependencies
     const updatedCells = structuredClone(cells)
     const newCellsReferences: number[] | [] = newTokens.filter((token: CleanToken) => token.indexOfOriginCell > -1).map(token => token.indexOfOriginCell)
     const oldCellsReferences: number[] | [] = oldTokens.filter((token: CleanToken) => token.indexOfOriginCell > -1).map(token => token.indexOfOriginCell)
@@ -140,25 +140,25 @@ export function withUpdatedCellDependencies(cells: Cell[], oldTokens: CleanToken
 
     cellsThatLostDep.forEach((index) => {
         const cellToUpdate = updatedCells[index]
-        const indexOfElementToRemove = cellToUpdate.cellsThatDependOnMe.indexOf(indexOfChangedCell)
+        const indexOfElementToRemove = cellToUpdate.dependents.indexOf(indexOfChangedCell)
 
         if (indexOfElementToRemove === -1) {
             return
         }
 
-        cellToUpdate.cellsThatDependOnMe.splice(indexOfElementToRemove, 1)
+        cellToUpdate.dependents.splice(indexOfElementToRemove, 1)
     })
 
     cellsThatGainedDep.forEach((index) => {
         const cellToUpdate = updatedCells[index]
 
         // Check for duplicates. TODO: mb make this a Set
-        const indexOfElementToAdd = cellToUpdate.cellsThatDependOnMe.indexOf(indexOfChangedCell)
+        const indexOfElementToAdd = cellToUpdate.dependents.indexOf(indexOfChangedCell)
         if (indexOfElementToAdd !== -1) {
             return
         }
 
-        cellToUpdate.cellsThatDependOnMe.push(indexOfChangedCell)
+        cellToUpdate.dependents.push(indexOfChangedCell)
     })
 
     return updatedCells
