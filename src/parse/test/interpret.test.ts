@@ -1,5 +1,5 @@
 import { assert, describe, expect, it } from "vitest";
-import { interpreter } from "../interpreter";
+import { interpreter } from "../interpret";
 
 // =================================================
 // # TEST DATA

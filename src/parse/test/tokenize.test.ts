@@ -1,5 +1,5 @@
 import {assert, describe, expect, it} from 'vitest'
-import { tokenize } from '../tokenizer'
+import { tokenize } from '../tokenize'
 
 // =================================================
 // TEST CASES

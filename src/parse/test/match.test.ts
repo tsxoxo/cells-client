@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isCellRef, isOp } from "../matchers";
+import { isCellRef, isOp } from "../match";
 
 // =================================================
 // # TEST DATA

@@ -3,7 +3,9 @@
 // =================================================
 //
 // NOTE: START HERE
-// * then continue plugging in new parser into app: 1) move state handling into own file
+// * then continue plugging in new parser into app: 
+// 1) move state handling into own file
+// 2) Simplify cell type: {dependents}
 //
 // Takes string.
 // Outputs a list of objects that
@@ -12,8 +14,10 @@
 // Example
 // In: "11*(2+3)"
 // Out (simplified): [{ value: "11"}, {value: "*"}, ...]
+//
+// NB: Fails fast -- Throws on the first error
 
-import { isCellRef, isNumber, isOp, isParens, isWhitespace } from "./matchers"
+import { isCellRef, isNumber, isOp, isParens, isWhitespace } from "./match"
 import { Result, fail, success } from "./types/errors"
 import { Token } from "./types/grammar"
 

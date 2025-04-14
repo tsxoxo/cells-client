@@ -1,5 +1,5 @@
 import { assert, describe, expect, it } from "vitest";
-import { Parser } from "../parser";
+import { Parser } from "../ast";
 import { Token, TokenType } from "../types/grammar";
 
 // =================================================

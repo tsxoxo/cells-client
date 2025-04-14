@@ -13,7 +13,7 @@
 // * number ::= [0-9]+ (( ',' | '.' ) [0-9]+)?
 // * cell ::= [a-zA-Z][0-9][0-9]?
 
-import { isNumber } from "./matchers.ts";
+import { isNumber } from "./match.ts";
 import { Node_Binary, Node_Number, Token, Tree } from "./types/grammar.ts";
 
 export class Parser {
