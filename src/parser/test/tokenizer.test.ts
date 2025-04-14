@@ -24,9 +24,7 @@ const validWithCells = "11+2*(A1-B11)/7"
 // ### Edgecases
 // * starts with negative number
 // * a lot of unncessary whitespace 
-//      -> reduce to state without whitespace
-//      OR let user decide
-// * typos like doubled ops or invalid cell reference
+const validWithWhitespace = "     11 +2*(A1-    B11)        / 7    " // * typos like doubled ops or invalid cell reference
 //      -> Mark as error and perhaps suggest correction
 //* single values: both literals and cell references. e.g. '=A5'
 //      * also in brackets, like '=1+(2)
@@ -89,6 +87,15 @@ describe('tokenizer', () => {
     assert(result.ok === true)
     expect(result.value.length).toBe(1)
     expect(result.value[0].value).toBe("A99")
+  })
+
+  it('handles whitespace', () => {
+    const result = tokenize(validWithWhitespace)
+
+    assert(result.ok === true)
+    expect(result.value.length).toBe(11)
+    expect(result.value[0].value).toBe("11")
+    expect(result.value[ result.value.length-1 ].value).toBe("7")
   })
 
   // INVALID

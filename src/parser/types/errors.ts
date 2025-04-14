@@ -27,8 +27,7 @@
 // * Invalid op placement: "++", "1+4*5*"
 //      --> tokenizer or parser
 //
-// NOTE:
-// Start here: 
+// TODO:
 // * bubble up errors and show in UI 
 // * develop testing strategy. look at .each syntax
 // * write/refactor tests for parsing units

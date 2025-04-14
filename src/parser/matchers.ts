@@ -17,6 +17,10 @@ export function isParens(str: string): boolean {
   return /[\(\)]/.test(str)
 }
 
+export function isWhitespace(str: string): boolean {
+  return /\s/.test(str)
+}
+
 export function isValidValue(char: string): boolean {
   return /[a-zA-Z0-9\.\,]/.test(char)
 }

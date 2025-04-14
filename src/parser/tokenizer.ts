@@ -2,7 +2,12 @@
 // TOKENIZER
 // =================================================
 //
-// Takes raw string.
+// NOTE: START HERE
+// * add handling of whitespaces. add test.
+// * clean up tests for tokenizer
+// * then continue plugging in new parser into app: 1) move state handling into own file
+//
+// Takes string.
 // Outputs a list of objects that
 // is easier to work with.
 //
@@ -10,16 +15,22 @@
 // In: "11*(2+3)"
 // Out (simplified): [{ value: "11"}, {value: "*"}, ...]
 
-import { isCellRef, isNumber, isOp, isParens } from "./matchers"
+import { isCellRef, isNumber, isOp, isParens, isWhitespace } from "./matchers"
 import { Result, fail, success } from "./types/errors"
 import { Token } from "./types/grammar"
 
-export function tokenize(rawInput: string): Result<Token[]> {
+export function tokenize(str: string): Result<Token[]> {
   const tokens = [] as Token[]
 
   let ind = 0
   
-  while( ind < rawInput.length ) {
+  while( ind < str.length ) {
+    // Ignore whitespace
+    if( isWhitespace(str[ind]) ) {
+      ind++
+      continue
+    }
+
     const result =  getNextToken( ind )
 
     if( result.ok === true ) {
@@ -38,7 +49,7 @@ export function tokenize(rawInput: string): Result<Token[]> {
 
   function getNextToken(start: number): Result<Token> {
     const token = createEmptyToken(ind)
-    const char = rawInput[start]
+    const char = str[start]
 
     if( isOp(char) ) {
       token.type = "op"
@@ -55,9 +66,9 @@ export function tokenize(rawInput: string): Result<Token[]> {
     // Lump all other valid symbols together for simplicity. We differentiate below.
     if( /[a-zA-Z0-9,\.]/.test(char) ) {
       let _ind = ind
-      while( _ind < rawInput.length ) {
-        if( /[a-zA-Z0-9,\.]/.test(rawInput[_ind]) ) {
-          token.value += rawInput[_ind]
+      while( _ind < str.length ) {
+        if( /[a-zA-Z0-9,\.]/.test(str[_ind]) ) {
+          token.value += str[_ind]
           _ind++
         } else {
           break
