@@ -3,8 +3,6 @@
 // =================================================
 //
 // NOTE: START HERE
-// * add handling of whitespaces. add test.
-// * clean up tests for tokenizer
 // * then continue plugging in new parser into app: 1) move state handling into own file
 //
 // Takes string.
@@ -84,14 +82,13 @@ export function tokenize(str: string): Result<Token[]> {
         token.type = "cell"
         return success(token)
       }
-      // TODO: isFormula
       
       // Invalid char or valid chars in wrong order.
-      return fail( "token" )
+      return fail( "TOKEN" )
     }
 
     // Neither an op, nor a parens, nor a number or a cell.
-    return fail( "token" )
+    return fail( "TOKEN" )
   }
 }
 

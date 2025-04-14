@@ -2,30 +2,44 @@
 // ERROR HANDLING
 // =================================================
 //
-// ## Design pillar
+// # DESIGN PILLARS
 // Make errors granular so that they can be communicated to user.
 //
 // ## Desired UI behavior
 // A) Show an error message.
 // B) Mark the erroneous token.
 //
-// ## Necessary data
+// --> Necessary data
 // A) The type of error.
 // B) The start and end position of the invalid token.
 //
-// ## Types of errors
-// * Invalid char/token: "#%`[$]" etc. 
+// ## ERROR TYPES
+// 
+// ### [TOKEN] Invalid or ill-formed tokens
 //      --> tokenizer
+// * Invalid char: "#%`[$=" etc.
+// * Ill-formed token: "A999", "string"
 //
 // * Invalid value from cell reference: "A1 + A2", where A1 === 'something invalid'
-// * Invalid cell reference: A999 + A2
-// * Number too big (check after getting cell ref)
-// * Divide by 0
-//      --> parser
+//      --> ast
 //
-// * Invalid bracket placement
+// ### "Out-of-bounds"
+//      --> ast
+// * Number too big (single num as well as result of calc. should be checked after evaluating cell reference)
+// * Divide by 0
+//
+// * Circular cell reference
+//
+// ### Invalid syntax
+//      --> ast
+// * Bracket placement
 // * Invalid op placement: "++", "1+4*5*"
-//      --> tokenizer or parser
+//
+//
+// ### Functions (future feature)
+//
+// ### Ranges (future feature)
+//
 //
 // TODO:
 // * bubble up errors and show in UI 
