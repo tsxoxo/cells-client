@@ -25,12 +25,12 @@ export class Parser {
     this.current = 0
   }
 
-  peek() {
+  private peek() {
     if( this.current >= this.tokens.length ) { return null }
     return this.tokens[this.current]
   }
 
-  consume() {
+  private consume() {
     if( this.current >= this.tokens.length ) { return null }
     this.current++
     return this.tokens[this.current - 1]
@@ -42,7 +42,7 @@ export class Parser {
     return result
   }
 
-  parseExpression(): Node_Binary | Node_Number | null  {
+  private parseExpression(): Node_Binary | Node_Number | null  {
     let expr = this.parseTerm()
 
     if (expr === null ) {
@@ -74,7 +74,7 @@ export class Parser {
     return expr
   }
 
-  parseTerm(): Node_Binary | Node_Number | null {
+  private parseTerm(): Node_Binary | Node_Number | null {
     let term = this.parseFactor()
     let termBinary = null
 
@@ -107,7 +107,7 @@ export class Parser {
     return termBinary ? termBinary : term
   }
 
-  parseFactor(): Node_Number | null {
+  private parseFactor(): Node_Number | null {
     const factor = this.peek()
 
     // end of the line

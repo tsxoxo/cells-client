@@ -55,6 +55,14 @@ export type Error = { ok: false; type: ErrorType; position?: number }
 export type Result<T> = Success<T> | Error
 
 // Helper functions
+export function pipe<T>(initValue: T, ...fns: ( (res: T) => T )[]): T {
+  return fns.reduce( (acc, fn) => fn(acc), initValue)
+}
+
+export function flatMap<T,U>(res: Result<T>, fn: (v: T) => Result<U>): Result<U>  {
+  return res.ok ? fn(res.value) : res
+}
+
 export function success<T>(value: T): Success<T> {
   return { ok: true, value }
 }

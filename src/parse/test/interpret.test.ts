@@ -1,5 +1,5 @@
 import { assert, describe, expect, it } from "vitest";
-import { interpreter } from "../interpret";
+import { interpret } from "../interpret";
 
 // =================================================
 // # TEST DATA
@@ -26,15 +26,15 @@ const validExpressionWithTermTree = {
 
 describe('Interpreter', () => {
   it('does number arithmetics no brackets', () => {
-    let result = interpreter(validExpressionTree)
+    let result = interpret(validExpressionTree)
     assert(result.ok === true)
     expect(result.value).toEqual(5)
 
-    result = interpreter(validTermTree)
+    result = interpret(validTermTree)
     assert(result.ok === true)
     expect(result.value).toEqual(6)
 
-    result = interpreter(validExpressionWithTermTree)
+    result = interpret(validExpressionWithTermTree)
     assert(result.ok === true)
     expect(result.value).toEqual(7)
   })
