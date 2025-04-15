@@ -8,7 +8,7 @@ export interface Cell {
   // what is displayed: raw input or result of formula 
   value: string | number,
   // indices of cells used in formula
-  dependencies: CleanToken[],
+  dependencies: number[]
   // cells that reference this cell
   dependents: number[]
 }

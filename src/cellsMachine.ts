@@ -1,54 +1,34 @@
-import { setup, assign, assertEvent } from 'xstate'
-import type { Cell, AppError } from './types'
+import { setup, assign } from 'xstate'
+import type { Cell } from './types'
 import { INITIAL_CELLS } from "./INITIAL_DATA";
-import { parseInput, withUpdatedCellDependencies, withPropagatedChanges } from "./utils"
+import { handleCellContentChange } from './state';
+import { Error, isSuccess } from './parse/types/errors';
 
-interface Context { 'cells': Cell[], errors: AppError[] }
+export interface Context { 'cells': Cell[], errors: Error[] }
+
+export type changeCellContent = {
+      type: 'changeCellContent', indexOfCell: number, value: string
+    }
 
 export const cellsMachine = setup({
   "types": {
     "context": {} as Context,
-    "events": {} as {
-      type: 'changeCellContent', indexOfCell: number, value: string
-    }
+    "events": {} as changeCellContent 
   },
   "actions": {
-    "updateCellContent": assign(({ context, event }) => {
-      assertEvent(event, 'changeCellContent');
+    "updateCellContent": assign(({ context, event } ) => {
+      const result = handleCellContentChange(context, event)
 
-      // is this different from {...errors}?
-      let errors = structuredClone(context.errors)
-      // Parse user input
-      const { errorMessage: inputErrorMessage, cleanTokens: tokens, value } = parseInput(event.value, context.cells)
-
-      const updatedCell: Cell = {
-        content: event.value,
-        value,
-        dependencies: tokens,
-        dependents: context.cells[event.indexOfCell]?.dependents || [],
+      if( isSuccess(result) ) {
+        return {
+          cells: result.value
+        }
+      } else {
+        return {
+          errors: [ result ]
+        }
       }
-      const cellsWithUpdatedCell = context.cells.toSpliced(event.indexOfCell, 1, updatedCell)
-      const cellsWithUpdatedCellAndDependencies = withUpdatedCellDependencies(
-        cellsWithUpdatedCell,
-        context.cells[event.indexOfCell]?.dependencies || [],
-        event.indexOfCell
-      )
-
-      const { errors: propagationErrors, cellsAfterPropagation } = withPropagatedChanges(cellsWithUpdatedCellAndDependencies, event.indexOfCell)
-
-      if (inputErrorMessage !== '') {
-        errors = [...errors, {
-          indexOfCell: event.indexOfCell,
-          message: inputErrorMessage
-        }]
-      }
-      errors = [...errors, ...propagationErrors]
-
-      return {
-        cells: cellsAfterPropagation,
-        errors
-      }
-    }),
+    })
   }
 })
   .createMachine({

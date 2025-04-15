@@ -1,20 +1,4 @@
 import type { AppError, Cell, CleanToken } from './types'
-import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants"
-
-function isCellName(s: string) {
-    return /^\w{1}\d\d?$/.test(s.toLocaleLowerCase())
-}
-function getIndexFromCellName(cellName: string) {
-    // cellName examples: 'A1', 'B99'
-    // We call the letter x and the number y such as 'A0' === (1, 1)
-    const x = ALPHABET_WITH_FILLER.indexOf(cellName[0])
-    const y = Number(cellName.slice(1)) + 1
-
-    return NUM_OF_ROWS * (x - 1) + y - 1
-}
-function isFormula(input: string): boolean {
-    return input[0] === '='
-}
 function tokenize(input: string): string[] {
     // remove whitespaces
     const sanitizedInput = (s: string) => {
@@ -103,66 +87,7 @@ export const parseInput = (input: string, cells: Cell[]): { errorMessage: string
     return { errorMessage, cleanTokens, value }
 }
 
-export function withPropagatedChanges(cells: Cell[], indexOfChangedCell: number): { errors: AppError[] | [], cellsAfterPropagation: Cell[] } {
-    let cellsAfterPropagation = structuredClone(cells)
-    let errors: AppError[] | [] = [];
 
-    function propagate(fromThisIndex: number) {
-        cellsAfterPropagation[fromThisIndex].dependents.forEach((indexOfCellToRecalculate) => {
-            const cellToUpdate = cellsAfterPropagation[indexOfCellToRecalculate]
-            const { errorMessage, cleanTokens, value } = parseInput(cellToUpdate.content, cellsAfterPropagation)
-            cellToUpdate.value = value
-            cellToUpdate.dependencies = cleanTokens
-            if (errorMessage !== '') {
-                console.log(`errorMessage: ${errorMessage}`);
-
-                errors = [...errors, {
-                    indexOfCell: indexOfCellToRecalculate,
-                    message: errorMessage
-                }]
-            }
-            propagate(indexOfCellToRecalculate)
-        })
-    }
-
-    propagate(indexOfChangedCell)
-
-    return { errors, cellsAfterPropagation }
-}
-
-export function withUpdatedCellDependencies(cells: Cell[], oldTokens: CleanToken[] | [], indexOfChangedCell: number): Cell[] {
-    const newTokens = cells[indexOfChangedCell].dependencies
-    const updatedCells = structuredClone(cells)
-    const newCellsReferences: number[] | [] = newTokens.filter((token: CleanToken) => token.indexOfOriginCell > -1).map(token => token.indexOfOriginCell)
-    const oldCellsReferences: number[] | [] = oldTokens.filter((token: CleanToken) => token.indexOfOriginCell > -1).map(token => token.indexOfOriginCell)
-    const cellsThatLostDep: number[] | [] = oldCellsReferences.filter(index => !newCellsReferences.includes(index))
-    const cellsThatGainedDep: number[] | [] = newCellsReferences.filter(index => !oldCellsReferences.includes(index))
-
-    cellsThatLostDep.forEach((index) => {
-        const cellToUpdate = updatedCells[index]
-        const indexOfElementToRemove = cellToUpdate.dependents.indexOf(indexOfChangedCell)
-
-        if (indexOfElementToRemove === -1) {
-            return
-        }
-
-        cellToUpdate.dependents.splice(indexOfElementToRemove, 1)
-    })
-
-    cellsThatGainedDep.forEach((index) => {
-        const cellToUpdate = updatedCells[index]
-
-        // Check for duplicates. TODO: mb make this a Set
-        const indexOfElementToAdd = cellToUpdate.dependents.indexOf(indexOfChangedCell)
-        if (indexOfElementToAdd !== -1) {
-            return
-        }
-
-        cellToUpdate.dependents.push(indexOfChangedCell)
-    })
-
-    return updatedCells
-}
 
 export function handleErrors(errors: AppError[] | []) {
     errors.length > 0 && errors.forEach(error => {
