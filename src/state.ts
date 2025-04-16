@@ -1,12 +1,11 @@
 import { assertEvent } from 'xstate';
-import type { AppError, Cell } from './types';
+import type { Cell } from './types';
 import { Context, changeCellContent } from './cellsMachine';
 import { parseFormula } from './parse/main';
-import { Result, fail, isSuccess, success } from './parse/types/errors';
-
+import { AppError, ParseError, Result, fail, isSuccess, success } from './parse/types/errors';
 
 // CONTROL FLOW
-export function handleCellContentChange(context: Context, event: changeCellContent): Result<Cell[]> {
+export function handleCellContentChange(context: Context, event: changeCellContent): Result<Cell[], AppError> {
   assertEvent(event, 'changeCellContent');
   //console.log(`event.value: ${event.value}`)
   //console.log(`event.indexOfCell: ${event.indexOfCell}`)
@@ -16,8 +15,13 @@ export function handleCellContentChange(context: Context, event: changeCellConte
 
   // Evaluate content. Parse if formula.
   const maybeNewCell = updateCellContent(oldCell, event.value)
+
+  // Enrich ParseError with index of cell
   if(!isSuccess(maybeNewCell)) {
-    return maybeNewCell
+    return fail({
+        indexOfCell: event.indexOfCell,
+        cause: maybeNewCell.error
+    })
   }
 
   // Happy path: not formula or successfully parsed.
@@ -36,7 +40,7 @@ export function handleCellContentChange(context: Context, event: changeCellConte
 // UTILS
 
 // Update a single cell
-function updateCellContent(cell:Cell, newContent: string): Result<Cell> {
+function updateCellContent(cell:Cell, newContent: string): Result<Cell, ParseError> {
   const updatedCell = structuredClone(cell)
   updatedCell.content = newContent
 

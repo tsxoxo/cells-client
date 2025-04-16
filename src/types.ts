@@ -1,9 +1,8 @@
-import { Error as ParseError } from "./parse/types/errors"
-
 export interface CleanToken {
   value: number,
   indexOfOriginCell: number
 }
+
 export interface Cell {
   // raw user input
   content: string,
@@ -15,7 +14,3 @@ export interface Cell {
   dependents: number[]
 }
 
-export interface AppError {
-  indexOfCell: number,
-  parseError: ParseError
-}

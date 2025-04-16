@@ -2,9 +2,9 @@ import { setup, assign } from 'xstate'
 import type { Cell } from './types'
 import { INITIAL_CELLS } from "./INITIAL_DATA";
 import { handleCellContentChange } from './state';
-import { Error, isSuccess } from './parse/types/errors';
+import { AppError, isSuccess } from './parse/types/errors';
 
-export interface Context { 'cells': Cell[], errors: Error[] }
+export interface Context { 'cells': Cell[], errors: AppError[] }
 
 export type changeCellContent = {
   type: 'changeCellContent', indexOfCell: number, value: string
@@ -21,7 +21,7 @@ export const cellsMachine = setup({
 
       return isSuccess(result) 
         ? { cells: result.value }
-        : { errors: [ result ] }
+        : { errors: [ result.error ] }
     })
   }
 })

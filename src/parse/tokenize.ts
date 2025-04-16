@@ -18,10 +18,10 @@
 // NB: Fails fast -- Throws on the first error
 
 import { isCellRef, isNumber, isOp, isParens, isWhitespace } from "./match"
-import { Result, fail, success } from "./types/errors"
+import { ParseError, Result, fail, success } from "./types/errors"
 import { Token } from "./types/grammar"
 
-export function tokenize(str: string): Result<Token[]> {
+export function tokenize(str: string): Result<Token[], ParseError> {
   const tokens = [] as Token[]
 
   let ind = 0
@@ -49,7 +49,7 @@ export function tokenize(str: string): Result<Token[]> {
 
   return success( tokens )
 
-  function getNextToken(start: number): Result<Token> {
+  function getNextToken(start: number): Result<Token, ParseError> {
     const token = createEmptyToken(ind)
     const char = str[start]
 
@@ -88,11 +88,11 @@ export function tokenize(str: string): Result<Token[]> {
       }
       
       // Invalid char or valid chars in wrong order.
-      return fail( "TOKEN" )
+      return fail({ type:  "TOKEN"  })
     }
 
     // Neither an op, nor a parens, nor a number or a cell.
-    return fail( "TOKEN" )
+    return fail({ type:  "TOKEN"  })
   }
 }
 

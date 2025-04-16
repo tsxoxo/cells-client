@@ -1,11 +1,11 @@
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "../constants"
-import { Result, fail, isSuccess, success } from "./types/errors"
+import { ParseError, Result, fail, isSuccess, success } from "./types/errors"
 import { Tree } from "./types/grammar"
 
-export function interpret( tree: Tree ): Result<{ formulaResult: number, deps: number[] }> {
+export function interpret( tree: Tree ): Result<{ formulaResult: number, deps: number[] }, ParseError> {
   let deps: number[] = []
 
-  function solveNode( node: Tree ): Result<number> {
+  function solveNode( node: Tree ): Result<number, ParseError> {
     let calcResult
 
     // base case
@@ -32,7 +32,7 @@ export function interpret( tree: Tree ): Result<{ formulaResult: number, deps: n
     }
 
     // unexpected node type
-    return fail( "TOKEN" )
+    return fail({ type:  "TOKEN"  })
   }
 
   const formulaResult = solveNode(tree)
@@ -40,7 +40,7 @@ export function interpret( tree: Tree ): Result<{ formulaResult: number, deps: n
   return formulaResult.ok ? success({ formulaResult: formulaResult.value, deps  }) : formulaResult
 }
 
-function calculate( op: string, left: number, right: number ): Result<number> {
+function calculate( op: string, left: number, right: number ): Result<number, ParseError> {
   switch( op ) {
     case '+':
       return success( left + right )
@@ -51,7 +51,7 @@ function calculate( op: string, left: number, right: number ): Result<number> {
     case '/':
       return success( left / right )
     default: 
-      return fail( "UNKNOWN_OP" )
+      return fail({ type:  "UNKNOWN_OP"  })
   }
 }
 

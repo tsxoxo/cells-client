@@ -13,7 +13,7 @@
 // * number ::= [0-9]+ (( ',' | '.' ) [0-9]+)?
 // * cell ::= [a-zA-Z][0-9][0-9]?
 
-import { Result, fail, isSuccess, success } from "./types/errors.ts";
+import { ParseError, Result, fail, isSuccess, success } from "./types/errors.ts";
 import { Token, Tree } from "./types/grammar.ts";
 
 export class Parser {
@@ -36,13 +36,13 @@ export class Parser {
     return this.tokens[this.current - 1]
   }
 
-  makeAST(): Result<Tree> {
+  makeAST(): Result<Tree, ParseError> {
     const result = this.parseExpression()
 
     return result
   }
 
-  private parseExpression(): Result<Tree>  {
+  private parseExpression(): Result<Tree, ParseError>  {
     let expr = this.parseTerm()
     let exprBinary = null
 
@@ -75,7 +75,7 @@ export class Parser {
     return exprBinary ? success(exprBinary) : expr
   }
 
-  private parseTerm(): Result<Tree> {
+  private parseTerm(): Result<Tree, ParseError> {
     let term = this.parseFactor()
     let termBinary = null
 
@@ -109,12 +109,12 @@ export class Parser {
     return termBinary ? success(termBinary) : term
   }
 
-  private parseFactor(): Result<Tree> {
+  private parseFactor(): Result<Tree, ParseError> {
     const factor = this.peek()
 
     // end of the line
     if( factor === null ) {
-      return fail('UNEXPECTED_EOF')
+      return fail({ type: 'UNEXPECTED_EOF' })
     }
 
     if( factor.type === "number") {
@@ -137,7 +137,7 @@ export class Parser {
 
     // Can't parse token
     //console.log('cant parse token in parsefactor')
-    return fail('TOKEN')
+    return fail({ type: 'TOKEN' })
   }
 }
 

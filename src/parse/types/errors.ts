@@ -33,7 +33,9 @@
 // ### Invalid syntax
 //      --> ast
 // * Bracket placement
-// * Invalid op placement: "++", "1+4*5*"
+// * Invalid op placement:
+//      * "++"
+//      * [UNEXPECTED_EOF] "1+4*5*"
 //
 //
 // ### Functions (future feature)
@@ -50,29 +52,45 @@
 type ErrorType = "TOKEN" | "UNKNOWN_OP" | "UNEXPECTED_EOF"
 
 // Define result types
+export type Result<T, E = Error> = Success<T> | Failure<E>
+
 export type Success<T> = { ok: true; value: T }
-export type Error = { ok: false; type: ErrorType; position?: number }
-export type Result<T> = Success<T> | Error
+export type Failure<E> = { ok: false; error: E }
+
+
+export type ParseError = { 
+  type: ErrorType,
+  position?: number 
+}
+
+export type AppError = {
+  indexOfCell: number,
+  cause: ParseError
+}
 
 // Helper functions
-export function pipe<T>(initValue: Result<T>, ...fns: Array<(res: Result<any>,) => Result<any>> ): Result<any> {
+export function pipe<T, E>(initValue: Result<T, E>, ...fns: Array<(res: Result<any, E>,) => Result<any, E>> ): Result<any, E> {
   return fns.reduce( (acc, fn) => fn(acc), initValue)
 }
 
-export function flatMap<T,U>(res: Result<T>, fn: (v: T) => Result<U>): Result<U>  {
+export function flatMap<T, U, E>(res: Result<T, E>, fn: (val: T) => Result<U, E>): Result<U, E>  {
   return res.ok ? fn(res.value) : res
+}
+
+export function bind<T, U, E>(fn: (val: T) => Result<U, E>): (res: Result<T, E>) => Result<U, E> {
+  return val => flatMap(val, fn)
 }
 
 export function success<T>(value: T): Success<T> {
   return { ok: true, value }
 }
 
-export function fail(type: ErrorType, position?: number): Error {
-  return { ok: false, type, position }
+export function fail<E>( error: E): Failure<E> {
+  return { ok: false, error }
 }
 
 // Type guard
-export function isSuccess<T>(result: Result<T>): result is Success<T> {
+export function isSuccess<T, E>(result: Result<T, E>): result is Success<T> {
   return result.ok === true
 }
 
