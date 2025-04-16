@@ -13,8 +13,8 @@
 // * number ::= [0-9]+ (( ',' | '.' ) [0-9]+)?
 // * cell ::= [a-zA-Z][0-9][0-9]?
 
-import { isNumber } from "./match.ts";
-import { Node_Binary, Node_Number, Token, Tree } from "./types/grammar.ts";
+import { Result, fail, isSuccess, success } from "./types/errors.ts";
+import { Token, Tree } from "./types/grammar.ts";
 
 export class Parser {
   readonly tokens: Token[]
@@ -36,17 +36,18 @@ export class Parser {
     return this.tokens[this.current - 1]
   }
 
-  parse(): Tree | null {
+  makeAST(): Result<Tree> {
     const result = this.parseExpression()
 
     return result
   }
 
-  private parseExpression(): Node_Binary | Node_Number | null  {
+  private parseExpression(): Result<Tree>  {
     let expr = this.parseTerm()
+    let exprBinary = null
 
-    if (expr === null ) {
-      return null
+    if (!isSuccess(expr)) {
+      return expr
     }
 
     while ( this.peek()?.type === 'op' ) {
@@ -56,30 +57,30 @@ export class Parser {
 
         const right = this.parseTerm()
 
-        if ( right === null ) {
-          return null
+        if (!isSuccess(right)) {
+          return right
         }
 
-        expr = {
-          type: 'binary_op',
+        exprBinary = {
+          type: 'binary_op' as const,
           value: op,
-          left: expr,
-          right: right
+          left: exprBinary ? exprBinary : expr.value,
+          right: right.value
         }
       } else {
         break
       }
     }
 
-    return expr
+    return exprBinary ? success(exprBinary) : expr
   }
 
-  private parseTerm(): Node_Binary | Node_Number | null {
+  private parseTerm(): Result<Tree> {
     let term = this.parseFactor()
     let termBinary = null
 
-    if( term === null ) {
-      return null
+    if(!isSuccess(term)){ 
+      return term
     }
 
     while ( this.peek()?.type === 'op' ) {
@@ -89,45 +90,54 @@ export class Parser {
 
         const right = this.parseFactor()
 
-        if ( right === null ) {
-          return null
+        if (!isSuccess(right)) {
+          return right
         }
 
         termBinary = {
           type: 'binary_op' as const,
           value: op,
-          left: termBinary ? termBinary : term,
-          right: right
+          left: termBinary ? termBinary : term.value,
+          right: right.value
         }
       } else { 
         break
       }
     }
 
-    return termBinary ? termBinary : term
+    // getting a type error here
+    return termBinary ? success(termBinary) : term
   }
 
-  private parseFactor(): Node_Number | null {
+  private parseFactor(): Result<Tree> {
     const factor = this.peek()
 
     // end of the line
-    // is this an error state?
     if( factor === null ) {
-      return null
+      return fail('UNEXPECTED_EOF')
     }
 
-    if( isNumber(factor.value) ) {
+    if( factor.type === "number") {
       this.consume()
 
-      return ( {
+      return success({
         type: 'number',
         value: factor.value
-      } )
+      })
     }
-    // is it a cellref
-    // smth smth error handling
 
-    return null
+    if( factor.type === "cell") {
+      this.consume()
+
+      return success({
+        type: 'cell',
+        value: factor.value
+      })
+    }
+
+    // Can't parse token
+    //console.log('cant parse token in parsefactor')
+    return fail('TOKEN')
   }
 }
 

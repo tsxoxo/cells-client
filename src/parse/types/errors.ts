@@ -47,7 +47,7 @@
 // * write/refactor tests for parsing units
 // * write tests for UI
 
-type ErrorType = "TOKEN"
+type ErrorType = "TOKEN" | "UNKNOWN_OP" | "UNEXPECTED_EOF"
 
 // Define result types
 export type Success<T> = { ok: true; value: T }
@@ -55,7 +55,7 @@ export type Error = { ok: false; type: ErrorType; position?: number }
 export type Result<T> = Success<T> | Error
 
 // Helper functions
-export function pipe<T>(initValue: T, ...fns: ( (res: T) => T )[]): T {
+export function pipe<T>(initValue: Result<T>, ...fns: Array<(res: Result<any>,) => Result<any>> ): Result<any> {
   return fns.reduce( (acc, fn) => fn(acc), initValue)
 }
 

@@ -1,6 +1,8 @@
+import { Error as ParseError } from "./parse/types/errors"
+
 export interface CleanToken {
-    value: number,
-    indexOfOriginCell: number
+  value: number,
+  indexOfOriginCell: number
 }
 export interface Cell {
   // raw user input
@@ -14,6 +16,6 @@ export interface Cell {
 }
 
 export interface AppError {
-    indexOfCell: number,
-    message: string
+  indexOfCell: number,
+  parseError: ParseError
 }

@@ -7,8 +7,8 @@ import { Error, isSuccess } from './parse/types/errors';
 export interface Context { 'cells': Cell[], errors: Error[] }
 
 export type changeCellContent = {
-      type: 'changeCellContent', indexOfCell: number, value: string
-    }
+  type: 'changeCellContent', indexOfCell: number, value: string
+}
 
 export const cellsMachine = setup({
   "types": {
@@ -19,36 +19,30 @@ export const cellsMachine = setup({
     "updateCellContent": assign(({ context, event } ) => {
       const result = handleCellContentChange(context, event)
 
-      if( isSuccess(result) ) {
-        return {
-          cells: result.value
-        }
-      } else {
-        return {
-          errors: [ result ]
-        }
-      }
+      return isSuccess(result) 
+        ? { cells: result.value }
+        : { errors: [ result ] }
     })
   }
 })
-  .createMachine({
-    /** @xstate-layout N4IgpgJg5mDOIC5QGEwBs2wHQCcwEMIBPAYgGMALfAOxlQwG0AGAXUVAAcB7WASwBdeXauxAAPRABYATABoQRRAA4AjFgCsAX23zqXCHFH1Mo7n0HDREhAFoAbPMW27OkMex5CTzjwFCRSOKIdgDMWEoAnEqSIQDs6o6IKkrSGrGq0lramkA */
-    "context": {
-      "cells": INITIAL_CELLS,
-      "errors": []
+.createMachine({
+  /** @xstate-layout N4IgpgJg5mDOIC5QGEwBs2wHQCcwEMIBPAYgGMALfAOxlQwG0AGAXUVAAcB7WASwBdeXauxAAPRABYATABoQRRAA4AjFgCsAX23zqXCHFH1Mo7n0HDREhAFoAbPMW27OkMex5CTzjwFCRSOKIdgDMWEoAnEqSIQDs6o6IKkrSGrGq0lramkA */
+  "context": {
+    "cells": INITIAL_CELLS,
+    "errors": []
+  },
+  "id": "Cells",
+  "initial": "ready",
+  "states": {
+    "ready": {
+      "on": {
+        "changeCellContent": {
+          "target": "ready",
+          "actions": {
+            "type": "updateCellContent"
+          }
+        },
+      }
     },
-    "id": "Cells",
-    "initial": "ready",
-    "states": {
-      "ready": {
-        "on": {
-          "changeCellContent": {
-            "target": "ready",
-            "actions": {
-              "type": "updateCellContent"
-            }
-          },
-        }
-      },
-    }
-  })
+  }
+})

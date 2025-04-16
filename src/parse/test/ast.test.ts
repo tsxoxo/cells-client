@@ -1,4 +1,4 @@
-import { assert, describe, expect, it } from "vitest";
+import { assert, assert, describe, expect, it } from "vitest";
 import { Parser } from "../ast";
 import { Token, TokenType } from "../types/grammar";
 
@@ -51,20 +51,28 @@ const validExpressionWithTermTokens = makeTokens([
 describe('Parser', () => {
   it('parses expression', () => {
     const parser = new Parser(validExpressionTokens)
+    const parseResult = parser.makeAST()
     
-    expect(parser.parse()).toEqual(validExpressionTree)
+    assert(parseResult.ok === true)
+    expect(parseResult.value).toEqual(validExpressionTree)
   })
 
   it('parses term', () => {
     const parser = new Parser(validTermTokens)
-    expect(parser.parse()).toEqual(validTermTree)
+    const parseResult = parser.makeAST()
+    
+    assert(parseResult.ok === true)
+    expect(parseResult.value).toEqual(validTermTree)
   })
 
   it('parses expression with term', () => {
     const parser = new Parser(validExpressionWithTermTokens)
-    const tree = parser.parse()
+    const parseResult = parser.makeAST()
 
-    assert(tree !== null)
+    assert(parseResult.ok === true)
+
+    const tree = parseResult.value
+
     assert(tree.type === 'binary_op')
 
     expect(tree.value).toEqual("+")

@@ -30,7 +30,7 @@ export function handleCellContentChange(context: Context, event: changeCellConte
 
   // cells = propagateChanges(cells, event.indexOfCell)
 
-  return success(updatedCells.toSpliced(event.indexOfCell, 1, maybeNewCell.value))
+  return success(cellsWithUpdatedDeps.toSpliced(event.indexOfCell, 1, maybeNewCell.value))
 }
 
 // UTILS
@@ -43,6 +43,7 @@ function updateCellContent(cell:Cell, newContent: string): Result<Cell> {
   // If it looks like a formula, try parsing it.
   if( newContent[0] === '=' ) {
     const parseResult = parseFormula(newContent.slice(1))
+    //console.log(`AFTER PARSE: ${JSON.stringify(parseResult)}`)
 
     if( !isSuccess(parseResult) ) {
       return parseResult
@@ -50,7 +51,7 @@ function updateCellContent(cell:Cell, newContent: string): Result<Cell> {
 
     // Happy path: formula has been successfully parsed.
     // Update cell with result of calculation and new dependencies
-    updatedCell.value = parseResult.value.calcResult
+    updatedCell.value = parseResult.value.formulaResult
     updatedCell.dependencies = parseResult.value.deps
   } else {
     // Not a formula. Clear dependencies.

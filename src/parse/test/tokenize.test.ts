@@ -74,12 +74,12 @@ describe('tokenizer', () => {
     let result = tokenize(invalidChars)
 
     assert(result.ok === false)
-    expect(result.msg).toBe("TOKEN")
+    expect(result.type).toBe("TOKEN")
 
     result = tokenize(illFormedTokens)
 
     assert(result.ok === false)
-    expect(result.msg).toBe("TOKEN")
+    expect(result.type).toBe("TOKEN")
   })
 })
 
