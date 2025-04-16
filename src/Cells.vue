@@ -5,6 +5,7 @@ import { createBrowserInspector } from '@statelyai/inspect'
 import { computed, watch } from 'vue';
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants";
 import { handleErrors } from './utils';
+import { Cell } from './types'
 
 const { inspect } = createBrowserInspector({
   // Comment out the line below to start the inspector
@@ -16,10 +17,22 @@ const { snapshot, send } = useMachine(cellsMachine, {
 })
 const cells = computed(() => snapshot.value.context.cells)
 function onFocus(event: Event, x: number, y: number) {
-  (event.target as HTMLInputElement).value = cells.value[NUM_OF_ROWS * (x - 1) + y - 1]?.content || ''
+  const input = event.target as HTMLInputElement
+  const cell = cells.value[NUM_OF_ROWS * (x - 1) + y - 1]
+  input.value = cell?.content ?? ''
 }
+
 function onBlur(event: Event, x: number, y: number) {
-  (event.target as HTMLInputElement).value = String(cells.value[NUM_OF_ROWS * (x - 1) + y - 1]?.value || '')
+  const input = event.target as HTMLInputElement
+  const cell = cells.value[NUM_OF_ROWS * (x - 1) + y - 1]
+  input.value = typeof cell?.value === 'number'
+    ? String(cell.value)
+    : cell?.content ?? ''
+}
+function getDisplayValue(cell: Cell) {
+  return cell.value === undefined 
+  ? cell.content
+  : String(cell.value)
 }
 watch(() => snapshot.value.context.errors, () => handleErrors(snapshot.value.context.errors))
 </script>
@@ -41,9 +54,9 @@ watch(() => snapshot.value.context.errors, () => handleErrors(snapshot.value.con
           <template v-else>
             <div class="cell">
               <Transition name="update-value">
-                <input :key="cells[NUM_OF_ROWS * (x - 1) + y - 1]?.value"
+                <input :key="letter + number"
                   @change.trim="event => send({ type: 'changeCellContent', indexOfCell: (NUM_OF_ROWS * (x - 1) + y - 1), value: (event.target as HTMLInputElement).value })"
-                  :value="cells[NUM_OF_ROWS * (x - 1) + y - 1]?.value || cells[NUM_OF_ROWS * (x - 1) + y - 1]?.content" @focus="(e) => onFocus(e, x, y)"
+                  :value="getDisplayValue(cells[NUM_OF_ROWS * (x - 1) + y - 1])" @focus="(e) => onFocus(e, x, y)"
                   @blur="(e) => onBlur(e, x, y)" @click="() => console.log(cells[NUM_OF_ROWS * (x - 1) + y - 1])">
                 </input>
               </Transition>

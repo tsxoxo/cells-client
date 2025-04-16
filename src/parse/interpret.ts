@@ -1,8 +1,9 @@
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "../constants"
+import { Cell } from "../types"
 import { ParseError, Result, fail, isSuccess, success } from "./types/errors"
 import { Tree } from "./types/grammar"
 
-export function interpret( tree: Tree ): Result<{ formulaResult: number, deps: number[] }, ParseError> {
+export function interpret( tree: Tree, cells: Cell[] ): Result<{ formulaResult: number, deps: number[] }, ParseError> {
   let deps: number[] = []
 
   function solveNode( node: Tree ): Result<number, ParseError> {
@@ -14,8 +15,14 @@ export function interpret( tree: Tree ): Result<{ formulaResult: number, deps: n
     }
 
     if (node.type === "cell" ) {
-      deps.push(getIndexFromCellName(node.value))
-      return success(0)
+      const cellIndex = getIndexFromCellName(node.value)
+      const cell = cells[cellIndex]
+      
+      deps.push(cellIndex)
+
+      return typeof cell.value === "number" 
+        ? success(cell.value)
+        : fail({ type:  'INVALID_CELL' })
     }
 
     if (node.type === "binary_op") {
@@ -32,7 +39,7 @@ export function interpret( tree: Tree ): Result<{ formulaResult: number, deps: n
     }
 
     // unexpected node type
-    return fail({ type:  "TOKEN"  })
+    return fail({ type:  "UNEXPECTED_NODE"  })
   }
 
   const formulaResult = solveNode(tree)

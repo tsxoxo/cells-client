@@ -20,8 +20,8 @@
 // * Invalid char: "#%`[$=" etc.
 // * Ill-formed token: "A999", "string"
 //
-// * Invalid value from cell reference: "A1 + A2", where A1 === 'something invalid'
-//      --> ast
+// * [INVALID_CELL] Invalid value from cell reference: "A1 + A2", where A1 === 'something invalid'
+//      --> interpret
 //
 // ### "Out-of-bounds"
 //      --> ast
@@ -44,12 +44,12 @@
 //
 //
 // TODO:
-// * bubble up errors and show in UI 
 // * develop testing strategy. look at .each syntax
 // * write/refactor tests for parsing units
 // * write tests for UI
 
-type ErrorType = "TOKEN" | "UNKNOWN_OP" | "UNEXPECTED_EOF"
+// Is UNEXPECTED_NODE really necessary?
+type ErrorType = "TOKEN" | "UNKNOWN_OP" | "UNEXPECTED_EOF" | "UNEXPECTED_NODE" | "INVALID_CELL"
 
 // Define result types
 export type Result<T, E = Error> = Success<T> | Failure<E>

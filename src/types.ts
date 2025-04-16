@@ -6,8 +6,8 @@ export interface CleanToken {
 export interface Cell {
   // raw user input
   content: string,
-  // what is displayed: raw input or result of formula 
-  value: string | number,
+  // only set when formula is successfully interpreted 
+  value: number | undefined,
   // indices of cells used in formula
   dependencies: number[]
   // cells that reference this cell

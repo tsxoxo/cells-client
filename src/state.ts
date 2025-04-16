@@ -1,8 +1,9 @@
 import { assertEvent } from 'xstate';
 import type { Cell } from './types';
 import { Context, changeCellContent } from './cellsMachine';
-import { parseFormula } from './parse/main';
+import { parseToAST } from './parse/main';
 import { AppError, ParseError, Result, fail, isSuccess, success } from './parse/types/errors';
+import { interpret } from './parse/interpret';
 
 // CONTROL FLOW
 export function handleCellContentChange(context: Context, event: changeCellContent): Result<Cell[], AppError> {
@@ -14,7 +15,7 @@ export function handleCellContentChange(context: Context, event: changeCellConte
   const oldCell = structuredClone(updatedCells[event.indexOfCell])
 
   // Evaluate content. Parse if formula.
-  const maybeNewCell = updateCellContent(oldCell, event.value)
+  const maybeNewCell = updateCellContent(oldCell, event.value, context.cells)
 
   // Enrich ParseError with index of cell
   if(!isSuccess(maybeNewCell)) {
@@ -40,23 +41,34 @@ export function handleCellContentChange(context: Context, event: changeCellConte
 // UTILS
 
 // Update a single cell
-function updateCellContent(cell:Cell, newContent: string): Result<Cell, ParseError> {
+// cells are needed for resolution when interpreting a formula like "1+A0"
+function updateCellContent(cell: Cell, newContent: string, cells: Cell[]): Result<Cell, ParseError> {
   const updatedCell = structuredClone(cell)
   updatedCell.content = newContent
 
   // If it looks like a formula, try parsing it.
   if( newContent[0] === '=' ) {
-    const parseResult = parseFormula(newContent.slice(1))
+    // Could this be cleaner?
+    //const result = isSuccess(astResult)
+    //  ? interpret(astResult.value, cells)
+    //  : astResult // early fail
+    const maybeAST = parseToAST(newContent.slice(1))
     //console.log(`AFTER PARSE: ${JSON.stringify(parseResult)}`)
 
-    if( !isSuccess(parseResult) ) {
-      return parseResult
+    if( !isSuccess(maybeAST) ) {
+      return maybeAST
     }
 
     // Happy path: formula has been successfully parsed.
+    //
+    const maybeFormulaResult = interpret( maybeAST.value, cells )
+    if( !isSuccess(maybeFormulaResult) ) {
+      return maybeFormulaResult
+    }
+
     // Update cell with result of calculation and new dependencies
-    updatedCell.value = parseResult.value.formulaResult
-    updatedCell.dependencies = parseResult.value.deps
+    updatedCell.value = maybeFormulaResult.value.formulaResult
+    updatedCell.dependencies = maybeFormulaResult.value.deps
   } else {
     // Not a formula. Clear dependencies.
     updatedCell.dependencies = []
@@ -64,7 +76,7 @@ function updateCellContent(cell:Cell, newContent: string): Result<Cell, ParseErr
 
   // It's not a formula or parsing was success.
   return success( updatedCell )
-  }
+}
 
 // Return a list of dependencies to update.
 function makeDiff( oldDeps: number[], newDeps: number[] ): { stale: number[], fresh: number[] } {
