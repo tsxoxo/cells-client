@@ -66,6 +66,7 @@ export type Failure<E> = { ok: false; error: E }
 export type ParseError = {
   type: ErrorType
   position?: number
+  info?: string
 }
 
 export type AppError = {

@@ -11,6 +11,7 @@ import {
   success,
 } from "./parse/types/errors"
 import { interpret } from "./parse/interpret"
+import { isNumber } from "./parse/match"
 
 // CONTROL FLOW
 export function handleCellContentChange(
@@ -93,6 +94,10 @@ function updateCellContent(
   } else {
     // Not a formula. Clear dependencies.
     updatedCell.dependencies = []
+    // Check if it's a number
+    if (isNumber(newContent)) {
+      updatedCell.value = parseFloat(newContent)
+    }
   }
 
   // It's not a formula or parsing was success.

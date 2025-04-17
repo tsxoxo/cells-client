@@ -22,14 +22,14 @@ export function interpret(
       const cell = cells[cellIndex]
 
       if (cell === undefined) {
-        return fail({ type: "INVALID_CELL" })
+        return fail({ type: "INVALID_CELL", info: "cell undefined" })
       }
 
       deps.push(cellIndex)
 
       return typeof cell.value === "number"
         ? success(cell.value)
-        : fail({ type: "INVALID_CELL" })
+        : fail({ type: "INVALID_CELL", info: "cell not a number" })
     }
 
     if (node.type === "binary_op") {
