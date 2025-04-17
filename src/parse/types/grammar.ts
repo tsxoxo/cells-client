@@ -14,23 +14,29 @@
 // * Operator: /[+-\/\*]{1}/
 // * Number: /[0-9]+((,|\.)[0-9]+)?/
 // * Cell_ref: /[a-zA-Z]{1}[0-9]{1,2}
- 
+
 export const ALLOWED_SYMBOLS = {
-  ops: ['+', '-', '*', '/'],
-  nums: ['1', '2', '.', ','],
-  brackets: ['(', ')'],
+  ops: ["+", "-", "*", "/"],
+  nums: ["1", "2", ".", ","],
+  brackets: ["(", ")"],
   // and cell references...
 }
 
-export type TokenType = 'number' | 'cell' | 'op' | 'parens' | 'formula' | undefined
+export type TokenType =
+  | "number"
+  | "cell"
+  | "op"
+  | "parens"
+  | "formula"
+  | undefined
 export type Token = {
-  value: string, 
-  type: TokenType, 
+  value: string
+  type: TokenType
   //type: string,
   position: {
-    start: number,
+    start: number
     end: number
-  },
+  }
 }
 
 export type Tree = Node_Binary | Node_Number | Node_Cell
@@ -41,17 +47,16 @@ interface Node_Base {
 }
 
 export interface Node_Binary extends Node_Base {
-  type: 'binary_op',
+  type: "binary_op"
   // ['+', '-', '*', '/'],
-  left: Node_Binary | Node_Number | Node_Cell,
-  right: Node_Binary | Node_Number | Node_Cell,
+  left: Node_Binary | Node_Number | Node_Cell
+  right: Node_Binary | Node_Number | Node_Cell
 }
 
-export interface Node_Number extends Node_Base  {
-  type: 'number',
+export interface Node_Number extends Node_Base {
+  type: "number"
 }
 
-export interface Node_Cell extends Node_Base  {
-  type: 'cell',
+export interface Node_Cell extends Node_Base {
+  type: "cell"
 }
-

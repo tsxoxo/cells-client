@@ -1,3 +1,31 @@
-export const ALPHABET_WITH_FILLER = ['-', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+export const ALPHABET_WITH_FILLER = [
+  "-",
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "O",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+  "Y",
+  "Z",
+]
 export const NUM_OF_ROWS = 100
 export const NUMBER_OF_CELLS = (ALPHABET_WITH_FILLER.length - 1) * NUM_OF_ROWS

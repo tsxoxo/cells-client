@@ -13,25 +13,29 @@
 // * number ::= [0-9]+ (( ',' | '.' ) [0-9]+)?
 // * cell ::= [a-zA-Z][0-9][0-9]?
 
-import { ParseError, Result, fail, isSuccess, success } from "./types/errors.ts";
-import { Token, Tree } from "./types/grammar.ts";
+import { ParseError, Result, fail, isSuccess, success } from "./types/errors.ts"
+import { Token, Tree } from "./types/grammar.ts"
 
 export class Parser {
   readonly tokens: Token[]
   current: number
 
-  constructor (tokens: Token[]) {
+  constructor(tokens: Token[]) {
     this.tokens = tokens
     this.current = 0
   }
 
   private peek() {
-    if( this.current >= this.tokens.length ) { return null }
+    if (this.current >= this.tokens.length) {
+      return null
+    }
     return this.tokens[this.current]
   }
 
   private consume() {
-    if( this.current >= this.tokens.length ) { return null }
+    if (this.current >= this.tokens.length) {
+      return null
+    }
     this.current++
     return this.tokens[this.current - 1]
   }
@@ -42,7 +46,7 @@ export class Parser {
     return result
   }
 
-  private parseExpression(): Result<Tree, ParseError>  {
+  private parseExpression(): Result<Tree, ParseError> {
     let expr = this.parseTerm()
     let exprBinary = null
 
@@ -50,8 +54,8 @@ export class Parser {
       return expr
     }
 
-    while ( this.peek()?.type === 'op' ) {
-      if ( this.peek()?.value === '+' ||  this.peek()?.value === '-' ) {
+    while (this.peek()?.type === "op") {
+      if (this.peek()?.value === "+" || this.peek()?.value === "-") {
         const op = this.peek()?.value as string
         this.consume()
 
@@ -62,10 +66,10 @@ export class Parser {
         }
 
         exprBinary = {
-          type: 'binary_op' as const,
+          type: "binary_op" as const,
           value: op,
           left: exprBinary ? exprBinary : expr.value,
-          right: right.value
+          right: right.value,
         }
       } else {
         break
@@ -79,12 +83,12 @@ export class Parser {
     let term = this.parseFactor()
     let termBinary = null
 
-    if(!isSuccess(term)){ 
+    if (!isSuccess(term)) {
       return term
     }
 
-    while ( this.peek()?.type === 'op' ) {
-      if ( this.peek()?.value === '*' ||  this.peek()?.value === '/' ) {
+    while (this.peek()?.type === "op") {
+      if (this.peek()?.value === "*" || this.peek()?.value === "/") {
         const op = this.peek()?.value as string
         this.consume()
 
@@ -95,12 +99,12 @@ export class Parser {
         }
 
         termBinary = {
-          type: 'binary_op' as const,
+          type: "binary_op" as const,
           value: op,
           left: termBinary ? termBinary : term.value,
-          right: right.value
+          right: right.value,
         }
-      } else { 
+      } else {
         break
       }
     }
@@ -113,31 +117,30 @@ export class Parser {
     const factor = this.peek()
 
     // end of the line
-    if( factor === null ) {
-      return fail({ type: 'UNEXPECTED_EOF' })
+    if (factor === null) {
+      return fail({ type: "UNEXPECTED_EOF" })
     }
 
-    if( factor.type === "number") {
+    if (factor.type === "number") {
       this.consume()
 
       return success({
-        type: 'number',
-        value: factor.value
+        type: "number",
+        value: factor.value,
       })
     }
 
-    if( factor.type === "cell") {
+    if (factor.type === "cell") {
       this.consume()
 
       return success({
-        type: 'cell',
-        value: factor.value
+        type: "cell",
+        value: factor.value,
       })
     }
 
     // Can't parse token
     //console.log('cant parse token in parsefactor')
-    return fail({ type: 'TOKEN' })
+    return fail({ type: "TOKEN" })
   }
 }
-

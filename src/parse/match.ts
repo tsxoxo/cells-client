@@ -24,4 +24,3 @@ export function isWhitespace(str: string): boolean {
 export function isValidValue(char: string): boolean {
   return /[a-zA-Z0-9\.\,]/.test(char)
 }
-

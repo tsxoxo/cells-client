@@ -1,6 +1,6 @@
 // CRUD a: User inputs string into empty cell => the correct <Cell> is updated in context and displayed on screen
 // CRUD b: User deletes content of cell => <Cell> is correctly updated and '' is displayed
-// CRUD c: User updates cell => updates happen in context and page 
+// CRUD c: User updates cell => updates happen in context and page
 
 // Formula recognition
 // With primitives: User enters '=3+4' => display shows 7
@@ -10,19 +10,18 @@
 //// That are dirty: User enters '=A0+A1' => one cell contains a string, display shows input
 
 // Propagation
-// 2 levels: User updates cell A. Cell B gets updated because of A. Cell C gets updated because of B 
+// 2 levels: User updates cell A. Cell B gets updated because of A. Cell C gets updated because of B
 
 // Animation?
 
 // Model this with more states?
 //
 
-import { assert, describe, it } from 'vitest'
+import { assert, describe, it } from "vitest"
 
-describe.skip('skipped suite', () => {
-  it('test', () => {
+describe.skip("skipped suite", () => {
+  it("test", () => {
     // Suite skipped, no error
     assert.equal(Math.sqrt(4), 3)
   })
 })
-

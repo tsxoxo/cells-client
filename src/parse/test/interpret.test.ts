@@ -1,6 +1,6 @@
-import { assert, describe, expect, it } from "vitest";
-import { interpret } from "../interpret";
-import { Cell } from "../../types";
+import { assert, describe, expect, it } from "vitest"
+import { interpret } from "../interpret"
+import { Cell } from "../../types"
 
 // =================================================
 // # TEST DATA
@@ -12,7 +12,7 @@ const validExpressionTree = {
   value: "+",
   left: { type: "number", value: "2" },
   right: { type: "number", value: "3" },
-} as const;
+} as const
 
 // "2*3"
 const validTermTree = {
@@ -20,7 +20,7 @@ const validTermTree = {
   value: "*",
   left: { type: "number", value: "2" },
   right: { type: "number", value: "3" },
-} as const;
+} as const
 
 // "1+2*3"
 const validExpressionWithTermTree = {
@@ -33,7 +33,7 @@ const validExpressionWithTermTree = {
     left: { type: "number", value: "2" },
     right: { type: "number", value: "3" },
   },
-} as const;
+} as const
 
 // "A0*a01"
 const validWithCells = {
@@ -41,7 +41,7 @@ const validWithCells = {
   value: "+",
   left: { type: "cell", value: "A0" },
   right: { type: "cell", value: "a01" },
-} as const;
+} as const
 
 const cellsA0andA1: Cell[] = [
   {
@@ -56,7 +56,7 @@ const cellsA0andA1: Cell[] = [
     dependencies: [],
     dependents: [],
   },
-];
+]
 
 // INVALID
 //
@@ -68,37 +68,37 @@ const divideByZero = {
   value: "/",
   left: { type: "number", value: "1" },
   right: { type: "number", value: "0" },
-} as const;
+} as const
 
 // =================================================
 // # TEST
 // =================================================
 describe("Interpreter", () => {
   it("does number arithmetics no brackets", () => {
-    let result = interpret(validExpressionTree, []);
-    assert(result.ok === true);
-    expect(result.value.formulaResult).toEqual(5);
+    let result = interpret(validExpressionTree, [])
+    assert(result.ok === true)
+    expect(result.value.formulaResult).toEqual(5)
 
-    result = interpret(validTermTree, []);
-    assert(result.ok === true);
-    expect(result.value.formulaResult).toEqual(6);
+    result = interpret(validTermTree, [])
+    assert(result.ok === true)
+    expect(result.value.formulaResult).toEqual(6)
 
-    result = interpret(validExpressionWithTermTree, []);
-    assert(result.ok === true);
-    expect(result.value.formulaResult).toEqual(7);
-  });
+    result = interpret(validExpressionWithTermTree, [])
+    assert(result.ok === true)
+    expect(result.value.formulaResult).toEqual(7)
+  })
 
   it("uses values from cells and extracts dependencies", () => {
-    let result = interpret(validWithCells, cellsA0andA1);
-    assert(result.ok === true);
-    expect(result.value.formulaResult).toEqual(1);
-    expect(result.value.deps).toEqual([0, 1]);
-  });
+    let result = interpret(validWithCells, cellsA0andA1)
+    assert(result.ok === true)
+    expect(result.value.formulaResult).toEqual(1)
+    expect(result.value.deps).toEqual([0, 1])
+  })
 
   // INVALID CASES
   it("handles divide by zero", () => {
-    let result = interpret(divideByZero, []);
-    assert(result.ok === false);
-    expect(result.error.type).toEqual("DIVIDE_BY_0");
-  });
-});
+    let result = interpret(divideByZero, [])
+    assert(result.ok === false)
+    expect(result.error.type).toEqual("DIVIDE_BY_0")
+  })
+})

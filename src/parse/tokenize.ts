@@ -3,7 +3,7 @@
 // =================================================
 //
 // NOTE: START HERE
-// * then continue plugging in new parser into app: 
+// * then continue plugging in new parser into app:
 // 1) move state handling into own file
 // 2) Simplify cell type: {dependents}
 //
@@ -25,17 +25,17 @@ export function tokenize(str: string): Result<Token[], ParseError> {
   const tokens = [] as Token[]
 
   let ind = 0
-  
-  while( ind < str.length ) {
+
+  while (ind < str.length) {
     // Ignore whitespace
-    if( isWhitespace(str[ind]) ) {
+    if (isWhitespace(str[ind])) {
       ind++
       continue
     }
 
-    const result =  getNextToken( ind )
+    const result = getNextToken(ind)
 
-    if( result.ok === true ) {
+    if (result.ok === true) {
       const token = result.value
       token.position.end = token.position.start + ind
 
@@ -47,52 +47,52 @@ export function tokenize(str: string): Result<Token[], ParseError> {
     }
   }
 
-  return success( tokens )
+  return success(tokens)
 
   function getNextToken(start: number): Result<Token, ParseError> {
     const token = createEmptyToken(ind)
     const char = str[start]
 
-    if( isOp(char) ) {
+    if (isOp(char)) {
       token.type = "op"
       token.value = char
       return success(token)
     }
 
-    if( isParens(char) ) {
+    if (isParens(char)) {
       token.type = "parens"
       token.value = char
       return success(token)
     }
 
     // Lump all other valid symbols together for simplicity. We differentiate below.
-    if( /[a-zA-Z0-9,\.]/.test(char) ) {
+    if (/[a-zA-Z0-9,\.]/.test(char)) {
       let _ind = ind
-      while( _ind < str.length ) {
-        if( /[a-zA-Z0-9,\.]/.test(str[_ind]) ) {
+      while (_ind < str.length) {
+        if (/[a-zA-Z0-9,\.]/.test(str[_ind])) {
           token.value += str[_ind]
           _ind++
         } else {
           break
         }
       }
-      
+
       // Potential token has been collected and can be evaluated.
-      if( isNumber(token.value) ) {
+      if (isNumber(token.value)) {
         token.type = "number"
         return success(token)
       }
-      if( isCellRef(token.value) ) {
+      if (isCellRef(token.value)) {
         token.type = "cell"
         return success(token)
       }
-      
+
       // Invalid char or valid chars in wrong order.
-      return fail({ type:  "TOKEN"  })
+      return fail({ type: "TOKEN" })
     }
 
     // Neither an op, nor a parens, nor a number or a cell.
-    return fail({ type:  "TOKEN"  })
+    return fail({ type: "TOKEN" })
   }
 }
 
@@ -105,10 +105,9 @@ function createEmptyToken(start: number): Token {
   return {
     position: {
       start: start,
-      end: -1 
+      end: -1,
     },
     value: "",
-    type: undefined
-  };
+    type: undefined,
+  }
 }
-
