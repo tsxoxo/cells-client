@@ -74,11 +74,14 @@ export type AppError = {
 }
 
 // Helper functions
-export function pipe<T, E>(
+export function pipe<T, E, R>(
   initValue: Result<T, E>,
-  ...fns: Array<(res: Result<any, E>) => Result<any, E>>
-): Result<any, E> {
-  return fns.reduce((acc, fn) => fn(acc), initValue)
+  ...fns: Array<(res: Result<unknown, E>) => Result<unknown, E>>
+): Result<R, E> {
+  return fns.reduce(
+    (acc, fn) => fn(acc as Result<unknown, E>),
+    initValue as unknown as Result<unknown, E>,
+  ) as Result<R, E>
 }
 
 export function flatMap<T, U, E>(

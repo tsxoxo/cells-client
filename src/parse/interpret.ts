@@ -7,7 +7,7 @@ export function interpret(
   tree: Tree,
   cells: Cell[],
 ): Result<{ formulaResult: number; deps: number[] }, ParseError> {
-  let deps: number[] = []
+  const deps: number[] = []
 
   function solveNode(node: Tree): Result<number, ParseError> {
     let calcResult

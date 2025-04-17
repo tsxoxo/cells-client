@@ -148,40 +148,40 @@ function updateDeps(
   return updatedCells
 }
 
-export function withPropagatedChanges(
-  cells: Cell[],
-  indexOfChangedCell: number,
-): { errors: AppError[] | []; cellsAfterPropagation: Cell[] } {
-  let cellsAfterPropagation = structuredClone(cells)
-  let errors: AppError[] | [] = []
-
-  function propagate(fromThisIndex: number) {
-    cellsAfterPropagation[fromThisIndex].dependents.forEach(
-      (indexOfCellToRecalculate) => {
-        const cellToUpdate = cellsAfterPropagation[indexOfCellToRecalculate]
-        const { errorMessage, cleanTokens, value } = parseInput(
-          cellToUpdate.content,
-          cellsAfterPropagation,
-        )
-        cellToUpdate.value = value
-        cellToUpdate.dependencies = cleanTokens
-        if (errorMessage !== "") {
-          console.log(`errorMessage: ${errorMessage}`)
-
-          errors = [
-            ...errors,
-            {
-              indexOfCell: indexOfCellToRecalculate,
-              message: errorMessage,
-            },
-          ]
-        }
-        propagate(indexOfCellToRecalculate)
-      },
-    )
-  }
-
-  propagate(indexOfChangedCell)
-
-  return { errors, cellsAfterPropagation }
-}
+//export function withPropagatedChanges(
+//  cells: Cell[],
+//  indexOfChangedCell: number,
+//): { errors: AppError[] | []; cellsAfterPropagation: Cell[] } {
+//  const cellsAfterPropagation = structuredClone(cells)
+//  let errors: AppError[] | [] = []
+//
+//  function propagate(fromThisIndex: number) {
+//    cellsAfterPropagation[fromThisIndex].dependents.forEach(
+//      (indexOfCellToRecalculate) => {
+//        const cellToUpdate = cellsAfterPropagation[indexOfCellToRecalculate]
+//        const { errorMessage, cleanTokens, value } = parseInput(
+//          cellToUpdate.content,
+//          cellsAfterPropagation,
+//        )
+//        cellToUpdate.value = value
+//        cellToUpdate.dependencies = cleanTokens
+//        if (errorMessage !== "") {
+//          console.log(`errorMessage: ${errorMessage}`)
+//
+//          errors = [
+//            ...errors,
+//            {
+//              indexOfCell: indexOfCellToRecalculate,
+//              message: errorMessage,
+//            },
+//          ]
+//        }
+//        propagate(indexOfCellToRecalculate)
+//      },
+//    )
+//  }
+//
+//  propagate(indexOfChangedCell)
+//
+//  return { errors, cellsAfterPropagation }
+//}

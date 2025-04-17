@@ -42,21 +42,32 @@ watch(
     <template v-for="(number, y) in NUM_OF_ROWS + 1">
       <template v-for="(letter, x) in ALPHABET_WITH_FILLER">
         <template v-if="number === 1">
-          <div class="track-names" v-if="x > 0">{{ letter }}</div>
-          <div class="track-names" v-else></div>
+          <div
+            v-if="x > 0"
+            :key="`header-${y}-${x}-${letter}`"
+            class="track-names"
+          >
+            {{ letter }}
+          </div>
+          <div
+            v-else
+            :key="`header-empty-${y}-${x}-${letter}`"
+            class="track-names"
+          ></div>
         </template>
         <template v-else>
           <template v-if="letter === '-'">
-            <div class="track-names">
+            <div :key="`rowname-${y}-${x}-${letter}`" class="track-names">
               {{ number - 2 }}
             </div>
           </template>
           <template v-else>
-            <div class="cell">
+            <div :key="`cell-div-${letter} + ${number}`" class="cell">
               <Transition name="update-value">
                 <input
-                  :key="letter + number"
-                  @change.trim="
+                  :key="`cell-input-${letter} + ${number}`"
+                  :value="getDisplayValue(cells[NUM_OF_ROWS * (x - 1) + y - 1])"
+                  @change="
                     (event) =>
                       send({
                         type: 'changeCellContent',
@@ -64,7 +75,6 @@ watch(
                         value: (event.target as HTMLInputElement).value,
                       })
                   "
-                  :value="getDisplayValue(cells[NUM_OF_ROWS * (x - 1) + y - 1])"
                   @focus="(e) => onFocus(e, x, y)"
                   @blur="(e) => onBlur(e, x, y)"
                   @click="

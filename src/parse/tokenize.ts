@@ -66,10 +66,10 @@ export function tokenize(str: string): Result<Token[], ParseError> {
     }
 
     // Lump all other valid symbols together for simplicity. We differentiate below.
-    if (/[a-zA-Z0-9,\.]/.test(char)) {
+    if (/[a-zA-Z0-9,.]/.test(char)) {
       let _ind = ind
       while (_ind < str.length) {
-        if (/[a-zA-Z0-9,\.]/.test(str[_ind])) {
+        if (/[a-zA-Z0-9,.]/.test(str[_ind])) {
           token.value += str[_ind]
           _ind++
         } else {

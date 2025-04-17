@@ -14,7 +14,7 @@ export function isOp(str: string): boolean {
 }
 
 export function isParens(str: string): boolean {
-  return /^[\(\)]$/.test(str)
+  return /^[()]$/.test(str)
 }
 
 export function isWhitespace(str: string): boolean {
@@ -22,5 +22,5 @@ export function isWhitespace(str: string): boolean {
 }
 
 export function isValidValue(char: string): boolean {
-  return /[a-zA-Z0-9\.\,]/.test(char)
+  return /[a-zA-Z0-9.,]/.test(char)
 }

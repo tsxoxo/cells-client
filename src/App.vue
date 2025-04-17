@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Cells from "./Cells.vue"
+import Cells from "./CellsCanvas.vue"
 </script>
 
 <template>

@@ -47,7 +47,7 @@ export class Parser {
   }
 
   private parseExpression(): Result<Tree, ParseError> {
-    let expr = this.parseTerm()
+    const expr = this.parseTerm()
     let exprBinary = null
 
     if (!isSuccess(expr)) {
@@ -80,7 +80,7 @@ export class Parser {
   }
 
   private parseTerm(): Result<Tree, ParseError> {
-    let term = this.parseFactor()
+    const term = this.parseFactor()
     let termBinary = null
 
     if (!isSuccess(term)) {

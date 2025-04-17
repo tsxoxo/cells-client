@@ -89,7 +89,7 @@ describe("Interpreter", () => {
   })
 
   it("uses values from cells and extracts dependencies", () => {
-    let result = interpret(validWithCells, cellsA0andA1)
+    const result = interpret(validWithCells, cellsA0andA1)
     assert(result.ok === true)
     expect(result.value.formulaResult).toEqual(1)
     expect(result.value.deps).toEqual([0, 1])
@@ -97,7 +97,7 @@ describe("Interpreter", () => {
 
   // INVALID CASES
   it("handles divide by zero", () => {
-    let result = interpret(divideByZero, [])
+    const result = interpret(divideByZero, [])
     assert(result.ok === false)
     expect(result.error.type).toEqual("DIVIDE_BY_0")
   })

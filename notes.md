@@ -13,37 +13,37 @@ TODO:
 
 ### Formula parsing
 
--   Add addition of cell ranges: SUM(A1:B3)
--   Add multiplication
--   Add other operations
--   Add recursivity (properly process parentheses)
+- Add addition of cell ranges: SUM(A1:B3)
+- Add multiplication
+- Add other operations
+- Add recursivity (properly process parentheses)
 
 ### UX/UI
 
--   cell expands when focused: easier to read content
--   edgecase: it's a formula but it's just a single referenced cell that contains string. So: A0='foo', A1='=A0'
--   highlight dependencies; errors
--   [x] animate propagated changes
--   animate errors differently
--   stagger animations -- when multiple cell get updated.
+- cell expands when focused: easier to read content
+- edgecase: it's a formula but it's just a single referenced cell that contains string. So: A0='foo', A1='=A0'
+- highlight dependencies; errors
+- [x] animate propagated changes
+- animate errors differently
+- stagger animations -- when multiple cell get updated.
 
--   think about how to make things easier on mobile: e.g. break up the input of a formula into steps: 1. select operation: =, -, \*, /, 2. select cells: enter a selecting mode where you can tap on cells or even drag over the cells to select a field of cells.
+- think about how to make things easier on mobile: e.g. break up the input of a formula into steps: 1. select operation: =, -, \*, /, 2. select cells: enter a selecting mode where you can tap on cells or even drag over the cells to select a field of cells.
 
 ### IMPROVE
 
--   animate only propagated changes, not the cell that was just edited
+- animate only propagated changes, not the cell that was just edited
 
 ## ERRORS
 
--   Big picture -- implement non-console error messaging
--   only keep 1 error/newest error per cell (?)
--   mb ignore empty cells in formula instead of throwing, mb treat them as 0
--   log cell name instead of raw index in error message 'we got a problem in cell 123'
+- Big picture -- implement non-console error messaging
+- only keep 1 error/newest error per cell (?)
+- mb ignore empty cells in formula instead of throwing, mb treat them as 0
+- log cell name instead of raw index in error message 'we got a problem in cell 123'
 
 ## REFACTOR
 
--   make Cell.cellsThatDependOnMe a Set
--   think about making propagation declarative instead of mutating (is that possible? desirable? use a return value?)
+- make Cell.cellsThatDependOnMe a Set
+- think about making propagation declarative instead of mutating (is that possible? desirable? use a return value?)
 
 ## FIX
 
@@ -52,4 +52,4 @@ TODO:
 
 ## TESTS
 
--   Add tests. Slightly hidden resource: https://graph-docs.vercel.app/model-based-testing/intro
+- Add tests. Slightly hidden resource: https://graph-docs.vercel.app/model-based-testing/intro
