@@ -58,6 +58,19 @@ const cellsA0andA1: Cell[] = [
   },
 ]
 
+// "(1+2)*3"
+const validFromParens = {
+  type: "binary_op",
+  value: "*",
+  left: {
+    type: "binary_op",
+    value: "+",
+    left: { type: "number", value: "1" },
+    right: { type: "number", value: "2" },
+  },
+  right: { type: "number", value: "3" },
+} as const
+
 // INVALID
 //
 // * [INVALID_CELL] Invalid value from cell reference: "A1 + A2", where A1 === 'something invalid'
@@ -93,6 +106,13 @@ describe("Interpreter", () => {
     assert(result.ok === true)
     expect(result.value.formulaResult).toEqual(1)
     expect(result.value.deps).toEqual([0, 1])
+  })
+
+  it("parses tree derived from expr containing parens", () => {
+    const result = interpret(validFromParens, [])
+    assert(result.ok === true)
+    expect(result.value.formulaResult).toEqual(9)
+    expect(result.value.deps).toEqual([])
   })
 
   // INVALID CASES

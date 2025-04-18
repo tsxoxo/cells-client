@@ -70,19 +70,16 @@ function updateCellContent(
 
   // If it looks like a formula, try parsing it.
   if (newContent[0] === "=") {
-    // Could this be cleaner?
+    // Could this be cleaner alternative for the following block?
     //const result = isSuccess(astResult)
     //  ? interpret(astResult.value, cells)
     //  : astResult // early fail
     const maybeAST = parseToAST(newContent.slice(1))
     //console.log(`AFTER PARSE: ${JSON.stringify(parseResult)}`)
-
     if (!isSuccess(maybeAST)) {
       return maybeAST
     }
-
     // Happy path: formula has been successfully parsed.
-    //
     const maybeFormulaResult = interpret(maybeAST.value, cells)
     if (!isSuccess(maybeFormulaResult)) {
       return maybeFormulaResult
@@ -94,7 +91,7 @@ function updateCellContent(
   } else {
     // Not a formula. Clear dependencies.
     updatedCell.dependencies = []
-    // Check if it's a number
+    // but numeric value would still be usable
     if (isNumber(newContent)) {
       updatedCell.value = parseFloat(newContent)
     }
@@ -104,7 +101,8 @@ function updateCellContent(
   return success(updatedCell)
 }
 
-// Return a list of dependencies to update.
+// Make diff of to numeric arrays
+// used to make a list of stale/fresh dependencies to update.
 function makeDiff(
   oldDeps: number[],
   newDeps: number[],
@@ -116,11 +114,11 @@ function makeDiff(
 }
 
 // Update cell array with changed dependencies.
-// stale = cells that lost `changedCell` as a dependent
-// fresh = cells that gained `changedCell` as a dependent
+// stale = cells that lost `changed` cell as a dependent
+// fresh = cells that gained `changed` cell as a dependent
 function updateDeps(
   cells: Cell[],
-  indexOfChangedCell: number,
+  changed: number,
   stale: number[],
   fresh: number[],
 ) {
@@ -128,8 +126,7 @@ function updateDeps(
 
   stale.forEach((index) => {
     const cellThatLostDep = updatedCells[index]
-    const indexOfElementToRemove =
-      cellThatLostDep.dependents.indexOf(indexOfChangedCell)
+    const indexOfElementToRemove = cellThatLostDep.dependents.indexOf(changed)
 
     if (indexOfElementToRemove === -1) {
       return
@@ -140,14 +137,13 @@ function updateDeps(
 
   fresh.forEach((index) => {
     const cellThatGainedDep = updatedCells[index]
-    const indexOfElementToAdd =
-      cellThatGainedDep.dependents.indexOf(indexOfChangedCell)
+    const indexOfElementToAdd = cellThatGainedDep.dependents.indexOf(changed)
 
     if (indexOfElementToAdd !== -1) {
       return
     }
 
-    cellThatGainedDep.dependents.push(indexOfChangedCell)
+    cellThatGainedDep.dependents.push(changed)
   })
 
   return updatedCells

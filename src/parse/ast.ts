@@ -55,8 +55,9 @@ export class Parser {
     }
 
     while (this.peek()?.type === "op") {
-      if (this.peek()?.value === "+" || this.peek()?.value === "-") {
-        const op = this.peek()?.value as string
+      const token = this.peek()
+      if (token?.value === "+" || token?.value === "-") {
+        const op = token?.value as string
         this.consume()
 
         const right = this.parseTerm()
@@ -88,8 +89,9 @@ export class Parser {
     }
 
     while (this.peek()?.type === "op") {
-      if (this.peek()?.value === "*" || this.peek()?.value === "/") {
-        const op = this.peek()?.value as string
+      const token = this.peek()
+      if (token?.value === "*" || token?.value === "/") {
+        const op = token?.value as string
         this.consume()
 
         const right = this.parseFactor()
@@ -109,38 +111,54 @@ export class Parser {
       }
     }
 
-    // getting a type error here
     return termBinary ? success(termBinary) : term
   }
 
   private parseFactor(): Result<Tree, ParseError> {
-    const factor = this.peek()
+    const token = this.peek()
 
     // end of the line
-    if (factor === null) {
+    if (token === null) {
       return fail({ type: "UNEXPECTED_EOF" })
     }
 
-    if (factor.type === "number") {
-      this.consume()
+    switch (token.type) {
+      case "number":
+        this.consume()
 
-      return success({
-        type: "number",
-        value: factor.value,
-      })
+        return success({
+          type: "number",
+          value: token.value,
+        })
+
+      case "cell":
+        this.consume()
+
+        return success({
+          type: "cell",
+          value: token.value,
+        })
+
+      case "parens":
+        if (token?.value === "(") {
+          this.consume()
+          const expr = this.parseExpression()
+
+          if (this.peek()?.value !== ")") {
+            return fail({
+              type: "PARENS",
+              position: this.current,
+              info: "parseFactor: Expected closing bracket",
+            })
+          }
+
+          this.consume()
+          return expr
+        }
+        break
+
+      default:
+        return fail({ type: "TOKEN", info: "unknown type of token" })
     }
-
-    if (factor.type === "cell") {
-      this.consume()
-
-      return success({
-        type: "cell",
-        value: factor.value,
-      })
-    }
-
-    // Can't parse token
-    //console.log('cant parse token in parsefactor')
-    return fail({ type: "TOKEN" })
   }
 }

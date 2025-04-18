@@ -56,6 +56,7 @@ type ErrorType =
   | "UNEXPECTED_NODE"
   | "INVALID_CELL"
   | "DIVIDE_BY_0"
+  | "PARENS"
 
 // Define result types
 export type Result<T, E = Error> = Success<T> | Failure<E>
