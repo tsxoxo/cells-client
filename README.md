@@ -44,9 +44,10 @@ Made with [Vue](https://vuejs.org/) and [Xstate](https://stately.ai/docs) -- a f
 CURRENT
 
 - Extend parser with functions.
-  [ ] Extend grammar
+  [x] Extend grammar
   - build new matcher and use in tokenize
-  - add parser to ast
+    [x] add parser to ast
+    [ ] make said parser less ugly
   - build getCellsInRange and solve node in interpret
   - write tests
 

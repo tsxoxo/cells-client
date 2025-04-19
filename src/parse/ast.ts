@@ -121,7 +121,8 @@ export class Parser {
     if (token === null) {
       return fail({
         type: "UNEXPECTED_EOF",
-        info: "parseFactor: expected something after an operator",
+        token,
+        msg: "parseFactor: expected something after an operator",
       })
     }
 
@@ -150,8 +151,8 @@ export class Parser {
           if (this.peek()?.value !== ")") {
             return fail({
               type: "PARENS",
-              position: this.current,
-              info: "parseFactor: Expected closing bracket",
+              token: this.peek(),
+              msg: "parseFactor: Expected closing bracket",
             })
           }
 
@@ -161,18 +162,28 @@ export class Parser {
         } else {
           return fail({
             type: "PARENS",
-            position: this.current,
-            info: "parseFactor: Unexpected opening bracket",
+            token: this.peek(),
+            msg: "parseFactor: Unexpected opening bracket",
           })
         }
 
       case "func": {
         this.consume()
-        if (this.peek()?.value !== "(") {
+
+        const next = this.peek()
+        if (next === null) {
+          return fail({
+            type: "UNEXPECTED_EOF",
+            token: null,
+            msg: "parseFactor: unexpected end of input after function keyword.",
+          })
+        }
+
+        if (next.value !== "(") {
           return fail({
             type: "PARENS",
-            position: this.current,
-            info: "parseFactor: Expected opening bracket after function keyword",
+            token: next,
+            msg: "parseFactor: Expected opening bracket after function keyword",
           })
         }
 
@@ -187,9 +198,8 @@ export class Parser {
         if (this.peek()?.value !== ")") {
           return fail({
             type: "PARENS",
-            position: this.current,
-            info: "parseFactor: Expected closing bracket after function keyword",
-            token: this.tokens[this.current],
+            token: this.peek()!,
+            msg: "parseFactor: Expected closing bracket after function keyword",
           })
         }
 
@@ -204,7 +214,11 @@ export class Parser {
       }
     }
     // After case block
-    return fail({ type: "TOKEN", info: "unknown type of token" })
+    return fail({
+      type: "TOKEN",
+      token,
+      msg: "unknown type of token",
+    })
   }
 
   private parseRange(): Result<{ from: string; to: string }, ParseError> {
@@ -213,8 +227,8 @@ export class Parser {
     if (token === null) {
       return fail({
         type: "UNEXPECTED_EOF",
-        info: "parseRange: Expected something in function",
-        token: this.tokens[this.current],
+        token: null,
+        msg: "parseRange: Unexpected end of input in function",
       })
     }
 
@@ -237,8 +251,8 @@ export class Parser {
 
     return fail({
       type: "TOKEN",
-      info: "Could not parse range: Unexpected token in function",
-      token: this.tokens[this.current],
+      msg: "Could not parse range: Unexpected token in function",
+      token: this.peek(),
     })
   }
 }

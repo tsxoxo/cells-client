@@ -48,7 +48,7 @@
 // * write/refactor tests for parsing units
 // * write tests for UI
 
-import { Token } from "./grammar"
+import { Token, Tree } from "./grammar"
 
 // Is UNEXPECTED_NODE really necessary?
 type ErrorType =
@@ -66,16 +66,23 @@ export type Result<T, E = Error> = Success<T> | Failure<E>
 export type Success<T> = { ok: true; value: T }
 export type Failure<E> = { ok: false; error: E }
 
+export type InterpretError = {
+  type: ErrorType
+  // null for UNEXPECTED_EOF
+  node: Tree | null
+  msg?: string
+}
+
 export type ParseError = {
   type: ErrorType
-  position?: number
-  info?: string
-  token?: Token
+  // null for UNEXPECTED_EOF
+  token: Token | null
+  msg?: string
 }
 
 export type AppError = {
   indexOfCell: number
-  cause: ParseError
+  cause: ParseError | InterpretError
 }
 
 // Helper functions
