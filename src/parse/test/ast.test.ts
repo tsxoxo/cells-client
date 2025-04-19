@@ -81,6 +81,8 @@ const validExpressionWithTermTokens = makeTokens([
   { type: "number", value: "3" },
 ])
 
+// TODO: Cell refs
+
 // Brackets
 // "(1+2)*3"
 const validParens = makeTokens([
@@ -88,6 +90,19 @@ const validParens = makeTokens([
   { type: "number", value: "1" },
   { type: "op", value: "+" },
   { type: "number", value: "2" },
+  { type: "parens", value: ")" },
+  { type: "op", value: "*" },
+  { type: "number", value: "3" },
+])
+
+// Functions
+// "SUM(A1:A2)*3"
+const validFunc = makeTokens([
+  { type: "func", value: "SUM" },
+  { type: "parens", value: "(" },
+  { type: "cell", value: "A1" },
+  { type: "op", value: ":" },
+  { type: "cell", value: "A2" },
   { type: "parens", value: ")" },
   { type: "op", value: "*" },
   { type: "number", value: "3" },
@@ -146,6 +161,29 @@ describe("Parser", () => {
     expect(tree.left.value).toEqual("+")
     expect(tree.left.left.value).toEqual("1")
     expect(tree.left.right.value).toEqual("2")
+
+    expect(tree.right.type).toEqual("number")
+    expect(tree.right.value).toEqual("3")
+  })
+  it("parses functions", () => {
+    // "(A1+A2)*3"
+    const parser = new Parser(validFunc)
+    const parseResult = parser.makeAST()
+
+    assertIsSuccess(parseResult)
+
+    const tree = parseResult.value
+
+    assertBinaryOp(tree)
+    console.dir(tree)
+
+    expect(tree.value).toEqual("*")
+
+    //assertBinaryOp(tree.left)
+    assert(tree.left.type === "func")
+    expect(tree.left.value).toEqual("SUM")
+    expect(tree.left.from).toEqual("A1")
+    expect(tree.left.to).toEqual("A2")
 
     expect(tree.right.type).toEqual("number")
     expect(tree.right.value).toEqual("3")

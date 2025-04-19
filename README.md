@@ -43,11 +43,12 @@ Made with [Vue](https://vuejs.org/) and [Xstate](https://stately.ai/docs) -- a f
 
 CURRENT
 
-- Extend parser for brackets. Possibly look into refactoring parser into function.
-  - Look at grammar. extend if necessary.
-  - extend parseFactor: if typeof node === parens && node.value === '(' parseExpression().
-  - how to spot syntax errors? anything simpler than two counters?: num_open_parens, num_close_parens. if close > open throw.
-- Add custom functions with cell ranges: SUM(A1:B3)
+- Extend parser with functions.
+  [ ] Extend grammar
+  - build new matcher and use in tokenize
+  - add parser to ast
+  - build getCellsInRange and solve node in interpret
+  - write tests
 
 ### UX/UI
 

@@ -48,6 +48,8 @@
 // * write/refactor tests for parsing units
 // * write tests for UI
 
+import { Token } from "./grammar"
+
 // Is UNEXPECTED_NODE really necessary?
 type ErrorType =
   | "TOKEN"
@@ -68,6 +70,7 @@ export type ParseError = {
   type: ErrorType
   position?: number
   info?: string
+  token?: Token
 }
 
 export type AppError = {

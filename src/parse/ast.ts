@@ -119,7 +119,10 @@ export class Parser {
 
     // end of the line
     if (token === null) {
-      return fail({ type: "UNEXPECTED_EOF" })
+      return fail({
+        type: "UNEXPECTED_EOF",
+        info: "parseFactor: expected something after an operator",
+      })
     }
 
     switch (token.type) {
@@ -153,12 +156,89 @@ export class Parser {
           }
 
           this.consume()
-          return expr
-        }
-        break
 
-      default:
-        return fail({ type: "TOKEN", info: "unknown type of token" })
+          return expr
+        } else {
+          return fail({
+            type: "PARENS",
+            position: this.current,
+            info: "parseFactor: Unexpected opening bracket",
+          })
+        }
+
+      case "func": {
+        this.consume()
+        if (this.peek()?.value !== "(") {
+          return fail({
+            type: "PARENS",
+            position: this.current,
+            info: "parseFactor: Expected opening bracket after function keyword",
+          })
+        }
+
+        // Happy path: is a bracket. Try to parse range.
+        this.consume()
+        const range = this.parseRange()
+
+        if (range.ok === false) {
+          return range
+        }
+
+        if (this.peek()?.value !== ")") {
+          return fail({
+            type: "PARENS",
+            position: this.current,
+            info: "parseFactor: Expected closing bracket after function keyword",
+            token: this.tokens[this.current],
+          })
+        }
+
+        // happy path: consume the closing bracket
+        this.consume()
+
+        return success({
+          type: "func",
+          value: token.value,
+          ...range.value,
+        })
+      }
     }
+    // After case block
+    return fail({ type: "TOKEN", info: "unknown type of token" })
+  }
+
+  private parseRange(): Result<{ from: string; to: string }, ParseError> {
+    const token = this.peek()
+
+    if (token === null) {
+      return fail({
+        type: "UNEXPECTED_EOF",
+        info: "parseRange: Expected something in function",
+        token: this.tokens[this.current],
+      })
+    }
+
+    // Happy path
+    // TODO: Prob refactor: move error to the top. unnest
+    if (token.type === "cell") {
+      this.consume()
+      if (this.peek()?.value === ":") {
+        this.consume()
+        const maybeCell = this.peek()
+        if (maybeCell?.type === "cell") {
+          this.consume()
+          return success({
+            from: token!.value,
+            to: maybeCell.value,
+          })
+        }
+      }
+    }
+
+    return fail({
+      type: "TOKEN",
+      info: "Could not parse range: Unexpected token in function",
+      token: this.tokens[this.current],
+    })
   }
 }
