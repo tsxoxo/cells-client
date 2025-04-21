@@ -146,3 +146,13 @@ export function assertIsSuccess<T, E>(
     )
   }
 }
+
+export function assertIsFail<T, E>(
+  result: Result<T, E>,
+): asserts result is Failure<E> {
+  if (result.ok) {
+    throw new Error(
+      `result is not a fail! value: ${JSON.stringify(result.value)}`,
+    )
+  }
+}

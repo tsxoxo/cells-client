@@ -1,7 +1,7 @@
 import { assert, describe, expect, it } from "vitest"
 import { Parser } from "../ast"
 import { Token, TokenType } from "../types/grammar"
-import { assertBinaryOp, assertIsSuccess } from "../types/errors"
+import { assertBinaryOp, assertIsFail, assertIsSuccess } from "../types/errors"
 
 // =================================================
 // # UTILS
@@ -106,15 +106,6 @@ const invFunc_token = makeTokens([
 ])
 
 // Bad parens
-const invFunc_missingOpen = makeTokens([
-  { type: "func", value: "SUM" },
-  { type: "cell", value: "A1" },
-  { type: "op", value: ":" },
-  { type: "cell", value: "A2" },
-  { type: "parens", value: ")" },
-  { type: "op", value: "*" },
-  { type: "number", value: "3" },
-])
 const invFunc_missingClose = makeTokens([
   { type: "func", value: "SUM" },
   { type: "parens", value: "(" },
@@ -134,6 +125,13 @@ const invFunc_doubleOpen = makeTokens([
   { type: "parens", value: ")" },
   { type: "op", value: "*" },
   { type: "number", value: "3" },
+])
+const invFunc_missingSecondCell = makeTokens([
+  { type: "func", value: "SUM" },
+  { type: "parens", value: "(" },
+  { type: "cell", value: "A1" },
+  { type: "op", value: ":" },
+  { type: "parens", value: ")" },
 ])
 
 describe("Parser", () => {
@@ -181,7 +179,6 @@ describe("Parser", () => {
     const tree = parseResult.value
 
     assertBinaryOp(tree)
-    console.dir(tree)
 
     expect(tree.value).toEqual("*")
 
@@ -221,29 +218,30 @@ describe("Parser", () => {
     const parser = new Parser(invFunc_token)
     const parseResult = parser.makeAST()
 
-    assert(parseResult.ok === false)
+    assertIsFail(parseResult)
     expect(parseResult.error.type).toEqual("TOKEN")
     expect(parseResult.error.token!.value).toEqual("*")
   })
 
   it("catches invalid parens around function", () => {
-    // that's actually gonna be caught by the tokenizer i think
-    // "SUMA1:A2)*3"
-    //const missingOpen = new Parser(invFunc_missingOpen).makeAST()
-
     // "SUM(A1:A2*3"
     const missingClose = new Parser(invFunc_missingClose).makeAST()
     // "SUM((A1:A2)*3"
     const doubleOpen = new Parser(invFunc_doubleOpen).makeAST()
 
-    //assert(missingOpen.ok === false)
-    //expect(missingOpen.error.type).toEqual("PARENS")
-    //expect(missingOpen.error.token!.value).toEqual("*")
-    assert(missingClose.ok === false)
+    //
+    const missingSecondCell = new Parser(invFunc_missingSecondCell).makeAST()
+
+    assertIsFail(missingSecondCell)
+    expect(missingSecondCell.error.type).toBe("TOKEN")
+    expect(missingSecondCell.error.msg).toContain("range")
+    expect(missingSecondCell.error.token!.value).toBe(")")
+
+    assertIsFail(missingClose)
     expect(missingClose.error.type).toEqual("PARENS")
     expect(missingClose.error.token!.value).toEqual("*")
 
-    assert(doubleOpen.ok === false)
+    assertIsFail(doubleOpen)
     expect(doubleOpen.error.type).toEqual("TOKEN")
     expect(doubleOpen.error.token!.value).toEqual("(")
   })

@@ -1,8 +1,8 @@
-import { assert, describe, expect, it } from "vitest"
+import { describe, expect, it } from "vitest"
 import { interpret } from "../interpret"
 import { Cell } from "../../types"
 import { Node_Binary } from "../types/grammar"
-import { assertIsSuccess } from "../types/errors"
+import { assertIsFail, assertIsSuccess } from "../types/errors"
 
 // =================================================
 // # TEST DATA
@@ -103,28 +103,28 @@ const divideByZero = {
 describe("Interpreter", () => {
   it("does number arithmetics no brackets", () => {
     let result = interpret(validExpressionTree, [])
-    assert(result.ok === true)
+    assertIsSuccess(result)
     expect(result.value.formulaResult).toEqual(5)
 
     result = interpret(validTermTree, [])
-    assert(result.ok === true)
+    assertIsSuccess(result)
     expect(result.value.formulaResult).toEqual(6)
 
     result = interpret(validExpressionWithTermTree, [])
-    assert(result.ok === true)
+    assertIsSuccess(result)
     expect(result.value.formulaResult).toEqual(7)
   })
 
   it("uses values from cells and extracts dependencies", () => {
     const result = interpret(validWithCells, cellsA0andA1)
-    assert(result.ok === true)
+    assertIsSuccess(result)
     expect(result.value.formulaResult).toEqual(1)
     expect(result.value.deps).toEqual([0, 1])
   })
 
   it("parses tree derived from expr containing parens", () => {
     const result = interpret(validFromParens, [])
-    assert(result.ok === true)
+    assertIsSuccess(result)
     expect(result.value.formulaResult).toEqual(9)
     expect(result.value.deps).toEqual([])
   })
@@ -151,7 +151,7 @@ describe("Interpreter", () => {
   // INVALID CASES
   it("handles divide by zero", () => {
     const result = interpret(divideByZero, [])
-    assert(result.ok === false)
+    assertIsFail(result)
     expect(result.error.type).toEqual("DIVIDE_BY_0")
   })
 })
