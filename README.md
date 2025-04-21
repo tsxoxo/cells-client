@@ -48,12 +48,10 @@ Made with [Vue](https://vuejs.org/) and [Xstate](https://stately.ai/docs) -- a f
 
 CURRENT
 
-- Extend parser with functions.
-  - [x] Extend grammar
-  - [ ] build new matcher and use in tokenize
-  - [x] add parser to ast
-        [ ] make said parser less ugly
-  - [x] build getCellsInRange and solve node in interpret
+[ ] fix ranges: put cells in proper order, simplify template
+[ ] make ast parser less ugly (unnest ifs)
+[ ] think if property testing is worht it
+[ ] go through links from claudes last 3 responses
 
 ### UX/UI
 

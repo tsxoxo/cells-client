@@ -5,7 +5,7 @@ import { createBrowserInspector } from "@statelyai/inspect"
 import { computed, watch } from "vue"
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants"
 import { handleErrors } from "./utils"
-import { Cell } from "./types"
+import { getCellIndexfromXY } from "./parse/cellUtils"
 
 const { inspect } = createBrowserInspector({
   // Comment out the line below to start the inspector
@@ -16,19 +16,26 @@ const { snapshot, send } = useMachine(cellsMachine, {
   inspect,
 })
 const cells = computed(() => snapshot.value.context.cells)
-function onFocus(event: Event, x: number, y: number) {
+function onFocus(event: Event, ind: number) {
   const input = event.target as HTMLInputElement
-  const cell = cells.value[NUM_OF_ROWS * (x - 1) + y - 1]
+  const cell = cells.value[ind]
   input.value = cell?.content ?? ""
 }
 
-function onBlur(event: Event, x: number, y: number) {
+function onBlur(event: Event, ind: number) {
   const input = event.target as HTMLInputElement
-  const cell = cells.value[NUM_OF_ROWS * (x - 1) + y - 1]
+  const cell = cells.value[ind]
   input.value =
     typeof cell?.value === "number" ? String(cell.value) : (cell?.content ?? "")
 }
-function getDisplayValue(cell: Cell) {
+function getDisplayValue(cellIndex: number) {
+  const cell = cells.value[cellIndex]
+  if (!cell) {
+    console.error(
+      `getDisplayValue: accessing index '${cellIndex} while cell has maximum of ${cells.value.length}'`,
+    )
+    return "err"
+  }
   return cell.value === undefined ? cell.content : String(cell.value)
 }
 watch(
@@ -66,20 +73,18 @@ watch(
               <Transition name="update-value">
                 <input
                   :key="`cell-input-${letter} + ${number}`"
-                  :value="getDisplayValue(cells[NUM_OF_ROWS * (x - 1) + y - 1])"
+                  :value="getDisplayValue(getCellIndexfromXY(x, y))"
                   @change="
                     (event) =>
                       send({
                         type: 'changeCellContent',
-                        indexOfCell: NUM_OF_ROWS * (x - 1) + y - 1,
+                        indexOfCell: getCellIndexfromXY(x, y),
                         value: (event.target as HTMLInputElement).value,
                       })
                   "
-                  @focus="(e) => onFocus(e, x, y)"
-                  @blur="(e) => onBlur(e, x, y)"
-                  @click="
-                    () => console.log(cells[NUM_OF_ROWS * (x - 1) + y - 1])
-                  "
+                  @focus="(e) => onFocus(e, getCellIndexfromXY(x, y))"
+                  @blur="(e) => onBlur(e, getCellIndexfromXY(x, y))"
+                  @click="() => console.log(cells[getCellIndexfromXY(x, y)])"
                 />
               </Transition>
             </div>

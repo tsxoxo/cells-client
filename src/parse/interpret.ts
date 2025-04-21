@@ -81,7 +81,7 @@ export function interpret(
         return fail({
           type: "INVALID_CELL",
           node,
-          msg: `Error in function "${node.value}": referenced cell ${resolvedRange.error.cell} contains non-numeric value.`,
+          msg: `Error in function '${node.value}': ${resolvedRange.error.msg}`,
         })
       }
 
@@ -90,7 +90,7 @@ export function interpret(
         return fail({
           type: "INVALID_CELL",
           node,
-          msg: `Error in function "${node.value}": ${result.error.msg}`,
+          msg: `Error in function '${node.value}': ${result.error.msg}`,
         })
       }
 

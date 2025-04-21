@@ -4,6 +4,7 @@ import { Context, changeCellContent } from "./cellsMachine"
 import { parseToAST } from "./parse/main"
 import {
   AppError,
+  InterpretError,
   ParseError,
   Result,
   fail,
@@ -49,6 +50,7 @@ export function handleCellContentChange(
     fresh,
   )
 
+  // TODO: propagate changes
   // cells = propagateChanges(cells, event.indexOfCell)
 
   return success(
@@ -64,7 +66,7 @@ function updateCellContent(
   cell: Cell,
   newContent: string,
   cells: Cell[],
-): Result<Cell, ParseError> {
+): Result<Cell, ParseError | InterpretError> {
   const updatedCell = structuredClone(cell)
   updatedCell.content = newContent
 
@@ -92,9 +94,9 @@ function updateCellContent(
     // Not a formula. Clear dependencies.
     updatedCell.dependencies = []
     // but numeric value would still be usable
-    if (isNumber(newContent)) {
-      updatedCell.value = parseFloat(newContent)
-    }
+    updatedCell.value = isNumber(newContent)
+      ? parseFloat(newContent)
+      : undefined
   }
 
   // It's not a formula or parsing was success.

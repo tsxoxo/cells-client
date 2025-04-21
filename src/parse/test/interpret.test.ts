@@ -42,10 +42,10 @@ const validWithCells = {
   type: "binary_op",
   value: "+",
   left: { type: "cell", value: "A0" },
-  right: { type: "cell", value: "a01" },
+  right: { type: "cell", value: "b00" },
 } as const
 
-const cellsA0andA1: Cell[] = [
+const cellsA0andB0: Cell[] = [
   {
     content: "0",
     value: 0,
@@ -74,11 +74,11 @@ const validFromParens: Node_Binary = {
 } as const
 
 // With functions
-// "SUM(A1:A5)*3"
+// "SUM(A0:F0)*3"
 const validWithFunc: Node_Binary = {
   type: "binary_op",
   value: "*",
-  left: { type: "func", value: "sum", from: "A1", to: "A5" },
+  left: { type: "func", value: "sum", from: "A0", to: "F0" },
   right: {
     type: "number",
     value: "3",
@@ -116,7 +116,7 @@ describe("Interpreter", () => {
   })
 
   it("uses values from cells and extracts dependencies", () => {
-    const result = interpret(validWithCells, cellsA0andA1)
+    const result = interpret(validWithCells, cellsA0andB0)
     assertIsSuccess(result)
     expect(result.value.formulaResult).toEqual(1)
     expect(result.value.deps).toEqual([0, 1])
@@ -136,16 +136,16 @@ describe("Interpreter", () => {
       { value: 30 },
       { value: 15 },
       { value: 25 },
-      { value: 35 }, // A5
+      { value: 35 }, // F0
     ] as Cell[]
 
-    // "SUM(A1:A5)*3"
-    // SUM(A1:A5) = 20 + 30 + 15 + 25 + 35 = 125
-    // result = 125 * 3 = 375
+    // "SUM(A0:F0)*3"
+    // SUM(A0:F0) = 10 + 20 + 30 + 15 + 25 + 35 = 135
+    // result = 135 * 3 = 405
     const result = interpret(validWithFunc, mockCells)
     assertIsSuccess(result)
-    expect(result.value.formulaResult).toEqual(375)
-    expect(result.value.deps).toEqual([1, 2, 3, 4, 5])
+    expect(result.value.formulaResult).toEqual(405)
+    expect(result.value.deps).toEqual([0, 1, 2, 3, 4, 5])
   })
 
   // INVALID CASES
