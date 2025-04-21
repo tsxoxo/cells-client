@@ -17,7 +17,14 @@
 //
 // NB: Fails fast -- Throws on the first error
 
-import { isCellRef, isNumber, isOp, isParens, isWhitespace } from "./match"
+import {
+  isCellRef,
+  isFunc,
+  isNumber,
+  isOp,
+  isParens,
+  isWhitespace,
+} from "./match"
 import { ParseError, Result, fail, success } from "./types/errors"
 import { Token } from "./types/grammar"
 
@@ -86,13 +93,26 @@ export function tokenize(str: string): Result<Token[], ParseError> {
         token.type = "cell"
         return success(token)
       }
+      if (isFunc(token.value)) {
+        token.type = "func"
+        return success(token)
+      }
 
       // Invalid char or valid chars in wrong order.
-      return fail({ type: "TOKEN" })
+      return fail({
+        type: "TOKEN",
+        token,
+        msg: `getNextToken: unknown token with value "${token.value}"`,
+      })
     }
 
-    // Neither an op, nor a parens, nor a number or a cell.
-    return fail({ type: "TOKEN" })
+    // Neither an op, a parens, a number, a cell, or a function keyword.
+    // TODO: Return token seems wrong
+    return fail({
+      type: "TOKEN",
+      token,
+      msg: `getNextToken: invalid char "${char}"`,
+    })
   }
 }
 

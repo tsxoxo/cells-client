@@ -175,7 +175,7 @@ export class Parser {
           return fail({
             type: "UNEXPECTED_EOF",
             token: null,
-            msg: "parseFactor: unexpected end of input after function keyword.",
+            msg: `parseFactor: unexpected end of input after function keyword "${token.value}".`,
           })
         }
 
@@ -183,7 +183,7 @@ export class Parser {
           return fail({
             type: "PARENS",
             token: next,
-            msg: "parseFactor: Expected opening bracket after function keyword",
+            msg: `parseFactor: Expected opening bracket after function keyword "${token.value}"`,
           })
         }
 
@@ -199,7 +199,7 @@ export class Parser {
           return fail({
             type: "PARENS",
             token: this.peek()!,
-            msg: "parseFactor: Expected closing bracket after function keyword",
+            msg: `parseFactor: Expected closing bracket after function keyword "${token.value}"`,
           })
         }
 

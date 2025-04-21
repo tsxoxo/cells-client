@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isCellRef, isOp } from "../match"
+import { isCellRef, isFunc, isOp } from "../match"
 
 // =================================================
 // # TEST DATA
@@ -18,5 +18,10 @@ describe("Matchers", () => {
     expect(isCellRef("A001")).toEqual(false)
     expect(isCellRef("A999")).toEqual(false)
     expect(isCellRef("fA9")).toEqual(false)
+  })
+
+  it("matches function keywords", () => {
+    expect(isFunc("sum")).toEqual(true)
+    expect(isFunc("sumfoo")).toEqual(false)
   })
 })

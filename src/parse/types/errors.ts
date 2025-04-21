@@ -38,9 +38,12 @@
 //      * [UNEXPECTED_EOF] "1+4*5*"
 //
 //
-// ### Functions (future feature)
+// ### Functions
 //
-// ### Ranges (future feature)
+// ### Ranges
+//
+// * [INVALID_CELL]: cell in range contains non-numeric value
+// NOTE: treat empty cells as valid by ignoring?
 //
 //
 // TODO:
@@ -48,12 +51,13 @@
 // * write/refactor tests for parsing units
 // * write tests for UI
 
-import { Token, Tree } from "./grammar"
+import { Node_Binary, Token, Tree } from "./grammar"
 
 // Is UNEXPECTED_NODE really necessary?
 type ErrorType =
   | "TOKEN"
   | "UNKNOWN_OP"
+  | "UNKNOWN_FUNC"
   | "UNEXPECTED_EOF"
   | "UNEXPECTED_NODE"
   | "INVALID_CELL"
@@ -66,23 +70,26 @@ export type Result<T, E = Error> = Success<T> | Failure<E>
 export type Success<T> = { ok: true; value: T }
 export type Failure<E> = { ok: false; error: E }
 
-export type InterpretError = {
-  type: ErrorType
-  // null for UNEXPECTED_EOF
-  node: Tree | null
-  msg?: string
-}
-
-export type ParseError = {
-  type: ErrorType
-  // null for UNEXPECTED_EOF
-  token: Token | null
-  msg?: string
-}
-
 export type AppError = {
   indexOfCell: number
   cause: ParseError | InterpretError
+}
+
+export type InterpretError = BaseError & {
+  // null for UNEXPECTED_EOF
+  node: Tree | null
+}
+export type ParseError = BaseError & {
+  // null for UNEXPECTED_EOF
+  token: Token | null
+}
+export type CellError = BaseError & {
+  cell: number
+}
+
+export type BaseError = {
+  type: ErrorType
+  msg?: string
 }
 
 // Helper functions
@@ -120,4 +127,22 @@ export function fail<E>(error: E): Failure<E> {
 // Type guard
 export function isSuccess<T, E>(result: Result<T, E>): result is Success<T> {
   return result.ok === true
+}
+
+export function assertBinaryOp(node: Tree): asserts node is Node_Binary {
+  if (node.type !== "binary_op") {
+    throw new Error(
+      `node is not of type "binary_op! node: ${JSON.stringify(node)}`,
+    )
+  }
+}
+
+export function assertIsSuccess<T, E>(
+  result: Result<T, E>,
+): asserts result is Success<T> {
+  if (!result.ok) {
+    throw new Error(
+      `result is not a success! error: ${JSON.stringify(result.error)}`,
+    )
+  }
 }

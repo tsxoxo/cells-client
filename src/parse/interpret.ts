@@ -1,6 +1,11 @@
-import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "../constants"
+import { ALPHABET_WITH_FILLER } from "../constants"
 import { Cell } from "../types"
-import { getCellsInRange } from "./cellUtils"
+import {
+  getCellValues,
+  getCellsInRange,
+  getIndexFromCellName,
+} from "./cellUtils"
+import { applyFuncToValues } from "./func"
 import {
   InterpretError,
   Result,
@@ -61,14 +66,36 @@ export function interpret(
     }
 
     if (node.type === "func") {
-      const to = getIndexFromCellName(node.to)
       const from = getIndexFromCellName(node.from)
-      const sorted = [to, from].sort()
+      const to = getIndexFromCellName(node.to)
+      // Arg order of from and to does not matter, cells get sorted in getCellsinRange.
       const cellsInRange = getCellsInRange(
-        sorted,
+        from,
+        to,
+        // Subtract the filler
         ALPHABET_WITH_FILLER.length - 1,
       )
-      const result = applyFuncToRange(node.value, cellsInRange)
+      const resolvedRange = getCellValues(cellsInRange, cells)
+
+      if (!isSuccess(resolvedRange)) {
+        return fail({
+          type: "INVALID_CELL",
+          node,
+          msg: `Error in function "${node.value}": referenced cell ${resolvedRange.error.cell} contains non-numeric value.`,
+        })
+      }
+
+      const result = applyFuncToValues(node.value, resolvedRange.value)
+      if (!isSuccess(result)) {
+        return fail({
+          type: "INVALID_CELL",
+          node,
+          msg: `Error in function "${node.value}": ${result.error.msg}`,
+        })
+      }
+
+      // Happy path: func processed successfully.
+      deps.push(...cellsInRange)
 
       return result
     }
@@ -86,11 +113,6 @@ export function interpret(
     ? success({ formulaResult: formulaResult.value, deps })
     : formulaResult
 }
-
-function applyFuncToRange(
-  func: string,
-  range: number[],
-): Result<number, InterpretError> {}
 
 // Takes node of type binary_op and its resolved operands.
 // (We pass in the whole node for easier error handling.)
@@ -116,13 +138,4 @@ function calculate(
     default:
       return fail({ type: "UNKNOWN_OP", node })
   }
-}
-
-function getIndexFromCellName(cellName: string): number {
-  // cellName examples: 'A1', 'B99'
-  // We call the letter x and the number y such as 'A0' === (1, 1)
-  const x = ALPHABET_WITH_FILLER.indexOf(cellName[0].toUpperCase())
-  const y = Number(cellName.slice(1)) + 1
-
-  return NUM_OF_ROWS * (x - 1) + y - 1
 }

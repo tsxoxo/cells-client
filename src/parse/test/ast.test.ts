@@ -1,7 +1,7 @@
 import { assert, describe, expect, it } from "vitest"
 import { Parser } from "../ast"
-import { Token, TokenType, Tree, Node_Binary } from "../types/grammar"
-import { Result, Success } from "../types/errors"
+import { Token, TokenType } from "../types/grammar"
+import { assertBinaryOp, assertIsSuccess } from "../types/errors"
 
 // =================================================
 // # UTILS
@@ -22,24 +22,6 @@ function makeTokens(
   )
 
   return tokens
-}
-
-function assertBinaryOp(node: Tree): asserts node is Node_Binary {
-  if (node.type !== "binary_op") {
-    throw new Error(
-      `node is not of type "binary_op! node: ${JSON.stringify(node)}`,
-    )
-  }
-}
-
-function assertIsSuccess<T, E>(
-  result: Result<T, E>,
-): asserts result is Success<T> {
-  if (!result.ok) {
-    throw new Error(
-      `result is not a success! error: ${JSON.stringify(result.error)}`,
-    )
-  }
 }
 
 // =================================================

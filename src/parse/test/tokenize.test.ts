@@ -1,5 +1,6 @@
 import { assert, describe, expect, it } from "vitest"
 import { tokenize } from "../tokenize"
+import { assertIsSuccess } from "../types/errors"
 
 // =================================================
 // TEST CASES
@@ -8,6 +9,8 @@ import { tokenize } from "../tokenize"
 // # Valid formulae
 // tokens.length === 11
 const validAllOps = "11+2.6*(A1-B11)/7,3"
+// Functions
+const validFunc = "SUM(A2:Z99)"
 
 // ## Edgecases
 // * starts with negative number
@@ -34,6 +37,15 @@ describe("tokenizer", () => {
     expect(result.value.length).toBe(11)
     expect(result.value[0].value).toBe("11")
     expect(result.value[result.value.length - 1].value).toBe("7,3")
+  })
+
+  it("handles funcs", () => {
+    const result = tokenize(validFunc)
+
+    assertIsSuccess(result)
+
+    expect(result.value.length).toBe(6)
+    expect(result.value[0].value).toBe("SUM")
   })
 
   // Edgecases

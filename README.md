@@ -37,6 +37,11 @@ Made with [Vue](https://vuejs.org/) and [Xstate](https://stately.ai/docs) -- a f
 
 # TODO
 
+## SECURITY
+
+- Protect again numeric overflow. Look into [ decimal.js ](https://mikemcl.github.io/decimal.js/#)
+- Escape user input
+
 ## FEAT
 
 ### Formula parsing
@@ -44,12 +49,11 @@ Made with [Vue](https://vuejs.org/) and [Xstate](https://stately.ai/docs) -- a f
 CURRENT
 
 - Extend parser with functions.
-  [x] Extend grammar
-  - build new matcher and use in tokenize
-    [x] add parser to ast
-    [ ] make said parser less ugly
-  - build getCellsInRange and solve node in interpret
-  - write tests
+  - [x] Extend grammar
+  - [ ] build new matcher and use in tokenize
+  - [x] add parser to ast
+        [ ] make said parser less ugly
+  - [x] build getCellsInRange and solve node in interpret
 
 ### UX/UI
 
