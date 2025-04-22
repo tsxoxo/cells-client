@@ -6,62 +6,55 @@
 // Make errors granular so that they can be communicated to user.
 //
 // ## Desired UI behavior
-// A) Show an error message.
+// A) Show a specific error message.
 // B) Mark the erroneous token.
 //
 // --> Necessary data
 // A) The type of error.
-// B) The start and end position of the invalid token.
+// B) The position or value of the invalid token.
 //
-// ## ERROR TYPES
+// # ERROR TYPES
+// * Lexical: INVALID_CHAR
+// * Syntax: UNEXPECTED_TOKEN, UNEXPECTED_EOF???
+// * Semantics: CIRCULAR_REF, INVALID_CELL, UNKNOWN_TOKEN/UNRECOGNIZED_TOKEN
+// * Evaluation: DIVIDE_BY_0, OUT_OF_BOUND
 //
-// ### [TOKEN] Invalid or ill-formed tokens
-//      --> tokenizer
-// * Invalid char: "#%`[$=" etc.
-// * Ill-formed token: "A999", "string"
+// ## Questions
+// * wrong func args?
+// * Ill-formed token: "A999", "string" ??? INVALID_CELL_REF vs INVALID_CELL_VAL
+//
+// ## DETAILS
+// * [INVALID_CHAR] Invalid character, e.g. "1+2$"
+// * [UNKNOWN_TOKEN] Valid chars, malformed or non-existing token: "A999", "foo()"
+//      --> tokenize
+//
+// * [UNEXPECTED_TOKEN] Valid token in invalid place: SUM(A3*5)
+// * [CIRCULAR_REF] Cell references itself, e.g. in A1 "A0+A1", "SUM(A0:B4)"
+//      --> ast, more???
 //
 // * [INVALID_CELL] Invalid value from cell reference: "A1 + A2", where A1 === 'something invalid'
-//      --> interpret
-//
-// ### "Out-of-bounds"
-//      --> ast
-// * Number too big (single num as well as result of calc. should be checked after evaluating cell reference)
+// * [OUT_OF_BOUND] Number too big (applies to single nums as well as result of calc. should be checked after evaluating cell reference)
 // * [DIVIDE_BY_0] Divide by 0
-//
-// * Circular cell reference
-//
-// ### Invalid syntax
-//      --> ast
-// * Bracket placement
-// * Invalid op placement:
-//      * "++"
-//      * [UNEXPECTED_EOF] "1+4*5*"
-//
-//
-// ### Functions
-//
-// ### Ranges
-//
-// * [INVALID_CELL]: cell in range contains non-numeric value
-// NOTE: treat empty cells as valid by ignoring?
-//
-//
-// TODO:
-// * develop testing strategy. look at .each syntax
-// * write/refactor tests for parsing units
-// * write tests for UI
+//      --> interpret
 
 import { Node_Binary, Token, Tree } from "./grammar"
 
-// Is UNEXPECTED_NODE really necessary?
 type ErrorType =
+  // SPlit into INVALID_CHAR (lex)
+  // and UNEXPECTED_TOKEN (synt)
   | "TOKEN"
+  // merge next two?
   | "UNKNOWN_OP"
   | "UNKNOWN_FUNC"
+  // merge into UNEXPECTED_TOKEN?
   | "UNEXPECTED_EOF"
+  // necessary?
   | "UNEXPECTED_NODE"
+  // value or ref?
   | "INVALID_CELL"
+  // EVALUATION
   | "DIVIDE_BY_0"
+  // mismatched parens?
   | "PARENS"
 
 // Define result types

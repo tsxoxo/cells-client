@@ -9,7 +9,6 @@
 // * range ::=  cell ':' cell
 // * number ::= [0-9]+ (( ',' | '.' ) [0-9]+)?
 // * cell ::= [a-zA-Z][0-9][0-9]?
-// TODO: Add negation
 //
 // ## RegEx
 // * Bracket: /[()]/

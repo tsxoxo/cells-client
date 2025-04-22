@@ -63,7 +63,19 @@ const validExpressionWithTermTokens = makeTokens([
   { type: "number", value: "3" },
 ])
 
-// TODO: Cell refs
+// cell refs
+// "A00*a1"
+const validCells = makeTokens([
+  { type: "cell", value: "A00" },
+  { type: "op", value: "*" },
+  { type: "cell", value: "a1" },
+])
+const validCellsTree = {
+  type: "binary_op",
+  value: "*",
+  left: { type: "cell", value: "A00" },
+  right: { type: "cell", value: "a1" },
+}
 
 // Brackets
 // "(1+2)*3"
@@ -167,6 +179,15 @@ describe("Parser", () => {
     expect(tree.left.value).toEqual("1")
     expect(tree.right.type).toEqual("binary_op")
     expect(tree.right.value).toEqual("*")
+  })
+
+  it("parses cells", () => {
+    const parser = new Parser(validCells)
+    const parseResult = parser.makeAST()
+
+    assertIsSuccess(parseResult)
+
+    expect(parseResult.value).toEqual(validCellsTree)
   })
 
   it("parses parens", () => {

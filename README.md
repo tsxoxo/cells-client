@@ -46,12 +46,37 @@ Made with [Vue](https://vuejs.org/) and [Xstate](https://stately.ai/docs) -- a f
 
 ### Formula parsing
 
-CURRENT
+@CURRENT
 
-[ ] fix ranges: put cells in proper order, simplify template
-[ ] make ast parser less ugly (unnest ifs)
-[ ] think if property testing is worht it
-[ ] go through links from claudes last 3 responses
+#### Systematize tests and errors
+
+- think through grouping tests by feature/grammar rule
+  _describe('parsing cell references (Rule 3.1)', ...))._
+  _group invalid tests under describe blocks based on each err category_
+
+- think through implementing grammar obj (see Claude)
+
+- think through error typing
+  _lexical,syntax,semantic,evaluation_
+  _Include consistent properties: type (your refined enum/string union), message (a default technical message), position (start/end index/line/column in the input string - crucial for parsers!), potentially offendingToken, and maybe a grammarRule reference._
+
+- write out a couple test.each
+
+- think if property testing is worht it
+
+* write integration test for full parsing pipeline
+
+@AFTER
+
+- parsing: add negation
+
+- state: propagate changes
+- write test for state updates
+
+-> redesign UI
+
+- write tests for UI
+  -> introduce networking
 
 ### UX/UI
 
@@ -65,6 +90,7 @@ CURRENT
 
 - animate only propagated changes, not the cell that was just edited
 - stagger animations?
+- parse: Funcs to add: "mult" | "avg" | "max" | "min" | "count"
 
 ## ERRORS
 

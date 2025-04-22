@@ -224,17 +224,10 @@ export class Parser {
   private parseRange(): Result<{ from: string; to: string }, ParseError> {
     const token = this.peek()
 
-    if (token === null) {
-      return fail({
-        type: "UNEXPECTED_EOF",
-        token: null,
-        msg: "parseRange: Unexpected end of input in function",
-      })
-    }
-
     // Happy path
-    // TODO: Prob refactor: move error to the top. unnest
-    if (token.type === "cell") {
+    // HACK:
+    // Seems wrong to nest but I cant be bothered right now
+    if (token?.type === "cell") {
       this.consume()
       if (this.peek()?.value === ":") {
         this.consume()
@@ -249,9 +242,19 @@ export class Parser {
       }
     }
 
+    // Either we ran out of tokens or
+    // token did not match range syntax
+    if (this.peek() === null) {
+      return fail({
+        type: "UNEXPECTED_EOF",
+        token: null,
+        msg: "parseRange: Unexpected end of input",
+      })
+    }
+
     return fail({
       type: "TOKEN",
-      msg: "Could not parse range: Unexpected token in function",
+      msg: "Could not parse range: Unexpected token",
       token: this.peek(),
     })
   }

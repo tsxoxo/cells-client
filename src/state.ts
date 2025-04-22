@@ -50,7 +50,6 @@ export function handleCellContentChange(
     fresh,
   )
 
-  // TODO: propagate changes
   // cells = propagateChanges(cells, event.indexOfCell)
 
   return success(

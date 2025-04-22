@@ -2,11 +2,6 @@
 // TOKENIZER
 // =================================================
 //
-// NOTE: START HERE
-// * then continue plugging in new parser into app:
-// 1) move state handling into own file
-// 2) Simplify cell type: {dependents}
-//
 // Takes string.
 // Outputs a list of objects that
 // is easier to work with.
@@ -107,7 +102,6 @@ export function tokenize(str: string): Result<Token[], ParseError> {
     }
 
     // Neither an op, a parens, a number, a cell, or a function keyword.
-    // TODO: Return token seems wrong
     return fail({
       type: "TOKEN",
       token,
