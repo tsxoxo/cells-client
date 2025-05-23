@@ -40,7 +40,7 @@
 import { Node_Binary, Token, Tree } from "./grammar"
 
 type ErrorType =
-  // SPlit into INVALID_CHAR (lex)
+  // Split into INVALID_CHAR (lex)
   // and UNEXPECTED_TOKEN (synt)
   | "TOKEN"
   // merge next two?
