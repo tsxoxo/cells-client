@@ -35,7 +35,7 @@ export function tokenize(str: string): Result<Token[], ParseError> {
       continue
     }
 
-    const result = getNextToken(ind)
+    const result = getNextToken(ind, str)
 
     if (result.ok === true) {
       const token = result.value
@@ -51,7 +51,7 @@ export function tokenize(str: string): Result<Token[], ParseError> {
 
   return success(tokens)
 
-  function getNextToken(start: number): Result<Token, ParseError> {
+  function getNextToken(start: number, str: string): Result<Token, ParseError> {
     const token = createEmptyToken(ind)
     const char = str[start]
 
@@ -67,15 +67,38 @@ export function tokenize(str: string): Result<Token[], ParseError> {
       return success(token)
     }
 
-    // Lump all other valid symbols together for simplicity. We differentiate below.
-    if (/[a-zA-Z0-9,.]/.test(char)) {
+    // Potentially a number or cell ref.
+    // Lump all symbols together for simplicity. We differentiate below.
+    const CHARS_NUM_OR_CELL = /[a-zA-Z0-9,.]/
+    if (CHARS_NUM_OR_CELL.test(char)) {
+      // Build up the token.
       let _ind = ind
       while (_ind < str.length) {
-        if (/[a-zA-Z0-9,.]/.test(str[_ind])) {
-          token.value += str[_ind]
+        const char = str[_ind]
+        if (CHARS_NUM_OR_CELL.test(char)) {
+          token.value += char
           _ind++
         } else {
-          break
+          if (isOp(char)) {
+            break
+          }
+          if (isParens(char)) {
+            break
+          }
+          if (isWhitespace(char)) {
+            _ind++
+            continue
+          }
+
+          // Char is invalid
+          // NOTE: START_HERE
+          // Change this error type to INVALID_CHAR
+          // And move on to return fail below, line 120
+          return fail({
+            type: "TOKEN",
+            token,
+            msg: `getNextToken: unknown token with value "${token.value}"`,
+          })
         }
       }
 
