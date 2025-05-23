@@ -14,17 +14,19 @@
 // B) The position or value of the invalid token.
 //
 // # ERROR TYPES
-// * Lexical: INVALID_CHAR
+// * Lexical: INVALID_CHAR, INVALID_CELL, INVALID_NUMBER, UNKNOWN_FUNCTION
 // * Syntax: UNEXPECTED_TOKEN, UNEXPECTED_EOF???
-// * Semantics: CIRCULAR_REF, INVALID_CELL, UNKNOWN_TOKEN/UNRECOGNIZED_TOKEN
+// * Semantics: CIRCULAR_REF
 // * Evaluation: DIVIDE_BY_0, OUT_OF_BOUND
+// * _Safety net: UNKNOWN_ERROR
 //
 // ## Questions
 // * wrong func args?
 // * Ill-formed token: "A999", "string" ??? INVALID_CELL_REF vs INVALID_CELL_VAL
 //
 // ## DETAILS
-// * [INVALID_CHAR] Invalid character, e.g. "1+2$"
+// * [INVALID_CHAR] Invalid character, e.g. "$" in "1+2$"
+// TODO: Possibly delete this (see INVALID_CELL, _NUMBER, _IDENTIFIER)
 // * [UNKNOWN_TOKEN] Valid chars, malformed or non-existing token: "A999", "foo()"
 //      --> tokenize
 //
@@ -36,12 +38,20 @@
 // * [OUT_OF_BOUND] Number too big (applies to single nums as well as result of calc. should be checked after evaluating cell reference)
 // * [DIVIDE_BY_0] Divide by 0
 //      --> interpret
+//
+// * [UNKNOWN_ERROR]: Safety net. Not sure if we ever hit this one. Possibly throw instead.
+//      --> tokenizer
 
 import { Node_Binary, Token, Tree } from "./grammar"
 
 type ErrorType =
   // Split into INVALID_CHAR (lex)
   // and UNEXPECTED_TOKEN (synt)
+  //
+  | "INVALID_CHAR"
+  | "INVALID_CELL"
+  | "INVALID_NUMBER"
+  | "UNKNOWN_FUNCTION"
   | "TOKEN"
   // merge next two?
   | "UNKNOWN_OP"
@@ -56,6 +66,7 @@ type ErrorType =
   | "DIVIDE_BY_0"
   // mismatched parens?
   | "PARENS"
+  | "UNKNOWN_ERROR"
 
 // Define result types
 export type Result<T, E = Error> = Success<T> | Failure<E>

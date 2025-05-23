@@ -23,6 +23,8 @@ import {
 import { ParseError, Result, fail, success } from "./types/errors"
 import { Token } from "./types/grammar"
 
+const ALPHANUM = /[a-zA-Z0-9]/
+
 export function tokenize(str: string): Result<Token[], ParseError> {
   const tokens = [] as Token[]
 
@@ -67,15 +69,14 @@ export function tokenize(str: string): Result<Token[], ParseError> {
       return success(token)
     }
 
-    // Potentially a number or cell ref.
-    // Lump all symbols together for simplicity. We differentiate below.
-    const CHARS_NUM_OR_CELL = /[a-zA-Z0-9,.]/
-    if (CHARS_NUM_OR_CELL.test(char)) {
+    // Is it a number?
+    const CHARS_NUM = /[0-9,.]/
+    if (CHARS_NUM.test(char)) {
       // Build up the token.
       let _ind = ind
       while (_ind < str.length) {
         const char = str[_ind]
-        if (CHARS_NUM_OR_CELL.test(char)) {
+        if (CHARS_NUM.test(char)) {
           token.value += char
           _ind++
         } else {
@@ -90,12 +91,13 @@ export function tokenize(str: string): Result<Token[], ParseError> {
             continue
           }
 
-          // Char is invalid
-          // NOTE: START_HERE
-          // Change this error type to INVALID_CHAR
-          // And move on to return fail below, line 120
+          // Unexpected char.
+          // Lump together invalid chars and letters, for now.
+          // Exampes: "3a", "5$"
+          // Add faulty char for error handling.
+          token.value += char
           return fail({
-            type: "TOKEN",
+            type: "INVALID_NUMBER",
             token,
             msg: `getNextToken: unknown token with value "${token.value}"`,
           })
@@ -107,26 +109,26 @@ export function tokenize(str: string): Result<Token[], ParseError> {
         token.type = "number"
         return success(token)
       }
-      if (isCellRef(token.value)) {
-        token.type = "cell"
-        return success(token)
-      }
-      if (isFunc(token.value)) {
-        token.type = "func"
-        return success(token)
-      }
 
-      // Invalid char or valid chars in wrong order.
+      // Number-like chars but an invalid pattern.
+      // Examples: "12,3.", "."
+      // We throw the same error as above
+      // Add faulty char for error handling.
+      token.value += char
       return fail({
-        type: "TOKEN",
+        type: "INVALID_NUMBER",
         token,
         msg: `getNextToken: unknown token with value "${token.value}"`,
       })
     }
 
+    if (ALPHANUM.test(char)) {
+      return parseAlphaNumeric(ind, token, str)
+    }
+
     // Neither an op, a parens, a number, a cell, or a function keyword.
     return fail({
-      type: "TOKEN",
+      type: "INVALID_CHAR",
       token,
       msg: `getNextToken: invalid char "${char}"`,
     })
@@ -147,4 +149,90 @@ function createEmptyToken(start: number): Token {
     value: "",
     type: undefined,
   }
+}
+
+// Parses potential cell refs and function names.
+// Merrily accrues all valid chars.
+// Validation happens separately.
+function parseAlphaNumeric(
+  ind: number,
+  token: Token,
+  str: string,
+): Result<Token, ParseError> {
+  let _ind = ind
+  // We already know the first char is alphanumeric
+  token.value += str[_ind]
+  _ind++
+
+  while (_ind < str.length) {
+    const char = str[_ind]
+    if (ALPHANUM.test(char)) {
+      token.value += char
+      _ind++
+    } else {
+      if (isOp(char)) {
+        break
+      }
+      if (isParens(char)) {
+        break
+      }
+      if (isWhitespace(char)) {
+        _ind++
+        continue
+      }
+
+      if (!ALPHANUM.test(char)) {
+        // Unexpected char.
+        // Catch both "A_" and "AA"
+        // Add to token for error handling
+        token.value += char
+        return fail({
+          type: "INVALID_CELL",
+          token,
+          msg: `getNextToken: unknown token with value "${token.value}"`,
+        })
+      }
+    }
+  }
+
+  // Potential token has been collected and can be evaluated.
+  return validateToken(token)
+}
+
+function validateToken(token: Token): Result<Token, ParseError> {
+  // HAPPY STATES
+  if (isCellRef(token.value)) {
+    token.type = "cell"
+    return success(token)
+  }
+  if (isFunc(token.value)) {
+    token.type = "func"
+    return success(token)
+  }
+
+  // ERRORS
+  // Differentiate between malformed cell refs and unknown func names
+  // Example: "a999" vs "foo"
+  if (/^[a-zA-Z]{1}[0-9]+/.test(token.value)) {
+    return fail({
+      type: "INVALID_CELL",
+      token,
+      msg: `getNextToken: unknown token with value "${token.value}"`,
+    })
+  }
+  if (/^[a-zA-Z]+/.test(token.value)) {
+    return fail({
+      type: "UNKNOWN_FUNCTION",
+      token,
+      msg: `getNextToken: unknown token with value "${token.value}"`,
+    })
+  }
+
+  // Safety net. Not sure if we ever hit this.
+  // Possibly, crash here?
+  return fail({
+    type: "UNKNOWN_ERROR",
+    token,
+    msg: `getNextToken: unknown token with value "${token.value}"`,
+  })
 }

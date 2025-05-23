@@ -86,6 +86,7 @@ export function interpret(
       }
 
       const result = applyFuncToValues(node.value, resolvedRange.value)
+      // TODO: This does not seem right error bubbling!
       if (!isSuccess(result)) {
         return fail({
           type: "INVALID_CELL",

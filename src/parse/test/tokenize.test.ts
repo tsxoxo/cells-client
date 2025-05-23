@@ -24,13 +24,16 @@ const singleValidValueCell = "A99"
 // INVALID
 // # [TOKEN] Invalid or ill-formed tokens
 //      --> tokenizer
-// * Invalid char: "#%`[$=" etc.
-const invalidChars = "11^+2*(_3-}4)"
-// * [TOKEN] Invalid token:
+// * [INVALID_CHAR]: "#%`[$=" etc.
+// NOTE: Invalid chars also get caught under different error types: e.g. INVALID_NUMBER
+// Put invalid char in front to test this specifically
+const err_invalidChar = "^+2*(_3-}4)"
+// * [INVALID_NUMBER]
+const err_INVALID_NUMBER = "a99+02+37b"
 //      * ill-formed: "a999", "string"
-const missingOpen = "SUMA1:A2)*3"
+const missingOpen = "SUMA1:B2)*3"
 
-const illFormedTokens = "A11+A001"
+const err_INVALID_CELL = "A11+B001"
 
 describe("tokenizer", () => {
   it("handles valid all ops with cells", () => {
@@ -86,20 +89,23 @@ describe("tokenizer", () => {
 
   // INVALID
   it("handles invalid tokens", () => {
-    let result = tokenize(invalidChars)
-
+    let result = tokenize(err_invalidChar)
     assertIsFail(result)
-    expect(result.error.type).toBe("TOKEN")
+    expect(result.error.type).toBe("INVALID_CHAR")
 
-    result = tokenize(illFormedTokens)
-
+    result = tokenize(err_INVALID_CELL)
     assertIsFail(result)
-    expect(result.error.type).toBe("TOKEN")
+    expect(result.error.type).toBe("INVALID_CELL")
+    expect(result.error.token!.value).toBe("B001")
+
+    result = tokenize(err_INVALID_NUMBER)
+    assertIsFail(result)
+    expect(result.error.token!.value).toBe("37b")
+    expect(result.error.type).toBe("INVALID_NUMBER")
 
     result = tokenize(missingOpen)
-
     assertIsFail(result)
-    expect(result.error.type).toBe("TOKEN")
+    expect(result.error.type).toBe("UNKNOWN_FUNCTION")
     expect(result.error.token!.value).toBe("SUMA1")
   })
 })
