@@ -78,6 +78,9 @@ Made with [Vue](https://vuejs.org/) and [Xstate](https://stately.ai/docs) -- a f
 - write tests for UI
   -> introduce networking
 
+- Build basic UI for errors
+- Think about handling for parsing try/catch
+
 ### UX/UI
 
 - make it easier to read and input formulae
@@ -100,6 +103,8 @@ Made with [Vue](https://vuejs.org/) and [Xstate](https://stately.ai/docs) -- a f
 ## REFACTOR
 
 - Rethink propagation. Simplify.
+
+- Re-integrate 'interpret' into main parsing pipeline? see comments in parse/main.ts
 
 ## FIX
 

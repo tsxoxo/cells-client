@@ -18,7 +18,7 @@ import { Tree } from "./types/grammar"
 export function interpret(
   tree: Tree,
   cells: Cell[],
-): Result<{ formulaResult: number; deps: number[] }, InterpretError> {
+): Result<{ res: number; deps: number[] }, InterpretError> {
   const deps: number[] = []
 
   function solveNode(node: Tree): Result<number, InterpretError> {
@@ -108,11 +108,9 @@ export function interpret(
     })
   }
 
-  const formulaResult = solveNode(tree)
+  const res = solveNode(tree)
 
-  return formulaResult.ok
-    ? success({ formulaResult: formulaResult.value, deps })
-    : formulaResult
+  return res.ok ? success({ res: res.value, deps }) : res
 }
 
 // Takes node of type binary_op and its resolved operands.

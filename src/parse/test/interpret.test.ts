@@ -104,28 +104,29 @@ describe("Interpreter", () => {
   it("does number arithmetics no brackets", () => {
     let result = interpret(validExpressionTree, [])
     assertIsSuccess(result)
-    expect(result.value.formulaResult).toEqual(5)
+    // 'result.value.res': yes, this is stupid
+    expect(result.value.res).toEqual(5)
 
     result = interpret(validTermTree, [])
     assertIsSuccess(result)
-    expect(result.value.formulaResult).toEqual(6)
+    expect(result.value.res).toEqual(6)
 
     result = interpret(validExpressionWithTermTree, [])
     assertIsSuccess(result)
-    expect(result.value.formulaResult).toEqual(7)
+    expect(result.value.res).toEqual(7)
   })
 
   it("uses values from cells and extracts dependencies", () => {
     const result = interpret(validWithCells, cellsA0andB0)
     assertIsSuccess(result)
-    expect(result.value.formulaResult).toEqual(1)
+    expect(result.value.res).toEqual(1)
     expect(result.value.deps).toEqual([0, 1])
   })
 
   it("parses tree derived from expr containing parens", () => {
     const result = interpret(validFromParens, [])
     assertIsSuccess(result)
-    expect(result.value.formulaResult).toEqual(9)
+    expect(result.value.res).toEqual(9)
     expect(result.value.deps).toEqual([])
   })
 
@@ -144,7 +145,7 @@ describe("Interpreter", () => {
     // result = 135 * 3 = 405
     const result = interpret(validWithFunc, mockCells)
     assertIsSuccess(result)
-    expect(result.value.formulaResult).toEqual(405)
+    expect(result.value.res).toEqual(405)
     expect(result.value.deps).toEqual([0, 1, 2, 3, 4, 5])
   })
 

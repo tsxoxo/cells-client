@@ -76,7 +76,7 @@ export type Failure<E> = { ok: false; error: E }
 
 export type AppError = {
   indexOfCell: number
-  cause: ParseError | InterpretError
+  cause: ParseError | InterpretError | UnknownError
 }
 
 export type InterpretError = BaseError & {
@@ -89,6 +89,10 @@ export type ParseError = BaseError & {
 }
 export type CellError = BaseError & {
   cell: number
+}
+export type UnknownError = BaseError & {
+  type: "UNKNOWN_ERROR"
+  err: unknown
 }
 
 export type BaseError = {

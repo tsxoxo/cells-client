@@ -229,7 +229,11 @@ function validateToken(token: Token): Result<Token, ParseError> {
   }
 
   // Safety net. Not sure if we ever hit this.
-  // Possibly, crash here?
+  //
+  // TODO: START_HERE
+  // think about what makes more sense:
+  // Add more granular errors for rest of parsing pipeline,
+  // OR first create an error factory for tokenizer
   return fail({
     type: "UNKNOWN_ERROR",
     token,

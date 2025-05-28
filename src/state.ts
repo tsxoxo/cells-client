@@ -7,6 +7,7 @@ import {
   InterpretError,
   ParseError,
   Result,
+  UnknownError,
   fail,
   isSuccess,
   success,
@@ -50,6 +51,7 @@ export function handleCellContentChange(
     fresh,
   )
 
+  // TODO: propagation
   // cells = propagateChanges(cells, event.indexOfCell)
 
   return success(
@@ -65,7 +67,7 @@ function updateCellContent(
   cell: Cell,
   newContent: string,
   cells: Cell[],
-): Result<Cell, ParseError | InterpretError> {
+): Result<Cell, ParseError | InterpretError | UnknownError> {
   const updatedCell = structuredClone(cell)
   updatedCell.content = newContent
 
@@ -75,20 +77,16 @@ function updateCellContent(
     //const result = isSuccess(astResult)
     //  ? interpret(astResult.value, cells)
     //  : astResult // early fail
-    const maybeAST = parseToAST(newContent.slice(1))
-    //console.log(`AFTER PARSE: ${JSON.stringify(parseResult)}`)
-    if (!isSuccess(maybeAST)) {
-      return maybeAST
-    }
-    // Happy path: formula has been successfully parsed.
-    const maybeFormulaResult = interpret(maybeAST.value, cells)
-    if (!isSuccess(maybeFormulaResult)) {
-      return maybeFormulaResult
+
+    const maybeEvalResult = safeEval(newContent.slice(1), cells)
+    if (!isSuccess(maybeEvalResult)) {
+      return maybeEvalResult
     }
 
+    // Happy path: formula has been successfully parsed.
     // Update cell with result of calculation and new dependencies
-    updatedCell.value = maybeFormulaResult.value.formulaResult
-    updatedCell.dependencies = maybeFormulaResult.value.deps
+    updatedCell.value = maybeEvalResult.value.res
+    updatedCell.dependencies = maybeEvalResult.value.deps
   } else {
     // Not a formula. Clear dependencies.
     updatedCell.dependencies = []
@@ -100,6 +98,47 @@ function updateCellContent(
 
   // It's not a formula or parsing was success.
   return success(updatedCell)
+}
+
+// Wraps parsing in try catch
+function safeEval(
+  formula: string,
+  cells: Cell[],
+): Result<
+  { res: number; deps: number[] },
+  ParseError | InterpretError | UnknownError
+> {
+  try {
+    const maybeAST = parseToAST(formula)
+    //console.log(`AFTER PARSE: ${JSON.stringify(parseResult)}`)
+    if (!isSuccess(maybeAST)) {
+      return maybeAST
+    }
+
+    const maybeFormula = interpret(maybeAST.value, cells)
+
+    // Pass along either error or result
+    return maybeFormula
+  } catch (e: unknown) {
+    // This shouldn't happen
+    if (typeof e === "string") {
+      console.error("Oops! Unexpected error: ", e)
+    } else if (e instanceof Error) {
+      console.error("Oops! Unexpected error: ", e.message)
+    } else {
+      console.error("Double oops! Something very unexpected: ", e)
+    }
+
+    // Not sure what the state here is.
+    // So I'm not sure how to handle this.
+    // Crash app?
+    //
+    // Clear cell, for now.
+    return fail({
+      type: "UNKNOWN_ERROR",
+      err: e,
+    })
+  }
 }
 
 // Make diff of to numeric arrays
