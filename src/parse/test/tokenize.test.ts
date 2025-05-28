@@ -92,6 +92,8 @@ describe("tokenizer", () => {
     let result = tokenize(err_invalidChar)
     assertIsFail(result)
     expect(result.error.type).toBe("INVALID_CHAR")
+    expect(result.error.token!.position.start).toBe(0)
+    expect(result.error.token!.position.end).toBe(1)
 
     result = tokenize(err_INVALID_CELL)
     assertIsFail(result)
