@@ -15,27 +15,21 @@
 //
 // # ERROR TYPES
 // * Lexical: INVALID_CHAR, INVALID_CELL, INVALID_NUMBER, UNKNOWN_FUNCTION
-// * Syntax: UNEXPECTED_TOKEN, UNEXPECTED_EOF???
+// * Syntax: UNEXPECTED_TOKEN, UNEXPECTED_EOF
 // * Semantics: CIRCULAR_REF
-// * Evaluation: DIVIDE_BY_0, OUT_OF_BOUND
+// * Evaluation: DIVIDE_BY_0, CELL_NOT_A_NUMBER
 // * _Safety net: UNKNOWN_ERROR
 //
-// ## Questions
-// * wrong func args?
-// * Ill-formed token: "A999", "string" ??? INVALID_CELL_REF vs INVALID_CELL_VAL
-//
 // ## DETAILS
-// * [INVALID_CHAR] Invalid character, e.g. "$" in "1+2$"
-// TODO: Possibly delete this (see INVALID_CELL, _NUMBER, _IDENTIFIER)
-// * [UNKNOWN_TOKEN] Valid chars, malformed or non-existing token: "A999", "foo()"
+// * [INVALID_xyz] INVALID_CELL, _CHAR and _Number catch invalid chars like $^/ as well.
+// * [INVALID_CHAR] catches chars outside of the above 3 parsing contexts (e.g. in first pos)
 //      --> tokenize
 //
 // * [UNEXPECTED_TOKEN] Valid token in invalid place: SUM(A3*5)
 // * [CIRCULAR_REF] Cell references itself, e.g. in A1 "A0+A1", "SUM(A0:B4)"
 //      --> ast, more???
 //
-// * [INVALID_CELL] Invalid value from cell reference: "A1 + A2", where A1 === 'something invalid'
-// * [OUT_OF_BOUND] Number too big (applies to single nums as well as result of calc. should be checked after evaluating cell reference)
+// * [INVALID_CELL] Invalid value from cell reference: "A1 + A2", where A1 contains something invalid
 // * [DIVIDE_BY_0] Divide by 0
 //      --> interpret
 //
@@ -44,40 +38,32 @@
 
 import { Node_Binary, Token, Tree } from "./grammar"
 
+// See section ## DETAILS above.
 export type ErrorType =
-  // Split into INVALID_CHAR (lex)
-  // and UNEXPECTED_TOKEN (synt)
-  //
   | "INVALID_CHAR"
   | "INVALID_CELL"
   | "INVALID_NUMBER"
   | "UNKNOWN_FUNCTION"
-  | "TOKEN"
-  // merge next two?
-  | "UNKNOWN_OP"
-  | "UNKNOWN_FUNC"
-  // merge into UNEXPECTED_TOKEN?
   | "UNEXPECTED_EOF"
-  // necessary?
-  | "UNEXPECTED_NODE"
   | "UNEXPECTED_TOKEN"
-  // value or ref?
-  | "INVALID_CELL"
-  // EVALUATION
   | "DIVIDE_BY_0"
-  // mismatched parens?
   | "PARENS"
+  | "CELL_NOT_A_NUMBER"
   | "UNKNOWN_ERROR"
 
 // Define result types
 export type Result<T, E = Error> = Success<T> | Failure<E>
-
 export type Success<T> = { ok: true; value: T }
 export type Failure<E> = { ok: false; error: E }
 
 export type AppError = {
   indexOfCell: number
   cause: ParseError | InterpretError | UnknownError
+}
+
+export type BaseError = {
+  type: ErrorType
+  msg?: string
 }
 
 export type InterpretError = BaseError & {
@@ -94,11 +80,6 @@ export type CellError = BaseError & {
 export type UnknownError = BaseError & {
   type: "UNKNOWN_ERROR"
   err: unknown
-}
-
-export type BaseError = {
-  type: ErrorType
-  msg?: string
 }
 
 // Helper functions
@@ -133,7 +114,8 @@ export function fail<E>(error: E): Failure<E> {
   return { ok: false, error }
 }
 
-// Type guard
+// Type guards
+// Used for testing
 export function isSuccess<T, E>(result: Result<T, E>): result is Success<T> {
   return result.ok === true
 }

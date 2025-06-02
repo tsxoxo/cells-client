@@ -99,6 +99,8 @@ Made with [Vue](https://vuejs.org/) and [Xstate](https://stately.ai/docs) -- a f
 
 - Big picture -- implement non-console error messaging
 - Parsing: mb accumulate errors instead of failing fast for a different UX
+- add error: [OUT_OF_BOUND] Number too big (applies to single nums as well as result of calc. should be checked after evaluating cell reference)
+- add error: circular reference (e.g. A1 contains formula referencing A1)
 
 ## REFACTOR
 

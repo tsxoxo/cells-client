@@ -145,8 +145,8 @@ function getNextToken(start: number, str: string): Result<Token, ParseError> {
         }
 
         // Unexpected char.
-        // Lump together invalid chars and letters, for now.
         // Exampes: "3a", "5$"
+        // (does not differentiate invalid char from unexpected but valid char)
         //
         // Add faulty char for error handling.
         token.value += char
@@ -182,6 +182,8 @@ function getNextToken(start: number, str: string): Result<Token, ParseError> {
   }
 
   // Neither an op, a parens, a number, a cell, or a function keyword.
+  // Examples: ~`^'$
+  //
   // Add faulty char for error handling.
   token.value += char
   return createError({
@@ -190,7 +192,9 @@ function getNextToken(start: number, str: string): Result<Token, ParseError> {
     expected: "valid char",
   })
 }
+// ###########################################################################
 // Specialized tokenizers (cells, funcs)
+// ###########################################################################
 //
 // Parses potential cell refs and function names.
 // Merrily accrues all valid chars.
@@ -224,6 +228,8 @@ function parseAlphaNumeric(
 
       // Unexpected char.
       // Catch  "A_", etc.
+      // (does not differentiate between invalid and unexpected)
+      //
       // Add to token for error handling
       token.value += char
       return createError({
@@ -260,17 +266,14 @@ function validateToken(token: Token): Result<Token, ParseError> {
     })
   }
   if (/^[a-zA-Z]+/.test(token.value)) {
-    return fail({
+    return createError({
       type: "UNKNOWN_FUNCTION",
       token,
       expected: "valid function reference",
     })
   }
 
-  // Safety net. Not sure if we ever hit this.
-  //
-  // TODO: START_HERE
-  // Add more granular errors for rest of parsing pipeline,
+  // Safety net. Not sure how we would hit this.
   return createError({
     type: "UNKNOWN_ERROR",
     token,

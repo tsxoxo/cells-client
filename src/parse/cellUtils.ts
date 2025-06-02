@@ -57,7 +57,7 @@ export function getCellsInRange(
 // Takes array of cell index(es) and the spreadsheet data.
 // Returns cell values or
 // error if any value is not a number.
-export function getCellValues(
+export function getNumbersFromCells(
   cellsToResolve: number[],
   all: Cell[],
 ): Result<number[], CellError> {
@@ -68,9 +68,8 @@ export function getCellValues(
     const val = all[cellToResolve].value
     if (typeof val !== "number") {
       return fail({
-        type: "INVALID_CELL",
+        type: "CELL_NOT_A_NUMBER",
         cell: cellToResolve,
-        msg: `Cell ${cellToResolve} has non-numeric value '${val}'`,
       })
     }
 

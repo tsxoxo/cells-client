@@ -16,7 +16,7 @@ import {
   isSuccess,
   success,
 } from "./types/errors.ts"
-import { Token, Tree } from "./types/grammar.ts"
+import { Node_Binary, Token, Tree } from "./types/grammar.ts"
 
 export class Parser {
   readonly tokens: Token[]
@@ -102,18 +102,18 @@ export class Parser {
 
   private parseTerm(): Result<Tree, ParseError> {
     const term = this.parseFactor()
-    let termBinary = null
+    let termBinary: Node_Binary | null = null
 
     if (!isSuccess(term)) {
       return term
     }
 
     while (this.peek()?.type === "op") {
-      const token = this.peek()
-      if (token?.value === "*" || token?.value === "/") {
-        const op = token?.value as string
+      const op = this.peek()
+      if (op?.value === "*" || op?.value === "/") {
         this.consume()
 
+        // 'term', defined above, is the left-hand part of the potential term
         const right = this.parseFactor()
 
         if (!isSuccess(right)) {
@@ -122,15 +122,18 @@ export class Parser {
 
         termBinary = {
           type: "binary_op" as const,
-          value: op,
+          value: op.value,
           left: termBinary ? termBinary : term.value,
           right: right.value,
         }
       } else {
+        // is op, but not mult or div
         break
       }
     }
 
+    // Success state
+    // (term is already a Result type so no need to wrap it)
     return termBinary ? success(termBinary) : term
   }
 

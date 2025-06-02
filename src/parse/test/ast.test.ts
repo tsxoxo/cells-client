@@ -63,6 +63,21 @@ const validExpressionWithTermTokens = makeTokens([
   { type: "number", value: "3" },
 ])
 
+// Edge: chained multiplication
+const validChainedMultTokens = makeTokens([
+  { type: "number", value: "2" },
+  { type: "op", value: "*" },
+  { type: "number", value: "3" },
+  { type: "op", value: "*" },
+  { type: "number", value: "4" },
+])
+// const validChainedMultTree
+//   type: "binary_op",
+//   value: "*",
+//   left: { type: "number", value: "2" },
+//   right: { type: "number", value: "3" },
+// }
+
 // cell refs
 // "A00*a1"
 const validCells = makeTokens([
@@ -179,6 +194,22 @@ describe("Parser", () => {
     expect(tree.left.value).toEqual("1")
     expect(tree.right.type).toEqual("binary_op")
     expect(tree.right.value).toEqual("*")
+  })
+
+  it("parses chained multiplication", () => {
+    const parser = new Parser(validChainedMultTokens)
+    const parseResult = parser.makeAST()
+
+    assertIsSuccess(parseResult)
+
+    const tree = parseResult.value
+
+    assertBinaryOp(tree)
+
+    expect(tree.value).toEqual("*")
+    expect(tree.left.type).toEqual("binary_op")
+    expect(tree.left.value).toEqual("*")
+    expect(tree.right.value).toEqual("4")
   })
 
   it("parses cells", () => {

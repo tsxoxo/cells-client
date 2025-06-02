@@ -16,7 +16,7 @@ export function applyFuncToValues(
 
   if (!FUNCTIONS[normalizedFuncName]) {
     return fail({
-      type: "UNKNOWN_FUNC",
+      type: "UNKNOWN_FUNCTION",
       msg: `Unknown function keyword ${funcName}`,
     })
   }

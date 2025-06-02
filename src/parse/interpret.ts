@@ -1,19 +1,21 @@
 import { ALPHABET_WITH_FILLER } from "../constants"
 import { Cell } from "../types"
 import {
-  getCellValues,
+  getNumbersFromCells,
   getCellsInRange,
   getIndexFromCellName,
 } from "./cellUtils"
 import { applyFuncToValues } from "./func"
 import {
+  ErrorType,
+  Failure,
   InterpretError,
   Result,
   fail,
   isSuccess,
   success,
 } from "./types/errors"
-import { Tree } from "./types/grammar"
+import { Token, Tree } from "./types/grammar"
 
 export function interpret(
   tree: Tree,
@@ -75,13 +77,22 @@ export function interpret(
         // Subtract the filler
         ALPHABET_WITH_FILLER.length - 1,
       )
-      const resolvedRange = getCellValues(cellsInRange, cells)
+      const resolvedRange = getNumbersFromCells(cellsInRange, cells)
 
       if (!isSuccess(resolvedRange)) {
+        // Some cell contains not a number.
+        // Error from getNumbersFromCells: {cell: number}
+        //
+        // TODO: START HERE
+        // Think about how to do this:
+        // We want this to bubble up to state:
+        // * the number of the cell (to display: 'cell A9 contains non-numeric value')
+        // * the position of the token (for marking the literal range in the UI: "A9:A19")
+        // * probably the literal range itself ("A9:A19") to display in err msg
+        // * probably the node, for logging (easy)
+        //
         return fail({
-          type: "INVALID_CELL",
           node,
-          msg: `Error in function '${node.value}': ${resolvedRange.error.msg}`,
         })
       }
 
@@ -102,8 +113,9 @@ export function interpret(
     }
 
     // unexpected node type
+    // not sure how we would get here.
     return fail({
-      type: "UNEXPECTED_NODE",
+      type: "UNKNOWN_ERROR",
       node,
     })
   }
@@ -135,6 +147,26 @@ function calculate(
         ? fail({ type: "DIVIDE_BY_0", node })
         : success(left / right)
     default:
-      return fail({ type: "UNKNOWN_OP", node })
+      // If we got here, something went seriously wrong during tokenizing.
+      return fail({ type: "UNKNOWN_ERROR", node })
   }
+}
+
+function createError({
+  type,
+  node,
+  expected,
+}: {
+  type: ErrorType
+  // Not sure how much sense it make to expect 'null'
+  node: Tree
+  expected: string
+}): Failure<InterpretError> {
+  // const tokenDisplayString = token === null ? "null" : token.value
+  return fail({
+    type,
+    node,
+    // msg: `${type} in Interpreter: expected [${expected}], got [${tokenDisplayString}]`,
+    msg: `${type} in Interpreter: expected [${expected}], got [${node.value}]`,
+  })
 }

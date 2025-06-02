@@ -27,7 +27,7 @@ const singleValidValueCell = "A99"
 // * [INVALID_CHAR]: "#%`[$=" etc.
 // NOTE: Invalid chars also get caught under different error types: e.g. INVALID_NUMBER
 // Put invalid char in front to test this specifically
-const err_invalidChar = "^+2*(_3-}4)"
+const err_invalidChar = "$+2*(3-4)"
 // * [INVALID_NUMBER]
 const err_INVALID_NUMBER = "a99+02+37b"
 //      * ill-formed: "a999", "string"
