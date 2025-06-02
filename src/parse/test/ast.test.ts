@@ -240,7 +240,7 @@ describe("Parser", () => {
     const parseResult = parser.makeAST()
 
     assertIsFail(parseResult)
-    expect(parseResult.error.type).toEqual("TOKEN")
+    expect(parseResult.error.type).toEqual("UNEXPECTED_TOKEN")
     expect(parseResult.error.token!.value).toEqual("*")
   })
 
@@ -254,7 +254,7 @@ describe("Parser", () => {
     const missingSecondCell = new Parser(invFunc_missingSecondCell).makeAST()
 
     assertIsFail(missingSecondCell)
-    expect(missingSecondCell.error.type).toBe("TOKEN")
+    expect(missingSecondCell.error.type).toBe("UNEXPECTED_TOKEN")
     expect(missingSecondCell.error.msg).toContain("range")
     expect(missingSecondCell.error.token!.value).toBe(")")
 
@@ -263,7 +263,7 @@ describe("Parser", () => {
     expect(missingClose.error.token!.value).toEqual("*")
 
     assertIsFail(doubleOpen)
-    expect(doubleOpen.error.type).toEqual("TOKEN")
+    expect(doubleOpen.error.type).toEqual("UNEXPECTED_TOKEN")
     expect(doubleOpen.error.token!.value).toEqual("(")
   })
 })

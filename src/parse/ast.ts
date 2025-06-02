@@ -5,15 +5,17 @@
 // Takes an array of tokens,
 // outputs a tree structure.
 //
-// Uses the following grammar:
-//
-// * expression ::= term (('+' | '-') term)*
-// * term ::= factor (('*' | '/') factor)*
-// * factor ::= number | cell | '(' expression ')'
-// * number ::= [0-9]+ (( ',' | '.' ) [0-9]+)?
-// * cell ::= [a-zA-Z][0-9][0-9]?
+// Uses the grammar specified in ./types/grammar.ts
 
-import { ParseError, Result, fail, isSuccess, success } from "./types/errors.ts"
+import {
+  ErrorType,
+  Failure,
+  ParseError,
+  Result,
+  fail,
+  isSuccess,
+  success,
+} from "./types/errors.ts"
 import { Token, Tree } from "./types/grammar.ts"
 
 export class Parser {
@@ -23,6 +25,30 @@ export class Parser {
   constructor(tokens: Token[]) {
     this.tokens = tokens
     this.current = 0
+  }
+
+  // Main function
+  makeAST(): Result<Tree, ParseError> {
+    const result = this.parseExpression()
+
+    return result
+  }
+
+  private createError({
+    type,
+    token,
+    expected,
+  }: {
+    type: ErrorType
+    token: Token | null
+    expected: string
+  }): Failure<ParseError> {
+    const tokenDisplayString = token === null ? "null" : token.value
+    return fail({
+      type,
+      token,
+      msg: `${type} in makeAST: expected [${expected}], got [${tokenDisplayString}]`,
+    })
   }
 
   private peek() {
@@ -38,12 +64,6 @@ export class Parser {
     }
     this.current++
     return this.tokens[this.current - 1]
-  }
-
-  makeAST(): Result<Tree, ParseError> {
-    const result = this.parseExpression()
-
-    return result
   }
 
   private parseExpression(): Result<Tree, ParseError> {
@@ -119,10 +139,10 @@ export class Parser {
 
     // end of the line
     if (token === null) {
-      return fail({
+      return this.createError({
         type: "UNEXPECTED_EOF",
         token,
-        msg: "parseFactor: expected something after an operator",
+        expected: "factor",
       })
     }
 
@@ -149,10 +169,10 @@ export class Parser {
           const expr = this.parseExpression()
 
           if (this.peek()?.value !== ")") {
-            return fail({
+            return this.createError({
               type: "PARENS",
               token: this.peek(),
-              msg: "parseFactor: Expected closing bracket",
+              expected: "closing parenthesis",
             })
           }
 
@@ -160,30 +180,32 @@ export class Parser {
 
           return expr
         } else {
-          return fail({
-            type: "PARENS",
+          // I guess we can hit this in theory if the tokenizer mislabels something else as 'parens'
+          return this.createError({
+            type: "UNKNOWN_ERROR",
             token: this.peek(),
-            msg: "parseFactor: Unexpected opening bracket",
+            expected: "opening bracket",
           })
         }
 
       case "func": {
+        // Advance to the next token
         this.consume()
 
         const next = this.peek()
         if (next === null) {
-          return fail({
+          return this.createError({
             type: "UNEXPECTED_EOF",
             token: null,
-            msg: `parseFactor: unexpected end of input after function keyword "${token.value}".`,
+            expected: "bracket after function keyword",
           })
         }
 
         if (next.value !== "(") {
-          return fail({
-            type: "PARENS",
+          return this.createError({
+            type: "UNEXPECTED_TOKEN",
             token: next,
-            msg: `parseFactor: Expected opening bracket after function keyword "${token.value}"`,
+            expected: "bracket after function keyword",
           })
         }
 
@@ -196,10 +218,10 @@ export class Parser {
         }
 
         if (this.peek()?.value !== ")") {
-          return fail({
+          return this.createError({
             type: "PARENS",
             token: this.peek()!,
-            msg: `parseFactor: Expected closing bracket after function keyword "${token.value}"`,
+            expected: "closing bracket of function expression",
           })
         }
 
@@ -213,11 +235,13 @@ export class Parser {
         })
       }
     }
-    // After case block
-    return fail({
-      type: "TOKEN",
+
+    // After switch(token.type) block
+    // == token was not anything we expected
+    return this.createError({
+      type: "UNEXPECTED_TOKEN",
       token,
-      msg: "unknown type of token",
+      expected: "any known factor",
     })
   }
 
@@ -231,31 +255,31 @@ export class Parser {
       this.consume()
       if (this.peek()?.value === ":") {
         this.consume()
-        const maybeCell = this.peek()
-        if (maybeCell?.type === "cell") {
+        if (this.peek()?.type === "cell") {
           this.consume()
+
           return success({
             from: token!.value,
-            to: maybeCell.value,
+            to: this.tokens[this.current - 1].value,
           })
         }
       }
     }
 
-    // Either we ran out of tokens or
-    // token did not match range syntax
+    // Did we run out of tokens?
     if (this.peek() === null) {
-      return fail({
+      return this.createError({
         type: "UNEXPECTED_EOF",
         token: null,
-        msg: "parseRange: Unexpected end of input",
+        expected: "more tokens in range expression",
       })
     }
 
-    return fail({
-      type: "TOKEN",
-      msg: "Could not parse range: Unexpected token",
+    // Token did not match range syntax
+    return this.createError({
+      type: "UNEXPECTED_TOKEN",
       token: this.peek(),
+      expected: "valid range syntax",
     })
   }
 }

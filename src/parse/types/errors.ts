@@ -60,6 +60,7 @@ export type ErrorType =
   | "UNEXPECTED_EOF"
   // necessary?
   | "UNEXPECTED_NODE"
+  | "UNEXPECTED_TOKEN"
   // value or ref?
   | "INVALID_CELL"
   // EVALUATION
