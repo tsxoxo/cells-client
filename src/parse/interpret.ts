@@ -21,6 +21,7 @@ export function interpret(
   tree: Tree,
   cells: Cell[],
   _numberOfCols?: number,
+  currentCellIndex?: number,
 ): Result<{ res: number; deps: number[] }, InterpretError> {
   const numberOfCols = _numberOfCols ?? ALPHABET_WITH_FILLER.length - 1
   const deps: number[] = []
@@ -35,6 +36,14 @@ export function interpret(
 
     if (node.type === "cell") {
       const cellIndex = getIndexFromCellName(node.value)
+
+      if (cellIndex === currentCellIndex) {
+        return createError({
+          type: "CIRCULAR_CELL_REF",
+          node,
+          expected: "cell to not contain reference to itself",
+        })
+      }
       const cell = cells[cellIndex]
 
       if (cell === undefined) {
@@ -83,27 +92,32 @@ export function interpret(
     if (node.type === "func") {
       const from = getIndexFromCellName(node.from.value)
       const to = getIndexFromCellName(node.to.value)
+
       // Arg order of from and to does not matter, cells get sorted in getCellsinRange.
-      const cellsInRange = getCellsInRange(
+      const cellsInRange: number[] = getCellsInRange(
         from,
         to,
         // Subtract the filler
         numberOfCols,
       )
+
+      // Does range contain circular reference?
+      for (let i = 0; i < cellsInRange.length; i++) {
+        if (cellsInRange[i] === currentCellIndex) {
+          return createError({
+            type: "CIRCULAR_CELL_REF",
+            node,
+            expected: "cell to not contain reference to itself",
+          })
+        }
+      }
+
+      // No circuar refs. Try to get all values.
       const resolvedRange = getNumbersFromCells(cellsInRange, cells)
 
       if (!isSuccess(resolvedRange)) {
         // Some cell contains not a number.
         // Enrich error from getNumbersFromCells
-        //
-        // TODO: START HERE
-        // Think about how to do this:
-        // We want this to bubble up to state:
-        // * the number of the cell (to display: 'cell A9 contains non-numeric value')
-        // * the position of the token (for marking the literal range in the UI: "A9:A19")
-        // * probably the literal range itself ("A9:A19") to display in err msg
-        // * probably the node, for logging (easy)
-        //
         return createError({
           type: resolvedRange.error.type, // "CELL_NOT_A_NUMBER"
           node,

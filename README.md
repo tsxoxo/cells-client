@@ -37,18 +37,19 @@ Made with [Vue](https://vuejs.org/) and [Xstate](https://stately.ai/docs) -- a f
 
 # TODO
 
-## SECURITY
+**@CURRENT**: Systematize tests and errors
 
-- Protect again numeric overflow. Look into [ decimal.js ](https://mikemcl.github.io/decimal.js/#)
-- Escape user input
+START_HERE:
 
-## FEAT
+## Make testing more sane
 
-### Formula parsing
+_Tidy up before implementing property testing_
 
-@CURRENT
+- Finish reading zombies article
 
-#### Systematize tests and errors
+- bring test data closer to test implementations.
+
+- consider test.each
 
 - think through grouping tests by feature/grammar rule
   _describe('parsing cell references (Rule 3.1)', ...))._
@@ -56,21 +57,16 @@ Made with [Vue](https://vuejs.org/) and [Xstate](https://stately.ai/docs) -- a f
 
 - think through implementing grammar obj (see Claude)
 
-- think through error typing
-  _lexical,syntax,semantic,evaluation_
-  _Include consistent properties: type (your refined enum/string union), message (a default technical message), position (start/end index/line/column in the input string - crucial for parsers!), potentially offendingToken, and maybe a grammarRule reference._
+## After that
 
-- write out a couple test.each
-
-- think if property testing is worht it
+- implement property testing
 
 * write integration test for full parsing pipeline
 
-@AFTER
-
-- parsing: add negation
+- Build basic UI for errors
 
 - state: propagate changes
+
 - write test for state updates
 
 -> redesign UI
@@ -78,8 +74,16 @@ Made with [Vue](https://vuejs.org/) and [Xstate](https://stately.ai/docs) -- a f
 - write tests for UI
   -> introduce networking
 
-- Build basic UI for errors
 - Think about handling for parsing try/catch
+
+**@BACKLOG**
+
+## SECURITY
+
+- Protect again numeric overflow. Look into [ decimal.js ](https://mikemcl.github.io/decimal.js/#)
+- Escape user input
+
+## FEAT
 
 ### UX/UI
 
@@ -93,7 +97,8 @@ Made with [Vue](https://vuejs.org/) and [Xstate](https://stately.ai/docs) -- a f
 
 - animate only propagated changes, not the cell that was just edited
 - stagger animations?
-- parse: Funcs to add: "mult" | "avg" | "max" | "min" | "count"
+- parse: add functions "mult" | "avg" | "max" | "min" | "count"
+- parse: add negation
 
 ## ERRORS
 

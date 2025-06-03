@@ -17,7 +17,6 @@ function makeTokens(
     ({ type, value, position }): Token => ({
       type,
       value,
-      // Dummy prop ignored in testing.
       position: position ?? {
         start: 0,
         end: 0,

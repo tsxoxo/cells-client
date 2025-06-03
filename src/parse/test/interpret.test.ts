@@ -199,3 +199,58 @@ it("produces correct error CELL_NOT_A_NUMBER", () => {
   expect(result.error.range).toBe("A0:B1") // The literal range
   expect(result.error.node).toEqual(sumWithBadCell) // The node that failed
 })
+
+it("catches error CELL_UNDEFINED", () => {
+  // "A1"
+  const undefinedCellTree = {
+    type: "cell",
+    value: "A1",
+    position: { start: 0, end: 2 },
+  } as const
+
+  // Mock cells array with only 26 elements (A0-Z0), so A1 (index 26) is undefined
+  const mockCells: Cell[] = Array(26).fill({
+    content: "0",
+    value: 0,
+    dependencies: [],
+    dependents: [],
+  })
+
+  const result = interpret(undefinedCellTree, mockCells)
+  assertIsFail(result)
+  expect(result.error.type).toBe("CELL_UNDEFINED")
+  expect(result.error.node).toEqual(undefinedCellTree)
+})
+
+it("catches error CIRCULAR_CELL_REF", () => {
+  // Test A: Direct self-reference "A1"
+  const selfRefTree = {
+    type: "cell",
+    value: "A1",
+    position: { start: 0, end: 2 },
+  } as const
+
+  const mockCells: Cell[] = Array(30).fill({
+    content: "0",
+    value: 0,
+    dependencies: [],
+    dependents: [],
+  })
+
+  const directResult = interpret(selfRefTree, mockCells, 26, 26) // A1 is index 26
+  assertIsFail(directResult)
+  expect(directResult.error.type).toBe("CIRCULAR_CELL_REF")
+
+  // Test B: Self-reference in range "SUM(A0:B1)"
+  const rangeWithSelfTree = {
+    type: "func",
+    value: "sum",
+    position: { start: 0, end: 10 },
+    from: { type: "cell", value: "A0", position: { start: 4, end: 6 } },
+    to: { type: "cell", value: "B1", position: { start: 7, end: 9 } },
+  } as const
+
+  const rangeResult = interpret(rangeWithSelfTree, mockCells, 26, 26) // A1 is in range A0:B1
+  assertIsFail(rangeResult)
+  expect(rangeResult.error.type).toBe("CIRCULAR_CELL_REF")
+})

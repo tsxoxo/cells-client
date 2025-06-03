@@ -21,14 +21,12 @@ export function handleCellContentChange(
   event: changeCellContent,
 ): Result<Cell[], AppError> {
   assertEvent(event, "changeCellContent")
+  // DEBUG
   //console.log(`event.value: ${event.value}`)
   //console.log(`event.indexOfCell: ${event.indexOfCell}`)
 
-  const updatedCells = structuredClone(context.cells)
-  const oldCell = structuredClone(updatedCells[event.indexOfCell])
-
   // Evaluate content. Parse if formula.
-  const maybeNewCell = updateCellContent(oldCell, event.value, context.cells)
+  const maybeNewCell = updateCell(event.indexOfCell, event.value, context.cells)
 
   // Enrich ParseError with index of cell
   if (!isSuccess(maybeNewCell)) {
@@ -41,11 +39,11 @@ export function handleCellContentChange(
   // Happy path: not formula or successfully parsed.
   //
   // Update dependencies.
-  const { dependencies: oldDeps } = oldCell
+  const { dependencies: oldDeps } = context.cells[event.indexOfCell]
   const { dependencies: newDeps } = maybeNewCell.value
   const { stale, fresh } = makeDiff(oldDeps, newDeps)
   const cellsWithUpdatedDeps = updateDeps(
-    updatedCells,
+    context.cells,
     event.indexOfCell,
     stale,
     fresh,
@@ -63,22 +61,18 @@ export function handleCellContentChange(
 
 // Update a single cell
 // cells are needed for resolution when interpreting a formula like "1+A0"
-function updateCellContent(
-  cell: Cell,
+function updateCell(
+  cellIndex: number,
   newContent: string,
   cells: Cell[],
 ): Result<Cell, ParseError | InterpretError | UnknownError> {
-  const updatedCell = structuredClone(cell)
+  const updatedCell = structuredClone(cells[cellIndex])
   updatedCell.content = newContent
 
   // If it looks like a formula, try parsing it.
   if (newContent[0] === "=") {
-    // Could this be cleaner alternative for the following block?
-    //const result = isSuccess(astResult)
-    //  ? interpret(astResult.value, cells)
-    //  : astResult // early fail
+    const maybeEvalResult = safeEval(newContent.slice(1), cells, cellIndex)
 
-    const maybeEvalResult = safeEval(newContent.slice(1), cells)
     if (!isSuccess(maybeEvalResult)) {
       return maybeEvalResult
     }
@@ -104,6 +98,7 @@ function updateCellContent(
 function safeEval(
   formula: string,
   cells: Cell[],
+  cellIndex: number,
 ): Result<
   { res: number; deps: number[] },
   ParseError | InterpretError | UnknownError
@@ -115,7 +110,7 @@ function safeEval(
       return maybeAST
     }
 
-    const maybeFormula = interpret(maybeAST.value, cells)
+    const maybeFormula = interpret(maybeAST.value, cells, cellIndex)
 
     // Pass along either error or result
     return maybeFormula
@@ -136,6 +131,7 @@ function safeEval(
     // Clear cell, for now.
     return fail({
       type: "UNKNOWN_ERROR",
+      msg: "Oops! Unexpected state while trying to interpret ast",
       err: e,
     })
   }
