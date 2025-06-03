@@ -46,9 +46,13 @@ export type ErrorType =
   | "UNKNOWN_FUNCTION"
   | "UNEXPECTED_EOF"
   | "UNEXPECTED_TOKEN"
-  | "DIVIDE_BY_0"
   | "PARENS"
+  | "UNKNOWN_ERROR"
+
+export type InterpretErrorType =
   | "CELL_NOT_A_NUMBER"
+  | "CELL_UNDEFINED"
+  | "DIVIDE_BY_0"
   | "UNKNOWN_ERROR"
 
 // Define result types
@@ -66,9 +70,16 @@ export type BaseError = {
   msg?: string
 }
 
-export type InterpretError = BaseError & {
-  // null for UNEXPECTED_EOF
-  node: Tree | null
+export type InterpretError = {
+  type: InterpretErrorType
+  node: Tree | null // null for UNEXPECTED_EOF
+  position: {
+    start: number
+    end: number
+  }
+  cell?: number
+  range?: string
+  msg?: string
 }
 export type ParseError = BaseError & {
   // null for UNEXPECTED_EOF

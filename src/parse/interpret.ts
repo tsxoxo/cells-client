@@ -7,15 +7,15 @@ import {
 } from "./cellUtils"
 import { applyFuncToValues } from "./func"
 import {
-  ErrorType,
   Failure,
   InterpretError,
+  InterpretErrorType,
   Result,
   fail,
   isSuccess,
   success,
 } from "./types/errors"
-import { Token, Tree } from "./types/grammar"
+import { Tree } from "./types/grammar"
 
 export function interpret(
   tree: Tree,
@@ -37,7 +37,7 @@ export function interpret(
 
       if (cell === undefined) {
         return fail({
-          type: "INVALID_CELL",
+          type: "CELL_UNDEFINED",
           node,
           info: "cell undefined",
         })
@@ -48,7 +48,7 @@ export function interpret(
       return typeof cell.value === "number"
         ? success(cell.value)
         : fail({
-            type: "INVALID_CELL",
+            type: "CELL_NOT_A_NUMBER",
             node,
             info: "Referenced cell not a number",
           })
@@ -68,8 +68,8 @@ export function interpret(
     }
 
     if (node.type === "func") {
-      const from = getIndexFromCellName(node.from)
-      const to = getIndexFromCellName(node.to)
+      const from = getIndexFromCellName(node.from.value)
+      const to = getIndexFromCellName(node.to.value)
       // Arg order of from and to does not matter, cells get sorted in getCellsinRange.
       const cellsInRange = getCellsInRange(
         from,
@@ -93,7 +93,7 @@ export function interpret(
         //
         return createError({
           node,
-          cellIndex: resolvedRange.error.cell,
+          cell: resolvedRange.error.cell,
         })
       }
 
@@ -130,11 +130,12 @@ export function interpret(
 // Takes node of type binary_op and its resolved operands.
 // (We pass in the whole node for easier error handling.)
 // Returns calculated result.
+// The error is a simplified object that gets enriched up the chain.
 function calculate(
   node: Tree,
   left: number,
   right: number,
-): Result<number, InterpretError> {
+): Result<number, { type: InterpretErrorType }> {
   const op = node.value
 
   switch (op) {
@@ -145,29 +146,36 @@ function calculate(
     case "*":
       return success(left * right)
     case "/":
-      return right === 0
-        ? fail({ type: "DIVIDE_BY_0", node })
-        : success(left / right)
+      return right === 0 ? fail({ type: "DIVIDE_BY_0" }) : success(left / right)
     default:
       // If we got here, something went seriously wrong during tokenizing.
-      return fail({ type: "UNKNOWN_ERROR", node })
+      return fail({ type: "UNKNOWN_ERROR" })
   }
 }
 
 function createError({
   type,
   node,
+  position,
+  cell,
+  range,
   expected,
 }: {
-  type: ErrorType
+  type: InterpretErrorType
   // Not sure how much sense it make to expect 'null'
   node: Tree
+  position: { start: number; end: number }
+  cell?: number
+  range?: string
   expected: string
 }): Failure<InterpretError> {
   // const tokenDisplayString = token === null ? "null" : token.value
   return fail({
     type,
     node,
+    position,
+    cell,
+    range,
     // msg: `${type} in Interpreter: expected [${expected}], got [${tokenDisplayString}]`,
     msg: `${type} in Interpreter: expected [${expected}], got [${node.value}]`,
   })

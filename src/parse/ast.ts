@@ -240,12 +240,14 @@ export class Parser {
 
         // happy path: consume the closing bracket
         this.consume()
-        console.log(`FUNCTION TOKEN: ${JSON.stringify(token)}`)
 
         return success({
           type: "func",
           value: token.value,
-          position: token.position,
+          position: {
+            start: token.position.start,
+            end: range.value.to.position.end + 1,
+          },
           ...range.value,
         })
       }
