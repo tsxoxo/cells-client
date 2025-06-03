@@ -14,8 +14,8 @@ function makeCell(
     dependents,
   }
 }
-export const INITIAL_CELLS: Cell[] = [...new Array(NUMBER_OF_CELLS)].map(
-  (_, ind) => makeCell(),
+export const INITIAL_CELLS: Cell[] = [...new Array(NUMBER_OF_CELLS)].map(() =>
+  makeCell(),
 )
 INITIAL_CELLS[0] = makeCell(10, "", [], [2])
 INITIAL_CELLS[1] = makeCell(11, "", [], [2])

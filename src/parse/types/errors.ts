@@ -53,6 +53,8 @@ export type InterpretErrorType =
   | "CELL_NOT_A_NUMBER"
   | "CELL_UNDEFINED"
   | "DIVIDE_BY_0"
+  // Safety net if tokenizer fails. Not sure if we really need this.
+  | "UNKNOWN_FUNCTION"
   | "UNKNOWN_ERROR"
 
 // Define result types
@@ -72,20 +74,17 @@ export type BaseError = {
 
 export type InterpretError = {
   type: InterpretErrorType
-  node: Tree | null // null for UNEXPECTED_EOF
-  position: {
-    start: number
-    end: number
-  }
-  cell?: number
-  range?: string
-  msg?: string
+  node: Tree
+  msg: string
+  cell?: number // Cell index which contains an invalid value
+  range?: string // Range passed to a function which contains an invalid cell
 }
 export type ParseError = BaseError & {
   // null for UNEXPECTED_EOF
   token: Token | null
 }
-export type CellError = BaseError & {
+export type CellError = {
+  type: "CELL_NOT_A_NUMBER"
   cell: number
 }
 export type UnknownError = BaseError & {

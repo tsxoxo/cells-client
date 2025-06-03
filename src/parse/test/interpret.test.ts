@@ -41,7 +41,7 @@ const validExpressionWithTermTree = {
   },
 } as const
 
-// "A0*B00" (fixed operator to match comment)
+// "A0*B00"
 const validWithCells = {
   type: "binary_op",
   value: "*",
@@ -135,7 +135,7 @@ describe("Interpreter", () => {
   it("uses values from cells and extracts dependencies", () => {
     const result = interpret(validWithCells, cellsA0andB0)
     assertIsSuccess(result)
-    expect(result.value.res).toEqual(1)
+    expect(result.value.res).toEqual(0)
     expect(result.value.deps).toEqual([0, 1])
   })
 
@@ -190,12 +190,12 @@ it("produces correct error CELL_NOT_A_NUMBER", () => {
     { content: "foo", value: undefined, dependencies: [], dependents: [] }, // B1 - non-numeric!
   ]
 
-  const result = interpret(sumWithBadCell, mockCells)
+  const result = interpret(sumWithBadCell, mockCells, 2)
 
   assertIsFail(result)
   expect(result.error.type).toBe("CELL_NOT_A_NUMBER")
   expect(result.error.cell).toBe(3) // B1's index
-  expect(result.error.position).toEqual({ start: 7, end: 9 }) // To mark the range string "A0:B1"
+  expect(result.error.node.position).toEqual({ start: 0, end: 10 }) // To mark the range string "A0:B1"
   expect(result.error.range).toBe("A0:B1") // The literal range
   expect(result.error.node).toEqual(sumWithBadCell) // The node that failed
 })

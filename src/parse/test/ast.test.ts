@@ -1,4 +1,4 @@
-import { assert, describe, expect, it } from "vitest"
+import { describe, expect, it } from "vitest"
 import { Parser } from "../ast"
 import { Token, TokenType } from "../types/grammar"
 import { assertBinaryOp, assertIsFail, assertIsSuccess } from "../types/errors"
