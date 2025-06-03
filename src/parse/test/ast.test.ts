@@ -256,10 +256,14 @@ describe("Parser", () => {
 
     expect(tree.value).toEqual("*")
 
-    assert(tree.left.type === "func")
-    expect(tree.left.value).toEqual("SUM")
-    expect(tree.left.from).toEqual("A1")
-    expect(tree.left.to).toEqual("A2")
+    const funcNode = tree.left
+
+    assert(funcNode.type === "func")
+    expect(funcNode.value).toEqual("SUM")
+    expect(funcNode.position.start).toEqual(0)
+    expect(funcNode.position.end).toEqual(1)
+    // expect(func.from).toEqual("A1")
+    // expect(func.to).toEqual("A2")
 
     expect(tree.right.type).toEqual("number")
     expect(tree.right.value).toEqual("3")

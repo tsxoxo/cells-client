@@ -48,6 +48,9 @@ export function tokenize(str: string): Result<Token[], ParseError> {
     if (result.ok === true) {
       const token = result.value
       token.position.end = token.position.start + token.value.length
+      // DEBUG
+      // if (token.type === "func")
+      //   console.log(`in tokenize, token = [${JSON.stringify(token)}]`)
 
       tokens.push(token)
       ind += token.value.length

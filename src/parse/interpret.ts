@@ -91,8 +91,9 @@ export function interpret(
         // * probably the literal range itself ("A9:A19") to display in err msg
         // * probably the node, for logging (easy)
         //
-        return fail({
+        return createError({
           node,
+          cellIndex: resolvedRange.error.cell,
         })
       }
 
@@ -113,6 +114,7 @@ export function interpret(
     }
 
     // unexpected node type
+    // safety net.
     // not sure how we would get here.
     return fail({
       type: "UNKNOWN_ERROR",

@@ -32,6 +32,10 @@ export type Tree = Node_Binary | Node_Number | Node_Cell | Node_Func
 interface Node_Base {
   type: string
   value: string
+  position: {
+    start: number
+    end: number
+  }
 }
 
 export interface Node_Binary extends Node_Base {
@@ -51,6 +55,6 @@ export interface Node_Cell extends Node_Base {
 
 export interface Node_Func extends Node_Base {
   type: "func"
-  from: string
-  to: string
+  from: Node_Cell
+  to: Node_Cell
 }

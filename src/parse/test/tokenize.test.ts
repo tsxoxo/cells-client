@@ -45,13 +45,15 @@ describe("tokenizer", () => {
     expect(result.value[result.value.length - 1].value).toBe("7,3")
   })
 
-  it("handles funcs", () => {
+  it("handles functions", () => {
     const result = tokenize(validFunc)
 
     assertIsSuccess(result)
 
     expect(result.value.length).toBe(6)
     expect(result.value[0].value).toBe("SUM")
+    expect(result.value[0].position.start).toBe(0)
+    expect(result.value[0].position.end).toBe(3)
   })
 
   // Edgecases

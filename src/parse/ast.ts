@@ -16,7 +16,7 @@ import {
   isSuccess,
   success,
 } from "./types/errors.ts"
-import { Node_Binary, Token, Tree } from "./types/grammar.ts"
+import { Node_Binary, Node_Cell, Token, Tree } from "./types/grammar.ts"
 
 export class Parser {
   readonly tokens: Token[]
@@ -89,6 +89,10 @@ export class Parser {
         exprBinary = {
           type: "binary_op" as const,
           value: op,
+          position: {
+            start: expr.value.position.start,
+            end: right.value.position.end,
+          },
           left: exprBinary ? exprBinary : expr.value,
           right: right.value,
         }
@@ -123,6 +127,10 @@ export class Parser {
         termBinary = {
           type: "binary_op" as const,
           value: op.value,
+          position: {
+            start: term.value.position.start,
+            end: right.value.position.end,
+          },
           left: termBinary ? termBinary : term.value,
           right: right.value,
         }
@@ -156,6 +164,7 @@ export class Parser {
         return success({
           type: "number",
           value: token.value,
+          position: token.position,
         })
 
       case "cell":
@@ -164,6 +173,7 @@ export class Parser {
         return success({
           type: "cell",
           value: token.value,
+          position: token.position,
         })
 
       case "parens":
@@ -199,7 +209,7 @@ export class Parser {
         if (next === null) {
           return this.createError({
             type: "UNEXPECTED_EOF",
-            token: null,
+            token: token,
             expected: "bracket after function keyword",
           })
         }
@@ -230,10 +240,12 @@ export class Parser {
 
         // happy path: consume the closing bracket
         this.consume()
+        console.log(`FUNCTION TOKEN: ${JSON.stringify(token)}`)
 
         return success({
           type: "func",
           value: token.value,
+          position: token.position,
           ...range.value,
         })
       }
@@ -248,22 +260,34 @@ export class Parser {
     })
   }
 
-  private parseRange(): Result<{ from: string; to: string }, ParseError> {
-    const token = this.peek()
+  private parseRange(): Result<{ from: Node_Cell; to: Node_Cell }, ParseError> {
+    const maybeFirstCell = this.peek()
 
     // Happy path
     // HACK:
     // Seems wrong to nest but I cant be bothered right now
-    if (token?.type === "cell") {
+    if (maybeFirstCell?.type === "cell") {
       this.consume()
       if (this.peek()?.value === ":") {
         this.consume()
         if (this.peek()?.type === "cell") {
+          const from = {
+            type: "cell" as const,
+            value: maybeFirstCell!.value,
+            position: maybeFirstCell.position,
+          }
+
+          const to = {
+            type: "cell" as const,
+            value: this.peek()!.value,
+            position: this.peek()!.position,
+          }
+
           this.consume()
 
           return success({
-            from: token!.value,
-            to: this.tokens[this.current - 1].value,
+            from,
+            to,
           })
         }
       }
@@ -273,7 +297,7 @@ export class Parser {
     if (this.peek() === null) {
       return this.createError({
         type: "UNEXPECTED_EOF",
-        token: null,
+        token: this.tokens[this.current - 1],
         expected: "more tokens in range expression",
       })
     }
