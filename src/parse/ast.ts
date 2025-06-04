@@ -8,13 +8,13 @@
 // Uses the grammar specified in ./types/grammar.ts
 
 import {
-  ErrorType,
   Failure,
-  ParseError,
   Result,
   fail,
-  isSuccess,
   success,
+  isSuccess,
+  ASTErrorType,
+  ASTError,
 } from "./types/errors.ts"
 import { Node_Binary, Node_Cell, Token, Tree } from "./types/grammar.ts"
 
@@ -28,7 +28,7 @@ export class Parser {
   }
 
   // Main function
-  makeAST(): Result<Tree, ParseError> {
+  makeAST(): Result<Tree, ASTError> {
     const result = this.parseExpression()
 
     return result
@@ -39,10 +39,10 @@ export class Parser {
     token,
     expected,
   }: {
-    type: ErrorType
+    type: ASTErrorType
     token: Token | null
     expected: string
-  }): Failure<ParseError> {
+  }): Failure<ASTError> {
     const tokenDisplayString = token === null ? "null" : token.value
     return fail({
       type,
@@ -66,7 +66,7 @@ export class Parser {
     return this.tokens[this.current - 1]
   }
 
-  private parseExpression(): Result<Tree, ParseError> {
+  private parseExpression(): Result<Tree, ASTError> {
     const expr = this.parseTerm()
     let exprBinary = null
 
@@ -104,7 +104,7 @@ export class Parser {
     return exprBinary ? success(exprBinary) : expr
   }
 
-  private parseTerm(): Result<Tree, ParseError> {
+  private parseTerm(): Result<Tree, ASTError> {
     const term = this.parseFactor()
     let termBinary: Node_Binary | null = null
 
@@ -145,7 +145,7 @@ export class Parser {
     return termBinary ? success(termBinary) : term
   }
 
-  private parseFactor(): Result<Tree, ParseError> {
+  private parseFactor(): Result<Tree, ASTError> {
     const token = this.peek()
 
     // end of the line
@@ -262,7 +262,7 @@ export class Parser {
     })
   }
 
-  private parseRange(): Result<{ from: Node_Cell; to: Node_Cell }, ParseError> {
+  private parseRange(): Result<{ from: Node_Cell; to: Node_Cell }, ASTError> {
     const maybeFirstCell = this.peek()
 
     // Happy path

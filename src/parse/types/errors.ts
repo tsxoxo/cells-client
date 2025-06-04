@@ -11,17 +11,17 @@
 //
 // --> Necessary data
 // A) The type of error.
-// B) The position or value of the invalid token.
+// B) The position of the bad token.
 //
 // ## DETAILS
-// * [INVALID_xyz] INVALID_CELL, _CHAR and _Number catch invalid chars like $^/ as well.
+// * [INVALID_xyz] INVALID_CELL, _CHAR and _NUMBER catch invalid chars like $^/ as well.
 // * [INVALID_CHAR] catches chars outside of the above 3 parsing contexts (e.g. in first pos)
 //      --> tokenize
 //
 // * [UNEXPECTED_TOKEN] Valid token in invalid place: SUM(A3*5)
 //      --> ast
 //
-// * [CELL_NOT_A_NUMBER] Non-numeric value from cell reference. Example: formula is "A1 + A2" and A1 contains "foo".
+// * [CELL_NOT_A_NUMBER] Non-numeric value from cell reference. "A1 + A2" and A1 contains "foo".
 // * [CELL_UNDEFINED] Attempt to get cell from cells array returned undefined: cell is empty.
 // * [CIRCULAR_CEL_REF] Cell references itself, e.g. in A1 "A0+A1", "SUM(A0:B4)"
 // * [DIVIDE_BY_0] Divide by 0
@@ -32,12 +32,16 @@
 
 import { Node_Binary, Token, Tree } from "./grammar"
 
+// Base types for parsing errors
 // See section ## DETAILS above.
-export type ErrorType =
+export type TokenizeErrorType =
   | "INVALID_CHAR"
   | "INVALID_CELL"
   | "INVALID_NUMBER"
   | "UNKNOWN_FUNCTION"
+  | "UNKNOWN_ERROR"
+
+export type ASTErrorType =
   | "UNEXPECTED_EOF"
   | "UNEXPECTED_TOKEN"
   | "PARENS"
@@ -48,14 +52,27 @@ export type InterpretErrorType =
   | "CELL_UNDEFINED"
   | "CIRCULAR_CELL_REF"
   | "DIVIDE_BY_0"
-  // Safety net if tokenizer fails. Not sure if we really need this.
-  | "UNKNOWN_FUNCTION"
+  | "UNKNOWN_FUNCTION" // Safety net if tokenizer fails. Not sure if we really need this.
   | "UNKNOWN_ERROR"
 
-// Define result types
-export type Result<T, E = Error> = Success<T> | Failure<E>
-export type Success<T> = { ok: true; value: T }
-export type Failure<E> = { ok: false; error: E }
+// Error objects that bubble up and get handled
+export type TokenizeError = {
+  type: TokenizeErrorType
+  token: Token
+  msg: string
+}
+export type ASTError = {
+  type: ASTErrorType
+  token: Token | null // is null when UNEXPECTED_EOF
+  msg: string
+}
+export type InterpretError = {
+  type: InterpretErrorType
+  node: Tree
+  msg: string
+  cell?: number // Cell index which contains an invalid value
+  range?: string // Range passed to a function which contains an invalid cell
+}
 
 export type AppError = {
   indexOfCell: number
@@ -67,13 +84,6 @@ export type BaseError = {
   msg: string
 }
 
-export type InterpretError = {
-  type: InterpretErrorType
-  node: Tree
-  msg: string
-  cell?: number // Cell index which contains an invalid value
-  range?: string // Range passed to a function which contains an invalid cell
-}
 export type ParseError = BaseError & {
   // null for UNEXPECTED_EOF
   token: Token | null
@@ -87,29 +97,12 @@ export type UnknownError = BaseError & {
   err: unknown
 }
 
-// Helper functions
-export function pipe<T, E, R>(
-  initValue: Result<T, E>,
-  ...fns: Array<(res: Result<unknown, E>) => Result<unknown, E>>
-): Result<R, E> {
-  return fns.reduce(
-    (acc, fn) => fn(acc as Result<unknown, E>),
-    initValue as unknown as Result<unknown, E>,
-  ) as Result<R, E>
-}
-
-export function flatMap<T, U, E>(
-  res: Result<T, E>,
-  fn: (val: T) => Result<U, E>,
-): Result<U, E> {
-  return res.ok ? fn(res.value) : res
-}
-
-export function bind<T, U, E>(
-  fn: (val: T) => Result<U, E>,
-): (res: Result<T, E>) => Result<U, E> {
-  return (val) => flatMap(val, fn)
-}
+// ########################################################################
+// RESULT PATTERN
+// ########################################################################
+export type Result<T, E> = Success<T> | Failure<E>
+export type Success<T> = { ok: true; value: T }
+export type Failure<E> = { ok: false; error: E }
 
 export function success<T>(value: T): Success<T> {
   return { ok: true, value }
@@ -120,11 +113,11 @@ export function fail<E>(error: E): Failure<E> {
 }
 
 // Type guards
-// Used for testing
 export function isSuccess<T, E>(result: Result<T, E>): result is Success<T> {
   return result.ok === true
 }
 
+// Used for testing
 export function assertBinaryOp(node: Tree): asserts node is Node_Binary {
   if (node.type !== "binary_op") {
     throw new Error(

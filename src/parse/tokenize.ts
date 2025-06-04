@@ -21,10 +21,10 @@ import {
   isWhitespace,
 } from "./match"
 import {
-  ErrorType,
   Failure,
-  ParseError,
   Result,
+  TokenizeError,
+  TokenizeErrorType,
   fail,
   success,
 } from "./types/errors"
@@ -32,7 +32,7 @@ import { Token } from "./types/grammar"
 
 const ALPHANUM = /[a-zA-Z0-9]/
 
-export function tokenize(str: string): Result<Token[], ParseError> {
+export function tokenize(str: string): Result<Token[], TokenizeError> {
   const tokens = [] as Token[]
   let ind = 0
 
@@ -59,10 +59,6 @@ export function tokenize(str: string): Result<Token[], ParseError> {
     } else {
       // error state
       const token = result.error.token
-
-      if (token == null) {
-        return result
-      }
 
       token.position.end = token.position.start + token.value.length
 
@@ -95,11 +91,10 @@ function createError({
   token,
   expected,
 }: {
-  type: ErrorType
-  // Not sure how much sense it make to expect 'null'
-  token: Token | null
+  type: TokenizeErrorType
+  token: Token
   expected: string
-}): Failure<ParseError> {
+}): Failure<TokenizeError> {
   const tokenDisplayString = token === null ? "null" : token.value
   return fail({
     type,
@@ -109,7 +104,10 @@ function createError({
 }
 
 // The meat and potatoes
-function getNextToken(start: number, str: string): Result<Token, ParseError> {
+function getNextToken(
+  start: number,
+  str: string,
+): Result<Token, TokenizeError> {
   const token = createEmptyToken(start)
   const char = str[start]
 
@@ -206,7 +204,7 @@ function parseAlphaNumeric(
   start: number,
   token: Token,
   str: string,
-): Result<Token, ParseError> {
+): Result<Token, TokenizeError> {
   let _ind = start
   // We already know the first char is alphanumeric
   token.value += str[_ind]
@@ -247,7 +245,7 @@ function parseAlphaNumeric(
   return validateToken(token)
 }
 
-function validateToken(token: Token): Result<Token, ParseError> {
+function validateToken(token: Token): Result<Token, TokenizeError> {
   // HAPPY STATES
   if (isCellRef(token.value)) {
     token.type = "cell"

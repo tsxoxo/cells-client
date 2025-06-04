@@ -3,10 +3,11 @@ import type { Cell } from "./types"
 import { Context, changeCellContent } from "./cellsMachine"
 import { parseToAST } from "./parse/main"
 import {
+  ASTError,
   AppError,
   InterpretError,
-  ParseError,
   Result,
+  TokenizeError,
   UnknownError,
   fail,
   isSuccess,
@@ -65,11 +66,19 @@ function updateCell(
   cellIndex: number,
   newContent: string,
   cells: Cell[],
-): Result<Cell, ParseError | InterpretError | UnknownError> {
+): Result<Cell, UnknownError> {
   const updatedCell = structuredClone(cells[cellIndex])
   updatedCell.content = newContent
 
-  // If it looks like a formula, try parsing it.
+  // Empty formula. Don't parse.
+  if (newContent === "=") {
+    updatedCell.value = undefined
+    updatedCell.dependencies = []
+
+    return success(updatedCell)
+  }
+
+  // Looks like formula. Try parsing it.
   if (newContent[0] === "=") {
     const maybeEvalResult = safeEval(newContent.slice(1), cells, cellIndex)
 
@@ -81,16 +90,22 @@ function updateCell(
     // Update cell with result of calculation and new dependencies
     updatedCell.value = maybeEvalResult.value.res
     updatedCell.dependencies = maybeEvalResult.value.deps
-  } else {
-    // Not a formula. Clear dependencies.
-    updatedCell.dependencies = []
-    // but numeric value would still be usable
-    updatedCell.value = isNumber(newContent)
-      ? parseFloat(newContent)
-      : undefined
+
+    return success(updatedCell)
   }
 
-  // It's not a formula or parsing was success.
+  // Single number. Still usable as value
+  if (isNumber(newContent)) {
+    updatedCell.value = parseFloat(newContent)
+    updatedCell.dependencies = []
+
+    return success(updatedCell)
+  }
+
+  // Default: treat as string
+  updatedCell.value = undefined
+  updatedCell.dependencies = []
+
   return success(updatedCell)
 }
 
@@ -101,7 +116,7 @@ function safeEval(
   cellIndex: number,
 ): Result<
   { res: number; deps: number[] },
-  ParseError | InterpretError | UnknownError
+  TokenizeError | ASTError | InterpretError | UnknownError
 > {
   try {
     const maybeAST = parseToAST(formula)
@@ -131,7 +146,7 @@ function safeEval(
     // Clear cell, for now.
     return fail({
       type: "UNKNOWN_ERROR",
-      msg: "Oops! Unexpected state while trying to interpret ast",
+      msg: "Oops, unexpected state! Triggered `catch` while trying to interpret AST.",
       err: e,
     })
   }
