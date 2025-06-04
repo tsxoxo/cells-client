@@ -316,7 +316,7 @@ describe("Parser", () => {
 
     assertIsFail(parseResult)
     expect(parseResult.error.type).toEqual("UNEXPECTED_TOKEN")
-    expect(parseResult.error.token!.value).toEqual("*")
+    expect(parseResult.error.payload!.value).toEqual("*")
   })
 
   it("catches invalid parens around function", () => {
@@ -331,14 +331,14 @@ describe("Parser", () => {
     assertIsFail(missingSecondCell)
     expect(missingSecondCell.error.type).toBe("UNEXPECTED_TOKEN")
     expect(missingSecondCell.error.msg).toContain("range")
-    expect(missingSecondCell.error.token!.value).toBe(")")
+    expect(missingSecondCell.error.payload!.value).toBe(")")
 
     assertIsFail(missingClose)
     expect(missingClose.error.type).toEqual("PARENS")
-    expect(missingClose.error.token!.value).toEqual("*")
+    expect(missingClose.error.payload!.value).toEqual("*")
 
     assertIsFail(doubleOpen)
     expect(doubleOpen.error.type).toEqual("UNEXPECTED_TOKEN")
-    expect(doubleOpen.error.token!.value).toEqual("(")
+    expect(doubleOpen.error.payload!.value).toEqual("(")
   })
 })

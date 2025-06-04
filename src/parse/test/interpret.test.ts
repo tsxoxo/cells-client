@@ -195,9 +195,8 @@ it("produces correct error CELL_NOT_A_NUMBER", () => {
   assertIsFail(result)
   expect(result.error.type).toBe("CELL_NOT_A_NUMBER")
   expect(result.error.cell).toBe(3) // B1's index
-  expect(result.error.node.position).toEqual({ start: 0, end: 10 }) // To mark the range string "A0:B1"
-  expect(result.error.range).toBe("A0:B1") // The literal range
-  expect(result.error.node).toEqual(sumWithBadCell) // The node that failed
+  expect(result.error.payload!.position).toEqual({ start: 0, end: 10 }) // To mark the range string "A0:B1"
+  expect(result.error.payload).toEqual(sumWithBadCell) // The node that failed
 })
 
 it("catches error CELL_UNDEFINED", () => {
@@ -219,7 +218,7 @@ it("catches error CELL_UNDEFINED", () => {
   const result = interpret(undefinedCellTree, mockCells)
   assertIsFail(result)
   expect(result.error.type).toBe("CELL_UNDEFINED")
-  expect(result.error.node).toEqual(undefinedCellTree)
+  expect(result.error.payload).toEqual(undefinedCellTree)
 })
 
 it("catches error CIRCULAR_CELL_REF", () => {

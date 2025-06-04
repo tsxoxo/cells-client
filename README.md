@@ -99,6 +99,7 @@ _Tidy up before implementing property testing_
 - stagger animations?
 - parse: add functions "mult" | "avg" | "max" | "min" | "count"
 - parse: add negation
+- parse: add nested functions
 
 ## ERRORS
 
