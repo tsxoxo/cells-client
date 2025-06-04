@@ -60,7 +60,7 @@ export function getCellsInRange(
 export function getNumbersFromCells(
   cellsToResolve: number[],
   all: Cell[],
-): Result<number[], { type: string; cell: number }> {
+): Result<number[], { type: "CELL_NOT_A_NUMBER"; cell: number }> {
   const values = []
 
   for (let i = 0; i < cellsToResolve.length; i++) {

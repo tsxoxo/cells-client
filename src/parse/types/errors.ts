@@ -30,17 +30,12 @@
 // * [UNKNOWN_ERROR]: Safety net. Not sure if we ever hit this one. Possibly throw instead.
 //      --> tokenizer
 
-import { Node_Binary, Token, Tree } from "./grammar"
-
-export type AppError = {
-  indexOfCell: number
-  cause: ParseError
-}
+import { Node_Binary, Token, Node } from "./grammar"
 
 // Error object that bubble up and get handled
 export type ParseError = {
   type: TokenizeErrorType | ASTErrorType | InterpretErrorType
-  payload: Token | Tree | null
+  payload: Token | Node | null
   msg: string
   cell?: number // Cell index which contains an invalid value
 }
@@ -89,7 +84,7 @@ export function isSuccess<T, E>(result: Result<T, E>): result is Success<T> {
 }
 
 // Used for testing
-export function assertBinaryOp(node: Tree): asserts node is Node_Binary {
+export function assertBinaryOp(node: Node): asserts node is Node_Binary {
   if (node.type !== "binary_op") {
     throw new Error(
       `node is not of type "binary_op! node: ${JSON.stringify(node)}`,

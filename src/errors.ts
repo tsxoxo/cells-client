@@ -1,4 +1,9 @@
-import { AppError } from "./parse/types/errors"
+import { ParseError } from "./parse/types/errors"
+
+export type AppError = {
+  indexOfCell: number
+  cause: ParseError
+}
 
 export function handleErrors(errors: AppError[]) {
   if (errors.length > 0) {

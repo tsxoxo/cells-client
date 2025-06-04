@@ -15,10 +15,10 @@ import {
   isSuccess,
   success,
 } from "./types/errors"
-import { Tree } from "./types/grammar"
+import { Node } from "./types/grammar"
 
 export function interpret(
-  tree: Tree,
+  tree: Node,
   cells: Cell[],
   _numberOfCols?: number,
   currentCellIndex?: number,
@@ -26,7 +26,7 @@ export function interpret(
   const numberOfCols = _numberOfCols ?? ALPHABET_WITH_FILLER.length - 1
   const deps: number[] = []
 
-  function solveNode(node: Tree): Result<number, ParseError> {
+  function solveNode(node: Node): Result<number, ParseError> {
     let calcResult
 
     // base case
@@ -163,7 +163,7 @@ export function interpret(
 // Returns calculated result.
 // The error is a simplified object that gets enriched up the chain.
 function calculate(
-  node: Tree,
+  node: Node,
   left: number,
   right: number,
 ): Result<number, { type: "DIVIDE_BY_0" | "UNKNOWN_ERROR" }> {
@@ -192,7 +192,7 @@ function createError({
 }: {
   type: InterpretErrorType
   // Not sure how much sense it make to expect 'null'
-  node: Tree
+  node: Node
   cell?: number
   expected: string
 }): Failure<ParseError> {

@@ -4,7 +4,7 @@ import { cellsMachine } from "./cellsMachine"
 import { createBrowserInspector } from "@statelyai/inspect"
 import { computed, watch } from "vue"
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./constants"
-import { handleErrors } from "./utils"
+import { handleErrors } from "./errors"
 import { getCellIndexfromXY } from "./parse/cellUtils"
 
 const { inspect } = createBrowserInspector({

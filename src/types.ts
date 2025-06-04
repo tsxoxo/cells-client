@@ -1,8 +1,3 @@
-export interface CleanToken {
-  value: number
-  indexOfOriginCell: number
-}
-
 export interface Cell {
   // raw user input
   content: string

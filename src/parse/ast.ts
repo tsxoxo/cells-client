@@ -16,7 +16,7 @@ import {
   ASTErrorType,
   ParseError,
 } from "./types/errors.ts"
-import { Node_Binary, Node_Cell, Token, Tree } from "./types/grammar.ts"
+import { Node_Binary, Node_Cell, Token, Node } from "./types/grammar.ts"
 
 export class Parser {
   readonly tokens: Token[]
@@ -28,7 +28,7 @@ export class Parser {
   }
 
   // Main function
-  makeAST(): Result<Tree, ParseError> {
+  makeAST(): Result<Node, ParseError> {
     const result = this.parseExpression()
 
     return result
@@ -66,7 +66,7 @@ export class Parser {
     return this.tokens[this.current - 1]
   }
 
-  private parseExpression(): Result<Tree, ParseError> {
+  private parseExpression(): Result<Node, ParseError> {
     const expr = this.parseTerm()
     let exprBinary = null
 
@@ -104,7 +104,7 @@ export class Parser {
     return exprBinary ? success(exprBinary) : expr
   }
 
-  private parseTerm(): Result<Tree, ParseError> {
+  private parseTerm(): Result<Node, ParseError> {
     const term = this.parseFactor()
     let termBinary: Node_Binary | null = null
 
@@ -145,7 +145,7 @@ export class Parser {
     return termBinary ? success(termBinary) : term
   }
 
-  private parseFactor(): Result<Tree, ParseError> {
+  private parseFactor(): Result<Node, ParseError> {
     const token = this.peek()
 
     // end of the line

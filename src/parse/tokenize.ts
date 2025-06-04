@@ -58,7 +58,7 @@ export function tokenize(str: string): Result<Token[], ParseError> {
       // after that, loop continues
     } else {
       // error state
-      const token = result.error.payload
+      const token = result.error.payload as Token
 
       token.position.end = token.position.start + token.value.length
 
@@ -94,12 +94,11 @@ function createError({
   type: TokenizeErrorType
   token: Token
   expected: string
-}): Failure<ParseError> {
-  const tokenDisplayString = token === null ? "null" : token.value
+}): Failure<ParseError & { payload: Token }> {
   return fail({
     type,
     payload: token,
-    msg: `${type} in Tokenizer: expected [${expected}], got [${tokenDisplayString}]`,
+    msg: `${type} in Tokenizer: expected [${expected}], got [${token.value}]`,
   })
 }
 

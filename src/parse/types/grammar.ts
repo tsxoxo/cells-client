@@ -27,7 +27,7 @@ export type Token = {
   }
 }
 
-export type Tree = Node_Binary | Node_Number | Node_Cell | Node_Func
+export type Node = Node_Binary | Node_Number | Node_Cell | Node_Func
 
 interface Node_Base {
   type: string
@@ -38,11 +38,11 @@ interface Node_Base {
   }
 }
 
+// Binary operators: ['+', '-', '*', '/'],
 export interface Node_Binary extends Node_Base {
   type: "binary_op"
-  // ['+', '-', '*', '/'],
-  left: Tree
-  right: Tree
+  left: Node
+  right: Node
 }
 
 export interface Node_Number extends Node_Base {
