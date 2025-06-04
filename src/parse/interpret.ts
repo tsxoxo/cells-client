@@ -8,8 +8,8 @@ import {
 import { applyFuncToValues } from "./func"
 import {
   Failure,
-  InterpretError,
   InterpretErrorType,
+  ParseError,
   Result,
   fail,
   isSuccess,
@@ -22,11 +22,11 @@ export function interpret(
   cells: Cell[],
   _numberOfCols?: number,
   currentCellIndex?: number,
-): Result<{ res: number; deps: number[] }, InterpretError> {
+): Result<{ res: number; deps: number[] }, ParseError> {
   const numberOfCols = _numberOfCols ?? ALPHABET_WITH_FILLER.length - 1
   const deps: number[] = []
 
-  function solveNode(node: Tree): Result<number, InterpretError> {
+  function solveNode(node: Tree): Result<number, ParseError> {
     let calcResult
 
     // base case
@@ -122,7 +122,6 @@ export function interpret(
           type: resolvedRange.error.type, // "CELL_NOT_A_NUMBER"
           node,
           cell: resolvedRange.error.cell,
-          range: `${node.from.value}:${node.to.value}`,
           expected: "all cells in range to contain valid numbers",
         })
       }
@@ -189,21 +188,18 @@ function createError({
   type,
   node,
   cell,
-  range,
   expected,
 }: {
   type: InterpretErrorType
   // Not sure how much sense it make to expect 'null'
   node: Tree
   cell?: number
-  range?: string
   expected: string
-}): Failure<InterpretError> {
+}): Failure<ParseError> {
   return fail({
     type,
-    node,
+    payload: node,
     cell,
-    range,
     msg: `${type} in Interpreter: expected [${expected}], got [${node.value}]`,
   })
 }

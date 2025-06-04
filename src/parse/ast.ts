@@ -1,5 +1,5 @@
 // =================================================
-// PARSER
+// AST-maker
 // =================================================
 //
 // Takes an array of tokens,
@@ -14,7 +14,7 @@ import {
   success,
   isSuccess,
   ASTErrorType,
-  ASTError,
+  ParseError,
 } from "./types/errors.ts"
 import { Node_Binary, Node_Cell, Token, Tree } from "./types/grammar.ts"
 
@@ -28,7 +28,7 @@ export class Parser {
   }
 
   // Main function
-  makeAST(): Result<Tree, ASTError> {
+  makeAST(): Result<Tree, ParseError> {
     const result = this.parseExpression()
 
     return result
@@ -42,11 +42,11 @@ export class Parser {
     type: ASTErrorType
     token: Token | null
     expected: string
-  }): Failure<ASTError> {
+  }): Failure<ParseError> {
     const tokenDisplayString = token === null ? "null" : token.value
     return fail({
       type,
-      token,
+      payload: token,
       msg: `${type} in makeAST: expected [${expected}], got [${tokenDisplayString}]`,
     })
   }
@@ -66,7 +66,7 @@ export class Parser {
     return this.tokens[this.current - 1]
   }
 
-  private parseExpression(): Result<Tree, ASTError> {
+  private parseExpression(): Result<Tree, ParseError> {
     const expr = this.parseTerm()
     let exprBinary = null
 
@@ -104,7 +104,7 @@ export class Parser {
     return exprBinary ? success(exprBinary) : expr
   }
 
-  private parseTerm(): Result<Tree, ASTError> {
+  private parseTerm(): Result<Tree, ParseError> {
     const term = this.parseFactor()
     let termBinary: Node_Binary | null = null
 
@@ -145,7 +145,7 @@ export class Parser {
     return termBinary ? success(termBinary) : term
   }
 
-  private parseFactor(): Result<Tree, ASTError> {
+  private parseFactor(): Result<Tree, ParseError> {
     const token = this.peek()
 
     // end of the line
@@ -262,7 +262,7 @@ export class Parser {
     })
   }
 
-  private parseRange(): Result<{ from: Node_Cell; to: Node_Cell }, ASTError> {
+  private parseRange(): Result<{ from: Node_Cell; to: Node_Cell }, ParseError> {
     const maybeFirstCell = this.peek()
 
     // Happy path

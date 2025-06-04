@@ -1,6 +1,6 @@
 import { ALPHABET_WITH_FILLER } from "../constants"
 import { Cell } from "../types"
-import { CellError, Result, fail, success } from "./types/errors"
+import { Result, fail, success } from "./types/errors"
 
 // used in vue template
 export function getCellIndexfromXY(x: number, y: number): number {
@@ -60,7 +60,7 @@ export function getCellsInRange(
 export function getNumbersFromCells(
   cellsToResolve: number[],
   all: Cell[],
-): Result<number[], CellError> {
+): Result<number[], { type: string; cell: number }> {
   const values = []
 
   for (let i = 0; i < cellsToResolve.length; i++) {

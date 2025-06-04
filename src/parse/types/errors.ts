@@ -32,6 +32,19 @@
 
 import { Node_Binary, Token, Tree } from "./grammar"
 
+export type AppError = {
+  indexOfCell: number
+  cause: ParseError
+}
+
+// Error object that bubble up and get handled
+export type ParseError = {
+  type: TokenizeErrorType | ASTErrorType | InterpretErrorType
+  payload: Token | Tree | null
+  msg: string
+  cell?: number // Cell index which contains an invalid value
+}
+
 // Base types for parsing errors
 // See section ## DETAILS above.
 export type TokenizeErrorType =
@@ -54,48 +67,6 @@ export type InterpretErrorType =
   | "DIVIDE_BY_0"
   | "UNKNOWN_FUNCTION" // Safety net if tokenizer fails. Not sure if we really need this.
   | "UNKNOWN_ERROR"
-
-// Error objects that bubble up and get handled
-export type TokenizeError = {
-  type: TokenizeErrorType
-  token: Token
-  msg: string
-}
-export type ASTError = {
-  type: ASTErrorType
-  token: Token | null // is null when UNEXPECTED_EOF
-  msg: string
-}
-export type InterpretError = {
-  type: InterpretErrorType
-  node: Tree
-  msg: string
-  cell?: number // Cell index which contains an invalid value
-  range?: string // Range passed to a function which contains an invalid cell
-}
-
-export type AppError = {
-  indexOfCell: number
-  cause: ParseError | InterpretError | UnknownError
-}
-
-export type BaseError = {
-  type: ErrorType
-  msg: string
-}
-
-export type ParseError = BaseError & {
-  // null for UNEXPECTED_EOF
-  token: Token | null
-}
-export type CellError = {
-  type: "CELL_NOT_A_NUMBER"
-  cell: number
-}
-export type UnknownError = BaseError & {
-  type: "UNKNOWN_ERROR"
-  err: unknown
-}
 
 // ########################################################################
 // RESULT PATTERN

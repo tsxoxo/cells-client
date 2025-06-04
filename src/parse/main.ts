@@ -1,19 +1,24 @@
 import { Parser } from "./ast.ts"
 import { tokenize } from "./tokenize.ts"
-import { Result, pipe, bind, ASTError, TokenizeError } from "./types/errors.ts"
-import { Token, Tree } from "./types/grammar.ts"
+import { ParseError, Result } from "./types/errors.ts"
+import { Tree } from "./types/grammar.ts"
 
-export function parseToAST(
-  formula: string,
-): Result<Tree, TokenizeError | ASTError> {
-  // I cut out 'interpret' from this pipeline
-  // (it gets called directly from state management).
-  // I did that because it depends on Cells[].
-  // I did not want to pollute this func here with Cells[],
-  // so I don't have to mock Cells[] if I want to test this.
-  // In hindsight, I'm not sure it's necessary to test this very simple pipe.
-  return pipe<Token[], TokenizeError | ASTError, Tree>(
-    tokenize(formula) as Result<Token[], TokenizeError>,
-    bind((tokens) => new Parser(tokens as Token[]).makeAST()),
-  )
+// I cut out 'interpret' from this pipeline
+// (it gets called directly from state management).
+// I did that because it depends on Cells[].
+// I did not want to pollute this func here with Cells[],
+// so I don't have to mock Cells[] if I want to test this.
+// In hindsight, I'm not sure it's necessary to test this very simple pipe.
+export function parseToAST(formula: string): Result<Tree, ParseError> {
+  const tokenResult = tokenize(formula)
+  if (!tokenResult.ok) {
+    return tokenResult // TokenizeError passes through
+  }
+
+  const astResult = new Parser(tokenResult.value).makeAST()
+  if (!astResult.ok) {
+    return astResult // ASTError passes through
+  }
+
+  return astResult
 }

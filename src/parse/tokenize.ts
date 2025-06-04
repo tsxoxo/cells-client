@@ -22,8 +22,8 @@ import {
 } from "./match"
 import {
   Failure,
+  ParseError,
   Result,
-  TokenizeError,
   TokenizeErrorType,
   fail,
   success,
@@ -32,7 +32,7 @@ import { Token } from "./types/grammar"
 
 const ALPHANUM = /[a-zA-Z0-9]/
 
-export function tokenize(str: string): Result<Token[], TokenizeError> {
+export function tokenize(str: string): Result<Token[], ParseError> {
   const tokens = [] as Token[]
   let ind = 0
 
@@ -58,7 +58,7 @@ export function tokenize(str: string): Result<Token[], TokenizeError> {
       // after that, loop continues
     } else {
       // error state
-      const token = result.error.token
+      const token = result.error.payload
 
       token.position.end = token.position.start + token.value.length
 
@@ -94,20 +94,17 @@ function createError({
   type: TokenizeErrorType
   token: Token
   expected: string
-}): Failure<TokenizeError> {
+}): Failure<ParseError> {
   const tokenDisplayString = token === null ? "null" : token.value
   return fail({
     type,
-    token,
+    payload: token,
     msg: `${type} in Tokenizer: expected [${expected}], got [${tokenDisplayString}]`,
   })
 }
 
 // The meat and potatoes
-function getNextToken(
-  start: number,
-  str: string,
-): Result<Token, TokenizeError> {
+function getNextToken(start: number, str: string): Result<Token, ParseError> {
   const token = createEmptyToken(start)
   const char = str[start]
 
@@ -204,7 +201,7 @@ function parseAlphaNumeric(
   start: number,
   token: Token,
   str: string,
-): Result<Token, TokenizeError> {
+): Result<Token, ParseError> {
   let _ind = start
   // We already know the first char is alphanumeric
   token.value += str[_ind]
@@ -245,7 +242,7 @@ function parseAlphaNumeric(
   return validateToken(token)
 }
 
-function validateToken(token: Token): Result<Token, TokenizeError> {
+function validateToken(token: Token): Result<Token, ParseError> {
   // HAPPY STATES
   if (isCellRef(token.value)) {
     token.type = "cell"

@@ -3,12 +3,9 @@ import type { Cell } from "./types"
 import { Context, changeCellContent } from "./cellsMachine"
 import { parseToAST } from "./parse/main"
 import {
-  ASTError,
   AppError,
-  InterpretError,
+  ParseError,
   Result,
-  TokenizeError,
-  UnknownError,
   fail,
   isSuccess,
   success,
@@ -66,7 +63,7 @@ function updateCell(
   cellIndex: number,
   newContent: string,
   cells: Cell[],
-): Result<Cell, UnknownError> {
+): Result<Cell, ParseError> {
   const updatedCell = structuredClone(cells[cellIndex])
   updatedCell.content = newContent
 
@@ -114,42 +111,18 @@ function safeEval(
   formula: string,
   cells: Cell[],
   cellIndex: number,
-): Result<
-  { res: number; deps: number[] },
-  TokenizeError | ASTError | InterpretError | UnknownError
-> {
-  try {
-    const maybeAST = parseToAST(formula)
-    //console.log(`AFTER PARSE: ${JSON.stringify(parseResult)}`)
-    if (!isSuccess(maybeAST)) {
-      return maybeAST
-    }
-
-    const maybeFormula = interpret(maybeAST.value, cells, cellIndex)
-
-    // Pass along either error or result
-    return maybeFormula
-  } catch (e: unknown) {
-    // This shouldn't happen
-    if (typeof e === "string") {
-      console.error("Oops! Unexpected error: ", e)
-    } else if (e instanceof Error) {
-      console.error("Oops! Unexpected error: ", e.message)
-    } else {
-      console.error("Double oops! Something very unexpected: ", e)
-    }
-
-    // Not sure what the state here is.
-    // So I'm not sure how to handle this.
-    // Crash app?
-    //
-    // Clear cell, for now.
-    return fail({
-      type: "UNKNOWN_ERROR",
-      msg: "Oops, unexpected state! Triggered `catch` while trying to interpret AST.",
-      err: e,
-    })
+): Result<{ res: number; deps: number[] }, ParseError> {
+  const maybeAST = parseToAST(formula)
+  if (!isSuccess(maybeAST)) {
+    return maybeAST
   }
+
+  const maybeFormula = interpret(maybeAST.value, cells, cellIndex)
+
+  // Pass along either error or result
+  // If this crashes, let it crash.
+  // I had a try..catch block here before. I removed it -- we catch programming errors in a different way.
+  return maybeFormula
 }
 
 // Make diff of to numeric arrays
