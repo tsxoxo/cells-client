@@ -39,42 +39,57 @@ Made with [Vue](https://vuejs.org/) and [Xstate](https://stately.ai/docs) -- a f
 
 **@CURRENT**: Systematize tests and errors
 
-START_HERE:
+START_HERE: foo bar
 
 ## Make testing more sane
 
-_Tidy up before implementing property testing_
+_Make testing more sane and complete_
+Big picture:
 
-- Finish reading zombies article
+- bring test data and implementations closer together
+- make testing more exhaustive/robust: i want to understand better what cases i am covering.
 
-- bring test data closer to test implementations.
+* implement tests for basic properties using fast-check. then reassess the question.
 
-- consider test.each
+**Property tests**
 
-- think through grouping tests by feature/grammar rule
+- The whole parse pipeline never crashes on any string
+- Tokenizer handles all single valid tokens
+- AST nodes have required fields
+- valid token sequence produces AST (seems hard to generate)
+- error msgs point to the right token (how to do that?)
+- it never silently produces wrong result (???)
+- "Tokenization is always unambiguous" (is "A1" always a cell, never "A" followed by "1"?)
+
+**valid cases**
+[x] handles valid cell refs
+[x] deps: result contains correct dependencies
+
+**invalid cases**
+returns appropiate error:
+
+- invalid cell ref
+- referenced cell contains undefined OR non-numeric
+- range contains cell with invalid content
+
+* think through grouping tests by feature/grammar rule
   _describe('parsing cell references (Rule 3.1)', ...))._
   _group invalid tests under describe blocks based on each err category_
 
-- think through implementing grammar obj (see Claude)
-
 ## After that
 
-- implement property testing
+- write integration test for full parsing pipeline
 
-* write integration test for full parsing pipeline
+* Build basic UI for errors
 
-- Build basic UI for errors
+* state: propagate changes
 
-- state: propagate changes
-
-- write test for state updates
+* write test for state updates
 
 -> redesign UI
 
 - write tests for UI
   -> introduce networking
-
-- Think about handling for parsing try/catch
 
 **@BACKLOG**
 
@@ -106,7 +121,8 @@ _Tidy up before implementing property testing_
 - Big picture -- implement non-console error messaging
 - Parsing: mb accumulate errors instead of failing fast for a different UX
 - add error: [OUT_OF_BOUND] Number too big (applies to single nums as well as result of calc. should be checked after evaluating cell reference)
-- add error: circular reference (e.g. A1 contains formula referencing A1)
+- THink about error boundaries
+- what does this mean for the program?: a cell is in an error state
 
 ## REFACTOR
 
