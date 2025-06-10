@@ -39,8 +39,6 @@ Made with [Vue](https://vuejs.org/) and [Xstate](https://stately.ai/docs) -- a f
 
 **@CURRENT**: Systematize tests and errors
 
-START_HERE: foo bar
-
 ## Make testing more sane
 
 _Make testing more sane and complete_
@@ -68,9 +66,7 @@ Big picture:
 **invalid cases**
 returns appropiate error:
 
-- invalid cell ref
-- referenced cell contains undefined OR non-numeric
-- range contains cell with invalid content
+- START_HERE: add funcs into prop tests. test A with valid cells. test B: range contains cell with invalid content
 
 * think through grouping tests by feature/grammar rule
   _describe('parsing cell references (Rule 3.1)', ...))._
@@ -123,6 +119,7 @@ returns appropiate error:
 - add error: [OUT_OF_BOUND] Number too big (applies to single nums as well as result of calc. should be checked after evaluating cell reference)
 - THink about error boundaries
 - what does this mean for the program?: a cell is in an error state
+- put error types in arrays, get error type string from there
 
 ## REFACTOR
 

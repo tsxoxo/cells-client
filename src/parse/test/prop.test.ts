@@ -1,14 +1,27 @@
+//############################################################
+// PROPERTY TESTS
+//############################################################
+// These tests automagically run with a slew of random values.
+//
+// NB: We leave out 0 from all formulas here, and test for it through examples.
+//
 import * as fc from "fast-check"
 import { it, expect } from "vitest"
 import { interpret } from "../interpret"
 import { parseToAST } from "../main"
-import { assertIsSuccess } from "../types/errors"
+import { assertIsFail, assertIsSuccess } from "../types/errors"
 import { createCell } from "../../INITIAL_DATA"
 import { Cell } from "../../types"
 import { getIndexFromCellName } from "../cellUtils"
+import { NUM_OF_COLS, NUM_OF_ROWS } from "../../constants"
 
+// TODO: test if these arbitraries generate different values on each prop test.
 const op = fc.constantFrom("+", "-", "*", "/")
 const cellPattern = /[a-zA-Z]{1}[0-9]{1,2}/g
+const numNoZero = fc.oneof(
+  // fc.integer({ max: -1 }), // negative
+  fc.integer({ min: 1 }), // positive
+)
 
 // Numeric formula, no brackets.
 it("respects operator precedence", () => {
@@ -22,15 +35,8 @@ it("respects operator precedence", () => {
       const ourResult = interpret(ast.value, [])
       const jsResult = eval(expr)
 
-      // Catches 0/0, 1/0, -1/0 == NaN, Infinity, -Infinity, respectively
-      if (!isFinite(jsResult)) {
-        expect(ourResult.ok).toBe(false) // Should be an error
-      } else {
-        // DEBUG
-        // console.log("jsResult: ", jsResult)
-        assertIsSuccess(ourResult)
-        expect(ourResult.value.res).toEqual(jsResult)
-      }
+      assertIsSuccess(ourResult)
+      expect(ourResult.value.res).toEqual(jsResult)
     }),
   )
 })
@@ -47,13 +53,8 @@ it("parses numeric expressions with brackets", () => {
       const ourResult = interpret(ast.value, [])
       const jsResult = eval(expr)
 
-      // Catches 0/0, 1/0, -1/0 == NaN, Infinity, -Infinity, respectively
-      if (!isFinite(jsResult)) {
-        expect(ourResult.ok).toBe(false) // Should be an error
-      } else {
-        assertIsSuccess(ourResult)
-        expect(ourResult.value.res).toBeCloseTo(jsResult)
-      }
+      assertIsSuccess(ourResult)
+      expect(ourResult.value.res).toBeCloseTo(jsResult)
     }),
   )
 })
@@ -65,15 +66,12 @@ it("parses numeric expressions with brackets", () => {
 it("processes single cell refs", () => {
   fc.assert(
     fc.property(createFormulaWithSingleCells(), (expr) => {
-      // Filter out division by 0 -- we test for that separately.
-      fc.pre(!expr.includes("/0"))
-
       // Create AST.
       const ast = parseToAST(expr)
       assertIsSuccess(ast)
 
       // Create cells array to pass to interpreter.
-      const cells = createNumericSpreadsheet(26, 100)
+      const cells = createNumericSpreadsheet()
       const ourResult = interpret(ast.value, cells)
       assertIsSuccess(ourResult)
 
@@ -90,12 +88,10 @@ it("processes single cell refs", () => {
 it("tracks cell dependencies", () => {
   fc.assert(
     fc.property(createFormulaWithSingleCells(), (expr) => {
-      fc.pre(!expr.includes("/0"))
-
       const ast = parseToAST(expr)
       assertIsSuccess(ast)
 
-      const cells = createNumericSpreadsheet(26, 100)
+      const cells = createNumericSpreadsheet()
       const ourResult = interpret(ast.value, cells)
       assertIsSuccess(ourResult)
 
@@ -112,12 +108,73 @@ it("tracks cell dependencies", () => {
 })
 
 // ############################################################
+// ERRORS
+// ############################################################
+
+// When cell is undefined, return error type: CELL_NOT_A_NUMBER
+it("returns correct error when cell is undefined", () => {
+  fc.assert(
+    fc.property(createFormulaWithSingleCells(), (expr) => {
+      // Create AST.
+      const ast = parseToAST(expr)
+      assertIsSuccess(ast)
+
+      // Create cells array to pass to interpreter.
+      const cells = createEmptySpreadsheet()
+      const ourResult = interpret(ast.value, cells)
+      assertIsFail(ourResult)
+
+      expect(ourResult.error.type).toEqual("CELL_NOT_A_NUMBER")
+      // Should throw on the first cell
+      const cellsInFormula = expr.match(cellPattern)
+      expect(ourResult.error.cell).toEqual(
+        getIndexFromCellName(cellsInFormula![0]),
+      )
+    }),
+  )
+})
+
+// When cell contains string, return error type: CELL_NOT_A_NUMBER
+it("returns correct error when cell contains string", () => {
+  fc.assert(
+    fc.property(createFormulaWithSingleCells(), (expr) => {
+      // Create AST.
+      const ast = parseToAST(expr)
+      assertIsSuccess(ast)
+
+      // Create cells array to pass to interpreter.
+      const cells = createStringSpreadsheet()
+      const ourResult = interpret(ast.value, cells)
+      assertIsFail(ourResult)
+
+      expect(ourResult.error.type).toEqual("CELL_NOT_A_NUMBER")
+      // Should throw on the first cell
+      const cellsInFormula = expr.match(cellPattern)
+      expect(ourResult.error.cell).toEqual(
+        getIndexFromCellName(cellsInFormula![0]),
+      )
+    }),
+  )
+})
+// ############################################################
 // HELPERS
 // ############################################################
-function createNumericSpreadsheet(x: number, y: number): Cell[] {
+function createNumericSpreadsheet(x = NUM_OF_COLS, y = NUM_OF_ROWS): Cell[] {
   return [...new Array(x * y)].map(() => {
-    const randomNat = Math.floor(Math.random() * 9999)
-    return createCell(randomNat)
+    const randomNatNoZero = Math.floor(Math.random() * 9999) + 1
+    return createCell(randomNatNoZero)
+  })
+}
+
+function createEmptySpreadsheet(x = NUM_OF_COLS, y = NUM_OF_ROWS): Cell[] {
+  return [...new Array(x * y)].map(() => {
+    return createCell()
+  })
+}
+
+function createStringSpreadsheet(x = NUM_OF_COLS, y = NUM_OF_ROWS): Cell[] {
+  return [...new Array(x * y)].map(() => {
+    return createCell(undefined, "foo")
   })
 }
 
@@ -126,8 +183,8 @@ function createNumericSpreadsheet(x: number, y: number): Cell[] {
 function createFormulaNumericNoBrackets() {
   return fc
     .tuple(
-      fc.nat(),
-      fc.array(fc.tuple(op, fc.nat()), {
+      numNoZero,
+      fc.array(fc.tuple(op, numNoZero), {
         minLength: 2,
         maxLength: 8,
       }),
@@ -138,7 +195,7 @@ function createFormulaNumericNoBrackets() {
 }
 
 function createFormulaNumericWithBrackets() {
-  const arbSimpleExpr = fc.nat()
+  const arbSimpleExpr = numNoZero
   const arbBinaryExpr = fc
     .tuple(arbSimpleExpr, op, arbSimpleExpr)
     .map((parts) => parts.join(""))
@@ -159,7 +216,7 @@ function createFormulaNumericWithBrackets() {
 
 // Like createFormulaNumericWithBrackets, but with added cell refs (no functions)
 function createFormulaWithSingleCells() {
-  const num = fc.nat()
+  const num = numNoZero
   const cell = fc.stringMatching(/^[a-zA-Z]{1}[0-9]{1,2}$/)
 
   const arbSimpleExpr = fc.oneof(num, cell)

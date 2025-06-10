@@ -105,6 +105,16 @@ const validWithFunc: Node_Binary = {
 // * [CELL_NOT_A_NUMBER] Invalid value from cell reference: "A1 + A2", where A1 === 'something invalid'
 //const invalid
 // * [DIVIDE_BY_0] Divide by 0
+// NOTE: Consider also infinity? not sure
+
+// Catches 0/0, 1/0, -1/0 == NaN, Infinity, -Infinity, respectively
+// if (!isFinite(jsResult)) {
+//   expect(ourResult.ok).toBe(false) // Should be an error
+// } else {
+//   assertIsSuccess(ourResult)
+//   expect(ourResult.value.res).toBeCloseTo(jsResult)
+// }
+
 const divideByZero = {
   type: "binary_op",
   value: "/",

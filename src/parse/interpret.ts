@@ -50,6 +50,7 @@ export function interpret(
         return createError({
           type: "CELL_UNDEFINED",
           node,
+          cell: cellIndex,
           expected: "cell to contain numerical value",
         })
       }
@@ -58,6 +59,7 @@ export function interpret(
         return createError({
           type: "CELL_NOT_A_NUMBER",
           node,
+          cell: cellIndex,
           expected: "cell to contain a number",
         })
       }
