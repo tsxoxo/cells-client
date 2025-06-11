@@ -3,7 +3,7 @@
 //############################################################
 // These tests automagically run with a slew of random values.
 //
-// NB: We leave out 0 from all formulas here, and test for it through examples.
+// NB: We leave out 0 from all formulas here, and test related edgecases (1/0, etc.) through examples.
 //
 import * as fc from "fast-check"
 import { it, expect } from "vitest"
@@ -75,8 +75,7 @@ it("processes single cell refs", () => {
       const ourResult = interpret(ast.value, cells)
       assertIsSuccess(ourResult)
 
-      // HACK: extract cell values by hand.
-      // i want to compare results, too.
+      // HACK: extract cell values by hand, so that we can compare results, too.
       const formulaWithCellRefsResolved = replaceCellRefsWithValues(expr, cells)
       const jsResult = eval(formulaWithCellRefsResolved)
 
@@ -159,6 +158,8 @@ it("returns correct error when cell contains string", () => {
 // ############################################################
 // HELPERS
 // ############################################################
+//
+// --- CELL ARRAY FACTORIES ---
 function createNumericSpreadsheet(x = NUM_OF_COLS, y = NUM_OF_ROWS): Cell[] {
   return [...new Array(x * y)].map(() => {
     const randomNatNoZero = Math.floor(Math.random() * 9999) + 1
@@ -178,12 +179,15 @@ function createStringSpreadsheet(x = NUM_OF_COLS, y = NUM_OF_ROWS): Cell[] {
   })
 }
 
+// --- FORMULA FACTORIES ---
 // Generate random formulae containing the 4 ops and natural numbers.
-// example OUTs: "1+2+3", "0/3+18-28736"
+// example OUTs: "1+2+3", "1/3+18-28736*9999"
 function createFormulaNumericNoBrackets() {
   return fc
     .tuple(
+      // At least one number
       numNoZero,
+      // Plus 2-8 'links'
       fc.array(fc.tuple(op, numNoZero), {
         minLength: 2,
         maxLength: 8,
@@ -214,7 +218,8 @@ function createFormulaNumericWithBrackets() {
   return arbExpression
 }
 
-// Like createFormulaNumericWithBrackets, but with added cell refs (no functions)
+// --- CELLS ---
+// Like createFormulaNumericWithBrackets, but with single cell refs (no functions)
 function createFormulaWithSingleCells() {
   const num = numNoZero
   const cell = fc.stringMatching(/^[a-zA-Z]{1}[0-9]{1,2}$/)
@@ -259,7 +264,7 @@ function replaceCellRefsWithValues(formula: string, cells: Cell[]): string {
       throw new Error("cellStartIndex undefined in replaceCellRefsWithValues")
     }
 
-    // Convert cellName to index in 1-dimensional array
+    // Convert cellName to index
     const cellIndex = getIndexFromCellName(cellName)
     // Get cell value
     const cellValue = cells[cellIndex].value
