@@ -1,5 +1,7 @@
 import { FUNCTION_KEYWORDS, FunctionKeyword } from "./func"
 
+export const cellPatternAnchored = /^[a-zA-Z]{1}[0-9]{1,2}$/
+
 export function isNumber(str: string): boolean {
   // Include float input using "," and "."
   // TODO: Edgecases like "1.0000000000"
@@ -8,7 +10,7 @@ export function isNumber(str: string): boolean {
 
 export function isCellRef(str: string): boolean {
   // Allow both formats: "A1" and "A01"
-  return /^[a-zA-Z]{1}[0-9]{1,2}$/.test(str)
+  return cellPatternAnchored.test(str)
 }
 
 export function isOp(str: string): boolean {

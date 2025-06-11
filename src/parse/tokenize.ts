@@ -255,6 +255,8 @@ function validateToken(token: Token): Result<Token, ParseError> {
   // ERRORS
   // Differentiate between malformed cell refs and unknown func names
   // Example: "a999" vs "foo"
+  //
+  // If it's letters and a number, treat it as a malformed cell
   if (/^[a-zA-Z]{1}[0-9]+/.test(token.value)) {
     return createError({
       type: "INVALID_CELL",
@@ -262,6 +264,7 @@ function validateToken(token: Token): Result<Token, ParseError> {
       expected: "valid cell reference",
     })
   }
+  // If it's just letters, treat it as an unknown function
   if (/^[a-zA-Z]+/.test(token.value)) {
     return createError({
       type: "UNKNOWN_FUNCTION",
