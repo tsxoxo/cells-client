@@ -1,5 +1,5 @@
-import { Cell } from "./types"
-import { NUMBER_OF_CELLS } from "./constants"
+import { Cell } from "../types/types"
+import { NUMBER_OF_CELLS } from "../config/constants"
 
 export function createCell(
   val = undefined as number | undefined,

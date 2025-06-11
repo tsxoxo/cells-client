@@ -11,7 +11,7 @@
     "lint": "eslint --ext .ts,.vue,.js .",
     "lint:fix": "eslint --ext .ts,.vue,.js . --fix",
     "format": "prettier --write \"**/*.{ts,vue,js,json,md}\"",
-    "check": "pnpm lint && pnpm format"
+    "fix": "pnpm lint && pnpm format"
   },
   "dependencies": {
     "@statelyai/inspect": "^0.2.0",

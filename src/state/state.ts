@@ -1,17 +1,17 @@
 import { assertEvent } from "xstate"
-import type { Cell } from "./types"
+import type { Cell } from "../types/types"
 import { Context, changeCellContent } from "./cellsMachine"
-import { parseToAST } from "./parse/main"
+import { parseToAST } from "../parse/main"
 import {
-  AppError,
   ParseError,
   Result,
   fail,
   isSuccess,
   success,
-} from "./parse/types/errors"
-import { interpret } from "./parse/interpret"
-import { isNumber } from "./parse/match"
+} from "../parse/types/errors"
+import { AppError } from "../errors/errors"
+import { interpret } from "../parse/interpret"
+import { isNumber } from "../parse/match"
 
 // CONTROL FLOW
 export function handleCellContentChange(

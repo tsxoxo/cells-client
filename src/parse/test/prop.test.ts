@@ -1,13 +1,12 @@
-// TODO:
-// * try adding nested brackets to that test
-// * Reassess progress to goal: simplify this test file
-// * Add funcs
 //############################################################
 // PROPERTY TESTS
 //############################################################
-// These tests automagically run with a slew of random values.
+// Integration tests for parsing pipeline.
+// These are property tests, meaning they
+// automagically run with a slew of random values.
 //
 // NB: We leave out 0 from all formulas here, and test related edgecases (1/0, etc.) through examples.
+// WARN: !!! Test can still occasionally fail on formulas like 1/(E2-E2)
 //
 // --- SETUP ---
 // Test infrastructure
@@ -15,7 +14,7 @@ import * as fc from "fast-check"
 import { it, expect } from "vitest"
 import { assertIsFail, assertIsSuccess } from "../types/errors"
 import { getIndexFromCellName } from "../cellUtils"
-import { Cell } from "../../types.ts"
+import { Cell } from "../../types/types.ts"
 
 // Cells data (fake spreadsheets)
 import {
@@ -28,6 +27,7 @@ import {
 import {
   createFormulaNumericNoBrackets,
   createFormulaNumericWithBrackets,
+  createFormulaWithFunctions,
   createFormulaWithSingleCells,
 } from "./_formulaFactories.ts"
 
@@ -78,6 +78,11 @@ function replaceCellRefsWithValues(formula: string, cells: Cell[]): string {
 }
 
 // --- TESTS ---
+//############################################################
+// NUMERIC
+//############################################################
+// Test valid formulas with only numeric values (no cell refs)
+
 // Numeric formula, no brackets.
 it("respects operator precedence", () => {
   fc.assert(
@@ -88,9 +93,10 @@ it("respects operator precedence", () => {
 
       // Step 2: Evaluate formula
       const ourResult = interpret(ast.value, [])
+      assertIsSuccess(ourResult)
+
       const jsResult = eval(expr)
 
-      assertIsSuccess(ourResult)
       expect(ourResult.value.res).toEqual(jsResult)
     }),
   )
@@ -106,9 +112,10 @@ it("parses numeric expressions with brackets", () => {
 
       // Evaluate formula.
       const ourResult = interpret(ast.value, [])
+      assertIsSuccess(ourResult)
+
       const jsResult = eval(expr)
 
-      assertIsSuccess(ourResult)
       expect(ourResult.value.res).toBeCloseTo(jsResult)
     }),
   )
@@ -117,6 +124,8 @@ it("parses numeric expressions with brackets", () => {
 //############################################################
 // CELLS
 //############################################################
+// Tests valid formulas using cell refs
+
 // Single cell refs, excluding func arguments like SUM(A1:A2)
 it("processes single cell refs", () => {
   fc.assert(
@@ -161,9 +170,31 @@ it("tracks cell dependencies", () => {
   )
 })
 
+// Functions with cell ranges as arguments like SUM(A1:A2)
+it("processes functions", () => {
+  fc.assert(
+    fc.property(createFormulaWithFunctions(), (expr) => {
+      // Create AST.
+      const ast = parseToAST(expr)
+      assertIsSuccess(ast)
+
+      // Create cells array to pass to interpreter.
+      const cells = createNumericSpreadsheet()
+      const ourResult = interpret(ast.value, cells)
+      assertIsSuccess(ourResult)
+
+      // NOTE: can we get the result in a simple way?
+      // const formulaWithCellRefsResolved = replaceCellRefsWithValues(expr, cells)
+      // const jsResult = eval(formulaWithCellRefsResolved)
+      //
+      // expect(ourResult.value.res).toEqual(jsResult)
+    }),
+  )
+})
 // ############################################################
 // ERRORS
 // ############################################################
+// Test for correct error generation
 
 // When cell is undefined, return error type: CELL_NOT_A_NUMBER
 it("returns correct error when cell is undefined", () => {
@@ -210,7 +241,3 @@ it("returns correct error when cell contains string", () => {
     }),
   )
 })
-
-// ############################################################
-// HELPERS
-// ############################################################

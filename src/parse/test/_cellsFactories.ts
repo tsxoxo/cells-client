@@ -2,9 +2,9 @@
 // --- SPREADSHEET FACTORIES ---
 // OUT: Cell[]
 // ############################
-import { Cell } from "../../types"
-import { createCell } from "../../INITIAL_DATA"
-import { NUM_OF_COLS, NUM_OF_ROWS } from "../../constants"
+import { Cell } from "../../types/types"
+import { createCell } from "../../test/INITIAL_DATA"
+import { NUM_OF_COLS, NUM_OF_ROWS } from "../../config/constants"
 
 export function createNumericSpreadsheet(
   x = NUM_OF_COLS,

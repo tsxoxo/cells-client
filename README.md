@@ -65,22 +65,30 @@ Big picture:
 
 **invalid cases**
 returns appropiate error:
+[x] CELL_NOT_A_NUMBER
 
-- START_HERE: add funcs into prop tests. test A with valid cells. test B: range contains cell with invalid content
+[x] test funcs A: all cells valid
 
+- START_HERE: test funcs B: invalid cells in range
+
+* **tidy up example tests**
 * think through grouping tests by feature/grammar rule
   _describe('parsing cell references (Rule 3.1)', ...))._
   _group invalid tests under describe blocks based on each err category_
+* edgecases:
+  - DIVIDE_BY_0: numeric and cellref and result (1/(E2-E2))
+  - range: one single invalid cell in range: leftboundary, inner, rightboundary
+* write integration tests for full parsing pipeline
 
 ## After that
 
-- write integration test for full parsing pipeline
+- off to Figma
 
-* Build basic UI for errors
+- Build basic UI for errors
 
-* state: propagate changes
+- state: propagate changes
 
-* write test for state updates
+- write test for state updates
 
 -> redesign UI
 

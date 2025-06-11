@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { isCellRef } from "../match"
 import { getCellsInRange, getIndexFromCellName } from "../cellUtils"
-import { ALPHABET_WITH_FILLER } from "../../constants"
+import { ALPHABET_WITH_FILLER } from "../../config/constants"
 
 // =================================================
 // # TEST DATA

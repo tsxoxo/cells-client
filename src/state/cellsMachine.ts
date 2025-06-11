@@ -1,9 +1,9 @@
 import { setup, assign } from "xstate"
-import type { Cell } from "./types"
-import { INITIAL_CELLS } from "./INITIAL_DATA"
+import type { Cell } from "../types/types"
+import { INITIAL_CELLS } from "../test/INITIAL_DATA"
 import { handleCellContentChange } from "./state"
-import { isSuccess } from "./parse/types/errors"
-import { AppError } from "./errors"
+import { isSuccess } from "../parse/types/errors"
+import { AppError } from "../errors/errors"
 
 export interface Context {
   cells: Cell[]

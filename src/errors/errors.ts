@@ -1,4 +1,4 @@
-import { ParseError } from "./parse/types/errors"
+import { ParseError } from "../parse/types/errors"
 
 export type AppError = {
   indexOfCell: number

@@ -1,5 +1,6 @@
 import * as fc from "fast-check"
 import { cellPatternAnchored } from "../match"
+import { FUNCTION_KEYWORDS } from "../func"
 
 // --- BASE ELEMENTS ---
 const op = fc.constantFrom("+", "-", "*", "/")
@@ -88,6 +89,61 @@ export function createFormulaWithSingleCells() {
   const exprChain = fc
     .tuple(
       cell,
+      fc.array(fc.tuple(op, arbExpression), {
+        minLength: 2,
+        maxLength: 8,
+      }),
+    )
+    .map(([first, rest]) => buildFormula(first, rest))
+
+  return exprChain
+}
+
+// Like createFormulaWithSingleCells but also with functions
+export function createFormulaWithFunctions() {
+  const num = nonZeroNat
+  const cell = fc.stringMatching(cellPatternAnchored)
+  const parens = {
+    open: fc.constant("("),
+    close: fc.constant(")"),
+  }
+
+  // Create a function expression such as sum(A0:Z99)
+  const funcKeyword = fc.constantFrom(...FUNCTION_KEYWORDS)
+  // SUM, sum, SuM should be treated equally by the parser.
+  const funcKeywordMixed = fc.mixedCase(funcKeyword)
+  const func = fc
+    .tuple(
+      funcKeywordMixed,
+      parens.open,
+      cell,
+      fc.constant(":"),
+      cell,
+      parens.close,
+    )
+    .map((parts) => parts.join(""))
+
+  const arbSimpleExpr = fc.oneof(num, cell, func)
+
+  const arbBinaryExpr = fc
+    .tuple(arbSimpleExpr, op, arbSimpleExpr)
+    .map((parts) => parts.join(""))
+
+  const arbParenExpr = fc
+    .tuple(parens.open, arbBinaryExpr, parens.close)
+    .map((parts) => parts.join(""))
+
+  // Combine with frequency
+  const arbExpression = fc.oneof(
+    { weight: 3, arbitrary: arbSimpleExpr },
+    { weight: 2, arbitrary: arbBinaryExpr },
+    { weight: 1, arbitrary: arbParenExpr },
+  )
+
+  // Start with obligatory function
+  const exprChain = fc
+    .tuple(
+      func,
       fc.array(fc.tuple(op, arbExpression), {
         minLength: 2,
         maxLength: 8,

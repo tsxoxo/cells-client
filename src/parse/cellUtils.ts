@@ -1,5 +1,5 @@
-import { ALPHABET_WITH_FILLER } from "../constants"
-import { Cell } from "../types"
+import { ALPHABET_WITH_FILLER } from "../config/constants"
+import { Cell } from "../types/types"
 import { Result, fail, success } from "./types/errors"
 
 // used in vue template

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { interpret } from "../interpret"
-import { Cell } from "../../types"
+import { Cell } from "../../types/types"
 import { Node_Binary, Node_Func } from "../types/grammar"
 import { assertIsFail, assertIsSuccess } from "../types/errors"
 
@@ -176,6 +176,8 @@ describe("Interpreter", () => {
   })
 
   // INVALID CASES
+  // TODO: test the following formula
+  // WARN: !!! Test can still occasionally fail on formulas like 1/(E2-E2)
   it("handles divide by zero", () => {
     const result = interpret(divideByZero, [])
     assertIsFail(result)
