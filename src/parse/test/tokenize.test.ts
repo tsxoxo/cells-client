@@ -6,7 +6,7 @@ import { assertIsFail, assertIsSuccess } from "../types/errors"
 // TEST CASES
 // =================================================
 //
-// # Valid formulae
+// # Valid formulas
 // tokens.length === 11
 const validAllOps = "11+2.6*(A1-B11)/7,3"
 // Functions

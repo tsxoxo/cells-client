@@ -16,7 +16,7 @@ function buildFormula(first: string, opPairs: Array<[string, string]>): string {
   return opPairs.reduce((expr, [op, nextExpr]) => expr + op + nextExpr, first)
 }
 
-// Generate random formulae containing the 4 ops and natural numbers.
+// Generate random formulas containing the 4 ops and natural numbers.
 // example OUTs: "1+2+3", "1/3+18-28736*9999"
 export function createFormulaNumericNoBrackets() {
   return fc

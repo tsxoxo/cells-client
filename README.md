@@ -69,16 +69,14 @@ returns appropiate error:
 
 [x] test funcs A: all cells valid
 
-- START_HERE: test funcs B: invalid cells in range
-
-* **tidy up example tests**
-* think through grouping tests by feature/grammar rule
+- **tidy up example tests**
+- think through grouping tests by feature/grammar rule
   _describe('parsing cell references (Rule 3.1)', ...))._
   _group invalid tests under describe blocks based on each err category_
-* edgecases:
+- edgecases:
   - DIVIDE_BY_0: numeric and cellref and result (1/(E2-E2))
   - range: one single invalid cell in range: leftboundary, inner, rightboundary
-* write integration tests for full parsing pipeline
+- write integration tests for full parsing pipeline
 
 ## After that
 
@@ -106,7 +104,7 @@ returns appropiate error:
 
 ### UX/UI
 
-- make it easier to read and input formulae
+- make it easier to read and input formulas
 - highlight dependencies
 - show errors
 

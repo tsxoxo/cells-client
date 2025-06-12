@@ -191,6 +191,7 @@ it("processes functions", () => {
     }),
   )
 })
+
 // ############################################################
 // ERRORS
 // ############################################################
@@ -220,7 +221,7 @@ it("returns correct error when cell is undefined", () => {
 })
 
 // When cell contains string, return error type: CELL_NOT_A_NUMBER
-it("returns correct error when cell contains string", () => {
+it("returns correct error when single cell ref contains string", () => {
   fc.assert(
     fc.property(createFormulaWithSingleCells(), (expr) => {
       // Create AST.
@@ -238,6 +239,26 @@ it("returns correct error when cell contains string", () => {
       expect(ourResult.error.cell).toEqual(
         getIndexFromCellName(cellsInFormula![0]),
       )
+    }),
+  )
+})
+
+// Throws correct error when cells in range have invalid value.
+it("returns correct error when cell in range contains string", () => {
+  fc.assert(
+    fc.property(createFormulaWithFunctions(), (expr) => {
+      // Create AST.
+      const ast = parseToAST(expr)
+      assertIsSuccess(ast)
+
+      // Create cells array to pass to interpreter.
+      const cells = createStringSpreadsheet()
+      const ourResult = interpret(ast.value, cells)
+      assertIsFail(ourResult)
+
+      // NOTE: Can we test for anything else to improve specifity for this behavior?
+      // We can't, for example, test on which cells it fails in a non trivial way,
+      // due to the complexity of the generated formulas.
     }),
   )
 })
