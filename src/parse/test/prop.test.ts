@@ -95,9 +95,11 @@ it("respects operator precedence", () => {
       const ourResult = interpret(ast.value, [])
       assertIsSuccess(ourResult)
 
+      // Should be equal to eval()
       const jsResult = eval(expr)
-
       expect(ourResult.value.res).toEqual(jsResult)
+      // Should be finite
+      expect(Number.isFinite(ourResult.value.res)).toEqual(true)
     }),
   )
 })
@@ -114,9 +116,11 @@ it("parses numeric expressions with brackets", () => {
       const ourResult = interpret(ast.value, [])
       assertIsSuccess(ourResult)
 
+      // Should be equal to eval()
       const jsResult = eval(expr)
-
-      expect(ourResult.value.res).toBeCloseTo(jsResult)
+      expect(ourResult.value.res).toEqual(jsResult)
+      // Should be finite
+      expect(Number.isFinite(ourResult.value.res)).toEqual(true)
     }),
   )
 })
@@ -139,11 +143,15 @@ it("processes single cell refs", () => {
       const ourResult = interpret(ast.value, cells)
       assertIsSuccess(ourResult)
 
-      // HACK: extract cell values by hand, so that we can compare results, too.
+      // HACK: We can't use eval() on formulas with cell refs,
+      // so we substitute their numeric values first.
       const formulaWithCellRefsResolved = replaceCellRefsWithValues(expr, cells)
-      const jsResult = eval(formulaWithCellRefsResolved)
 
+      // Should be equal to eval()
+      const jsResult = eval(formulaWithCellRefsResolved)
       expect(ourResult.value.res).toEqual(jsResult)
+      // Should be finite
+      expect(Number.isFinite(ourResult.value.res)).toEqual(true)
     }),
   )
 })
