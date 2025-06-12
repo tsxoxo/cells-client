@@ -1,115 +1,140 @@
+// =================================================
+// EXAMPLE-BASED UNIT TESTS FOR THE TOKENIZE MODULE
+// =================================================
 import { describe, expect, it } from "vitest"
 import { tokenize } from "../tokenize"
 import { assertIsFail, assertIsSuccess } from "../types/errors"
 
-// =================================================
-// TEST CASES
-// =================================================
-//
-// # Valid formulas
-// tokens.length === 11
-const validAllOps = "11+2.6*(A1-B11)/7,3"
-// Functions
-const validFunc = "SUM(A2:Z99)"
-
-// ## Edgecases
-// * starts with negative number
-const startWithNegative = "-11+2"
-// * whitespace
-const validWithWhitespace = "     11 +2*(A1-    B11)        / 7    "
-//* single values
-const singleValidValueSimple = "666"
-const singleValidValueCell = "A99"
-//
-// INVALID
-// # [TOKEN] Invalid or ill-formed tokens
-//      --> tokenizer
-// * [INVALID_CHAR]: "#%`[$=" etc.
-// NOTE: Invalid chars also get caught under different error types: e.g. INVALID_NUMBER
-// Put invalid char in front to test this specifically
-const err_invalidChar = "$+2*(3-4)"
-// * [INVALID_NUMBER]
-const err_INVALID_NUMBER = "a99+02+37b"
-//      * ill-formed: "a999", "string"
-const missingOpen = "SUMA1:B2)*3"
-
-const err_INVALID_CELL = "A11+B001"
-
 describe("tokenizer", () => {
-  it("handles valid all ops with cells", () => {
-    const result = tokenize(validAllOps)
+  it("handles complete formula", () => {
+    const result = tokenize("11+2*(A1-B99)/SUM(C1:D2)")
+    const expected = [
+      { type: "number", value: "11", position: { start: 0, end: 2 } },
+      { type: "op", value: "+", position: { start: 2, end: 3 } },
+      { type: "number", value: "2", position: { start: 3, end: 4 } },
+      { type: "op", value: "*", position: { start: 4, end: 5 } },
+      { type: "parens", value: "(", position: { start: 5, end: 6 } },
+      { type: "cell", value: "A1", position: { start: 6, end: 8 } },
+      { type: "op", value: "-", position: { start: 8, end: 9 } },
+      { type: "cell", value: "B99", position: { start: 9, end: 12 } },
+      { type: "parens", value: ")", position: { start: 12, end: 13 } },
+      { type: "op", value: "/", position: { start: 13, end: 14 } },
+      { type: "func", value: "SUM", position: { start: 14, end: 17 } },
+      { type: "parens", value: "(", position: { start: 17, end: 18 } },
+      { type: "cell", value: "C1", position: { start: 18, end: 20 } },
+      { type: "op", value: ":", position: { start: 20, end: 21 } },
+      { type: "cell", value: "D2", position: { start: 21, end: 23 } },
+      { type: "parens", value: ")", position: { start: 23, end: 24 } },
+    ]
 
     assertIsSuccess(result)
-    expect(result.value.length).toBe(11)
-    expect(result.value[0].value).toBe("11")
-    expect(result.value[result.value.length - 1].value).toBe("7,3")
+    expect(result.value).toEqual(expected)
   })
 
-  it("handles functions", () => {
-    const result = tokenize(validFunc)
-
-    assertIsSuccess(result)
-
-    expect(result.value.length).toBe(6)
-    expect(result.value[0].value).toBe("SUM")
-    expect(result.value[0].position.start).toBe(0)
-    expect(result.value[0].position.end).toBe(3)
+  describe("edge cases", () => {
+    it.each([
+      {
+        description: "it handles whitespace throughout formula",
+        input: "  42 + 7 * ( A1 - B2 )  ",
+        expected: [
+          { type: "number", value: "42", position: { start: 2, end: 4 } },
+          { type: "op", value: "+", position: { start: 5, end: 6 } },
+          { type: "number", value: "7", position: { start: 7, end: 8 } },
+          { type: "op", value: "*", position: { start: 9, end: 10 } },
+          { type: "parens", value: "(", position: { start: 11, end: 12 } },
+          { type: "cell", value: "A1", position: { start: 13, end: 15 } },
+          { type: "op", value: "-", position: { start: 16, end: 17 } },
+          { type: "cell", value: "B2", position: { start: 18, end: 20 } },
+          { type: "parens", value: ")", position: { start: 21, end: 22 } },
+        ],
+      },
+      {
+        description: "it handles formula starting with negative number",
+        input: "-11+2",
+        expected: [
+          { type: "op", value: "-", position: { start: 0, end: 1 } },
+          { type: "number", value: "11", position: { start: 1, end: 3 } },
+          { type: "op", value: "+", position: { start: 3, end: 4 } },
+          { type: "number", value: "2", position: { start: 4, end: 5 } },
+        ],
+      },
+      {
+        description: "it handles single number",
+        input: "42",
+        expected: [
+          { type: "number", value: "42", position: { start: 0, end: 2 } },
+        ],
+      },
+      {
+        description: "it handles single cell reference",
+        input: "A99",
+        expected: [
+          { type: "cell", value: "A99", position: { start: 0, end: 3 } },
+        ],
+      },
+    ])("$description", ({ input, expected }) => {
+      const result = tokenize(input)
+      assertIsSuccess(result)
+      expect(result.value).toEqual(expected)
+    })
   })
 
-  // Edgecases
-  it("handles single values", () => {
-    let result = tokenize(singleValidValueSimple)
+  describe("Error Handling", () => {
+    // NOTE: Invalid chars also get caught under different error types: e.g. INVALID_NUMBER.
+    // We put invalid char in front of formula to test this specifically.
+    it.each([
+      {
+        input: "$+2*(3-4)",
+        description: "it fails on invalid starting character",
+        expectedError: "INVALID_CHAR",
+        expectedValue: "$",
+        expectedPosition: {
+          start: 0,
+          end: 1,
+        },
+      },
+      {
+        input: "A11+B001",
+        description: "it fails on ill-formed cell reference",
+        expectedError: "INVALID_CELL",
+        expectedValue: "B001",
+        expectedPosition: {
+          start: 4,
+          end: 8,
+        },
+      },
+      {
+        input: "a99+02+37b",
+        description: "it fails on ill-formed number",
+        expectedError: "INVALID_NUMBER",
+        expectedValue: "37b",
+        expectedPosition: {
+          start: 7,
+          end: 10,
+        },
+      },
+      {
+        input: "SUMA1:B2)*3",
+        description: "it fails on function name without opening parenthesis",
+        expectedError: "UNKNOWN_FUNCTION",
+        expectedValue: "SUMA1",
+        expectedPosition: {
+          start: 0,
+          end: 5,
+        },
+      },
+    ])(
+      "given input '$input', $description",
+      ({ input, expectedError, expectedValue, expectedPosition }) => {
+        const result = tokenize(input)
 
-    assertIsSuccess(result)
-    expect(result.value.length).toBe(1)
-    expect(result.value[0].value).toBe("666")
-
-    result = tokenize(singleValidValueCell)
-
-    assertIsSuccess(result)
-    expect(result.value.length).toBe(1)
-    expect(result.value[0].value).toBe("A99")
-  })
-
-  it("handles whitespace", () => {
-    const result = tokenize(validWithWhitespace)
-
-    assertIsSuccess(result)
-    expect(result.value.length).toBe(11)
-    expect(result.value[0].value).toBe("11")
-    expect(result.value[result.value.length - 1].value).toBe("7")
-  })
-
-  it("handles negative", () => {
-    const result = tokenize(startWithNegative)
-
-    assertIsSuccess(result)
-    expect(result.value.length).toBe(4)
-    expect(result.value[0].value).toBe("-")
-    expect(result.value[result.value.length - 1].value).toBe("2")
-  })
-
-  // INVALID
-  it("handles invalid tokens", () => {
-    let result = tokenize(err_invalidChar)
-    assertIsFail(result)
-    expect(result.error.type).toBe("INVALID_CHAR")
-    expect(result.error.payload!.position.start).toBe(0)
-    expect(result.error.payload!.position.end).toBe(1)
-
-    result = tokenize(err_INVALID_CELL)
-    assertIsFail(result)
-    expect(result.error.type).toBe("INVALID_CELL")
-    expect(result.error.payload!.value).toBe("B001")
-
-    result = tokenize(err_INVALID_NUMBER)
-    assertIsFail(result)
-    expect(result.error.payload!.value).toBe("37b")
-    expect(result.error.type).toBe("INVALID_NUMBER")
-
-    result = tokenize(missingOpen)
-    assertIsFail(result)
-    expect(result.error.type).toBe("UNKNOWN_FUNCTION")
-    expect(result.error.payload!.value).toBe("SUMA1")
+        assertIsFail(result)
+        expect(result.error.type).toBe(expectedError)
+        if (expectedValue) {
+          expect(result.error.payload!.value).toBe(expectedValue)
+          expect(result.error.payload!.position).toEqual(expectedPosition)
+        }
+      },
+    )
   })
 })

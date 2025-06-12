@@ -80,15 +80,15 @@ returns appropiate error:
 
 ## After that
 
-- off to Figma
+- off to Figma -> redesign UI
 
 - Build basic UI for errors
+
+- rebuild UI. start count 1 not 0.
 
 - state: propagate changes
 
 - write test for state updates
-
--> redesign UI
 
 - write tests for UI
   -> introduce networking
