@@ -1,3 +1,6 @@
+// =================================================
+// EXAMPLE-BASED UNIT TESTS FOR THE AST MODULE
+// =================================================
 import { describe, expect, it } from "vitest"
 import { Parser } from "../ast"
 import { Token, TokenType } from "../types/grammar"
@@ -6,6 +9,9 @@ import { assertBinaryOp, assertIsFail, assertIsSuccess } from "../types/errors"
 // =================================================
 // # UTILS
 // =================================================
+
+// Make dummy tokens.
+// Position data is optional.
 function makeTokens(
   simplifiedTokens: {
     type: TokenType
@@ -340,5 +346,120 @@ describe("Parser", () => {
     assertIsFail(doubleOpen)
     expect(doubleOpen.error.type).toEqual("UNEXPECTED_TOKEN")
     expect(doubleOpen.error.payload!.value).toEqual("(")
+  })
+})
+
+
+describe("ast", () => {
+  it("handles complete formula", () => {
+    const result = makeTokens([
+    // fill this in with the appropiate arguments, including valid position data for each token.
+    ]
+    const expected: Node_Binary = {
+    // should correspond to the result: Token[] that we just defined. 
+    }
+
+    assertIsSuccess(result)
+    expect(result.value).toEqual(expected)
+  })
+
+  describe("edge cases", () => {
+    it.each([
+      {
+        description: "single number",
+        input: // of type Token[],
+        expected: // of type Node_Number
+        },
+      {
+        description: "single cell reference",
+        input: // of type Token[],
+        expected: // of type Node_Cell
+        },
+      {
+        description: "single function",
+        input: // of type Token[],
+        expected: // of type Node_Func
+        },
+      {
+        description: "nested expression",
+        input: // of type Token[]. use 3 levels of nested brackets.
+        expected: // of type Node_Func
+        },
+        ],
+      },
+    ])("$description", ({ input, expected }) => {
+      const result = tokenize(input)
+      assertIsSuccess(result)
+      expect(result.value).toEqual(expected)
+    })
+  })
+
+  describe("Error Handling", () => {
+    it.each([
+      {
+        input: // of type Token[]. based on formula "1+"
+        description: "it fails on EOF after op",
+        expectedError: "UNEXPECTED_EOF",
+        expectedValue: "+",
+        expectedPosition:// should correspond to token position of "+" within the input string}
+        { start: //number,
+        end: //number}
+        }
+        },
+      {
+        input: // based on formula "1+SUM"
+        description: "it fails on EOF after func keyword",
+        expectedError: "UNEXPECTED_EOF",
+        expectedValue: "SUM"
+        expectedPosition
+        },
+      {
+        input: // based on formula "1+SUM(A2:)"
+        description: "it fails on EOF within range expression",
+        expectedError: "UNEXPECTED_EOF",
+        expectedValue: ":"
+        expectedPosition
+        },
+      {
+        input: "SUM+A1:A3)",
+        description: "it fails on missing bracket.open after function keyword",
+        expectedError: "PARENS", // would "PARENS" be a more specific type?
+        expectedValue: "SUM",
+        expectedPosition: ,
+      },
+      {
+        input: "SUM(A1:A3*4",
+        description: "it fails on bracket.close after function range",
+        expectedError: "PARENS", // would "PARENS" be a more specific type?
+        expectedValue: "SUM",
+        expectedPosition: ,
+      },
+      {
+        input: "SUM(A1+A3)",
+        description: "it fails on ill-formed range A",
+        expectedError: "UNEXPECTED_TOKEN", // would "PARENS" be a more specific type?
+        expectedValue: "SUM",
+        expectedPosition: ,
+      },
+      {
+        input: "SUM(A1:A3:A7)",
+        description: "it fails on ill-formed range B",
+        expectedError: "UNEXPECTED_TOKEN", // would "PARENS" be a more specific type?
+        expectedValue: "SUM",
+        expectedPosition: ,
+      },
+    ])(
+      "given input '$input', $description",
+      ({ input, expectedError, expectedValue, expectedPosition }) => {
+        const result = tokenize(input)
+
+        assertIsFail(result)
+        expect(result.error.type).toBe(expectedError)
+        if (expectedValue) {
+          expect(result.error.payload!.value).toBe(expectedValue)
+          expect(result.error.payload!.position).toEqual(expectedPosition)
+        }
+      },
+    )
   })
 })

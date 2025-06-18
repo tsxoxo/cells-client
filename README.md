@@ -70,15 +70,21 @@ returns appropiate error:
 [x] test funcs A: all cells valid
 
 - **tidy up example tests**
-- think through grouping tests by feature/grammar rule
-  _describe('parsing cell references (Rule 3.1)', ...))._
-  _group invalid tests under describe blocks based on each err category_
+- START_HERE: Do what I did for tokenize.test for ast.test and interpret.test
 - edgecases:
   - DIVIDE_BY_0: numeric and cellref and result (1/(E2-E2))
   - range: one single invalid cell in range: leftboundary, inner, rightboundary
 - write integration tests for full parsing pipeline
+- Go over the properties mentioned above under "Property tests" -- add any of those?
 
 ## After that
+
+- Try and simplify Parser class. For example: why do I use a 'return early on fail' pattern in parseFactor under case('func'),
+  while nesting in parseRange. Underlying question: this whole parsing business seems like a state machine pattern--roughly:
+  `state: {name: expect_open_bracket, onFail: createError, onSuccess: consumeNext}`.
+  I think I could substantially simplify this part of the parsing pipeline, even if only by unifying the patterns for the control-flow.
+
+  - Furthermore, it does not make sense to me that consume() returns a value, yet we never use that return value, instead calling it strictly for its side-effects.
 
 - off to Figma -> redesign UI
 

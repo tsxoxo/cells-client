@@ -148,15 +148,19 @@ export class Parser {
   private parseFactor(): Result<Node, ParseError> {
     const token = this.peek()
 
-    // end of the line
+    // Expect any type of token.
+    // Error path.
+    // START_HERE: should we scrap UNEXPECTED_EOF and always return UNEXPECTED_TOKEN?
+    // This would declutter this file a bit.
     if (token === null) {
       return this.createError({
         type: "UNEXPECTED_EOF",
-        token,
+        token: this.tokens[this.current - 1],
         expected: "factor",
       })
     }
 
+    // Happy path.
     switch (token.type) {
       case "number":
         this.consume()
@@ -176,60 +180,68 @@ export class Parser {
           position: token.position,
         })
 
-      case "parens":
-        if (token?.value === "(") {
-          this.consume()
-          const expr = this.parseExpression()
-
-          if (this.peek()?.value !== ")") {
-            return this.createError({
-              type: "PARENS",
-              token: this.peek(),
-              expected: "closing parenthesis",
-            })
-          }
-
-          this.consume()
-
-          return expr
-        } else {
-          // I guess we can hit this in theory if the tokenizer mislabels something else as 'parens'
+      case "parens": {
+        // Expect bracket.open
+        if (token?.value === ")") {
           return this.createError({
-            type: "UNKNOWN_ERROR",
+            type: "PARENS",
             token: this.peek(),
-            expected: "opening bracket",
+            expected: "opening parenthesis",
           })
         }
 
+        // Happy path.
+        // Consume bracket.open and parse expression.
+        this.consume()
+        const expr = this.parseExpression()
+
+        // Expect bracket.close
+        if (this.peek()?.value !== ")") {
+          return this.createError({
+            type: "PARENS",
+            token: this.peek(),
+            expected: "closing parenthesis",
+          })
+        }
+
+        // Happy path.
+        // Consume closing bracket and return
+        this.consume()
+        return expr
+      }
+
       case "func": {
-        // Advance to the next token
+        // Consume function keyword
         this.consume()
 
+        // Expect bracket.open
         const next = this.peek()
         if (next === null) {
           return this.createError({
             type: "UNEXPECTED_EOF",
-            token: token,
+            token: this.tokens[this.current - 1],
             expected: "bracket after function keyword",
           })
         }
 
         if (next.value !== "(") {
           return this.createError({
-            type: "UNEXPECTED_TOKEN",
+            type: "PARENS",
             token: next,
             expected: "bracket after function keyword",
           })
         }
 
-        // Happy path: is a bracket. Try to parse range.
+        // Happy path: consume bracket.
         this.consume()
+        // Expect range.
         const range = this.parseRange()
 
         if (range.ok === false) {
           return range
         }
 
+        // Happy path. Expect bracket.close
         if (this.peek()?.value !== ")") {
           return this.createError({
             type: "PARENS",
@@ -238,7 +250,7 @@ export class Parser {
           })
         }
 
-        // happy path: consume the closing bracket
+        // Happy path: consume bracket.close and return
         this.consume()
 
         return success({
@@ -251,23 +263,23 @@ export class Parser {
           ...range.value,
         })
       }
-    }
 
-    // After switch(token.type) block
-    // == token was not anything we expected
-    return this.createError({
-      type: "UNEXPECTED_TOKEN",
-      token,
-      expected: "any known factor",
-    })
+      // Unexpected token.type == something went seriously wrong in the tokenizer.
+      // Unknown state, so we crash.
+      default:
+        throw new Error(
+          `Parser received unknown token type: ${token.type}. This indicates a bug in the tokenizer.`,
+        )
+    }
   }
 
+  // Function to parse range syntax, as in "SUM(A1:Z99)".
+  // Happy path: the next sequence of tokens is <cell_ref>, ":", <cell_ref>
   private parseRange(): Result<{ from: Node_Cell; to: Node_Cell }, ParseError> {
     const maybeFirstCell = this.peek()
 
     // Happy path
-    // HACK:
-    // Seems wrong to nest but I cant be bothered right now
+    // Expect sequence `<cell_ref>, ":", <cell_ref>`
     if (maybeFirstCell?.type === "cell") {
       this.consume()
       if (this.peek()?.value === ":") {
@@ -295,6 +307,7 @@ export class Parser {
       }
     }
 
+    // Error path.
     // Did we run out of tokens?
     if (this.peek() === null) {
       return this.createError({

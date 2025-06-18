@@ -3,6 +3,7 @@
 // =================================================
 //
 // # DESIGN PILLARS
+// ----------------
 // Make errors granular so that they can be communicated to user.
 //
 // ## Desired UI behavior
@@ -13,7 +14,7 @@
 // A) The type of error.
 // B) The position of the bad token.
 //
-// ## DETAILS
+// ## Details for error types
 // * [INVALID_xyz] INVALID_CELL, _CHAR and _NUMBER catch invalid chars like $^/ as well.
 // * [INVALID_CHAR] catches chars outside of the above 3 parsing contexts (e.g. in first pos)
 //      --> tokenize
@@ -49,11 +50,7 @@ export type TokenizeErrorType =
   | "UNKNOWN_FUNCTION"
   | "UNKNOWN_ERROR"
 
-export type ASTErrorType =
-  | "UNEXPECTED_EOF"
-  | "UNEXPECTED_TOKEN"
-  | "PARENS"
-  | "UNKNOWN_ERROR"
+export type ASTErrorType = "UNEXPECTED_EOF" | "UNEXPECTED_TOKEN" | "PARENS"
 
 export type InterpretErrorType =
   | "CELL_NOT_A_NUMBER"
