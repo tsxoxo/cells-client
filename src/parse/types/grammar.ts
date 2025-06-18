@@ -16,7 +16,14 @@
 // * Number: /[0-9]+((,|\.)[0-9]+)?/
 // * Cell_ref: /[a-zA-Z]{1}[0-9]{1,2}
 
-export type TokenType = "number" | "cell" | "op" | "parens" | "func" | undefined
+export type TokenType =
+  | "number"
+  | "cell"
+  | "op"
+  | "parens"
+  | "func"
+  | undefined
+  | "eof" // We use "eof" type rather than null.
 
 export type Token = {
   value: string
@@ -32,6 +39,8 @@ export type Node = Node_Binary | Node_Number | Node_Cell | Node_Func
 interface Node_Base {
   type: string
   value: string
+  // Position of corresponding token within the formula string.
+  // Currently used only in failure cases: the interpreter module passes along the whole Node.
   position: {
     start: number
     end: number

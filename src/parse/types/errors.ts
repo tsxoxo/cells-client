@@ -36,7 +36,7 @@ import { Node_Binary, Token, Node } from "./grammar"
 // Error object that bubble up and get handled
 export type ParseError = {
   type: TokenizeErrorType | ASTErrorType | InterpretErrorType
-  payload: Token | Node | null
+  payload: Token | Node
   msg: string
   cell?: number // Cell index which contains an invalid value
 }
@@ -50,7 +50,7 @@ export type TokenizeErrorType =
   | "UNKNOWN_FUNCTION"
   | "UNKNOWN_ERROR"
 
-export type ASTErrorType = "UNEXPECTED_EOF" | "UNEXPECTED_TOKEN" | "PARENS"
+export type ASTErrorType = "UNEXPECTED_TOKEN" | "PARENS"
 
 export type InterpretErrorType =
   | "CELL_NOT_A_NUMBER"

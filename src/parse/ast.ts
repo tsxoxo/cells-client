@@ -21,6 +21,14 @@ import { Node_Binary, Node_Cell, Token, Node } from "./types/grammar.ts"
 export class Parser {
   readonly tokens: Token[]
   current: number
+  readonly eofToken: Token = {
+    value: "",
+    type: "eof",
+    position: {
+      start: -1,
+      end: -1,
+    },
+  }
 
   constructor(tokens: Token[]) {
     this.tokens = tokens
@@ -40,10 +48,10 @@ export class Parser {
     expected,
   }: {
     type: ASTErrorType
-    token: Token | null
+    token: Token
     expected: string
   }): Failure<ParseError> {
-    const tokenDisplayString = token === null ? "null" : token.value
+    const tokenDisplayString = token.type === "eof" ? "eof" : token.value
     return fail({
       type,
       payload: token,
@@ -53,14 +61,16 @@ export class Parser {
 
   private peek() {
     if (this.current >= this.tokens.length) {
-      return null
+      // Return special "eof" token -- that seems simpler than handling a null value.
+      return this.eofToken
     }
     return this.tokens[this.current]
   }
 
   private consume() {
     if (this.current >= this.tokens.length) {
-      return null
+      // Return special "eof" token -- that seems simpler than handling a null value.
+      return this.eofToken
     }
     this.current++
     return this.tokens[this.current - 1]
@@ -68,7 +78,7 @@ export class Parser {
 
   private parseExpression(): Result<Node, ParseError> {
     const expr = this.parseTerm()
-    let exprBinary = null
+    let exprBinary: Node_Binary | undefined = undefined
 
     if (!isSuccess(expr)) {
       return expr
@@ -106,7 +116,7 @@ export class Parser {
 
   private parseTerm(): Result<Node, ParseError> {
     const term = this.parseFactor()
-    let termBinary: Node_Binary | null = null
+    let termBinary: Node_Binary | undefined = undefined
 
     if (!isSuccess(term)) {
       return term
@@ -149,18 +159,6 @@ export class Parser {
     const token = this.peek()
 
     // Expect any type of token.
-    // Error path.
-    // START_HERE: should we scrap UNEXPECTED_EOF and always return UNEXPECTED_TOKEN?
-    // This would declutter this file a bit.
-    if (token === null) {
-      return this.createError({
-        type: "UNEXPECTED_EOF",
-        token: this.tokens[this.current - 1],
-        expected: "factor",
-      })
-    }
-
-    // Happy path.
     switch (token.type) {
       case "number":
         this.consume()
@@ -185,7 +183,7 @@ export class Parser {
         if (token?.value === ")") {
           return this.createError({
             type: "PARENS",
-            token: this.peek(),
+            token,
             expected: "opening parenthesis",
           })
         }
@@ -216,13 +214,6 @@ export class Parser {
 
         // Expect bracket.open
         const next = this.peek()
-        if (next === null) {
-          return this.createError({
-            type: "UNEXPECTED_EOF",
-            token: this.tokens[this.current - 1],
-            expected: "bracket after function keyword",
-          })
-        }
 
         if (next.value !== "(") {
           return this.createError({
@@ -308,16 +299,7 @@ export class Parser {
     }
 
     // Error path.
-    // Did we run out of tokens?
-    if (this.peek() === null) {
-      return this.createError({
-        type: "UNEXPECTED_EOF",
-        token: this.tokens[this.current - 1],
-        expected: "more tokens in range expression",
-      })
-    }
-
-    // Token did not match range syntax
+    // We ran out of tokens or a token did not match range syntax
     return this.createError({
       type: "UNEXPECTED_TOKEN",
       token: this.peek(),

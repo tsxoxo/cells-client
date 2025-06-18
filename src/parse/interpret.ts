@@ -193,7 +193,6 @@ function createError({
   expected,
 }: {
   type: InterpretErrorType
-  // Not sure how much sense it make to expect 'null'
   node: Node
   cell?: number
   expected: string
