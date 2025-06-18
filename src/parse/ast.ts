@@ -189,6 +189,8 @@ export class Parser {
         }
 
         // Happy path.
+        // Save bracket position.
+        const bracketOpenPosition = token.position.start
         // Consume bracket.open and parse expression.
         this.consume()
         const expr = this.parseExpression()
@@ -203,6 +205,13 @@ export class Parser {
         }
 
         // Happy path.
+        if (isSuccess(expr)) {
+          // Update expr with opening and closing bracket positions.
+          expr.value.position = {
+            start: bracketOpenPosition,
+            end: this.peek()!.position.end,
+          }
+        }
         // Consume closing bracket and return
         this.consume()
         return expr
