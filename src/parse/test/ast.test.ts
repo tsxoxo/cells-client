@@ -16,17 +16,14 @@ function makeTokens(
   simplifiedTokens: {
     type: TokenType
     value: string
-    position?: { start: number; end: number }
+    position: { start: number; end: number }
   }[],
 ): Token[] {
   const tokens = simplifiedTokens.map(
     ({ type, value, position }): Token => ({
       type,
       value,
-      position: position ?? {
-        start: 0,
-        end: 0,
-      },
+      position,
     }),
   )
 
@@ -184,7 +181,7 @@ describe("ast", () => {
             left: {
               type: "binary_op",
               value: "+",
-              position: { start: 1, end: 4 },
+              position: { start: 0, end: 5 },
               left: {
                 type: "number",
                 value: "1",
@@ -301,7 +298,7 @@ describe("ast", () => {
           right: {
             type: "binary_op",
             value: "+",
-            position: { start: 3, end: 17 },
+            position: { start: 2, end: 18 },
             left: {
               type: "binary_op",
               value: "/",
@@ -314,7 +311,7 @@ describe("ast", () => {
               right: {
                 type: "binary_op",
                 value: "-",
-                position: { start: 7, end: 14 },
+                position: { start: 6, end: 15 },
                 left: {
                   type: "number",
                   value: "1",
@@ -323,7 +320,7 @@ describe("ast", () => {
                 right: {
                   type: "binary_op",
                   value: "*",
-                  position: { start: 10, end: 13 },
+                  position: { start: 9, end: 14 },
                   left: {
                     type: "number",
                     value: "2",
@@ -374,7 +371,7 @@ describe("ast", () => {
           { type: "func", value: "SUM", position: { start: 2, end: 5 } },
         ]),
         description: "it fails on EOF after func keyword",
-        expectedError: "UNEXPECTED_TOKEN",
+        expectedError: "PARENS",
         expectedValue: "",
         expectedPosition: { start: -1, end: -1 },
       },
@@ -405,7 +402,7 @@ describe("ast", () => {
           { type: "parens", value: ")", position: { start: 7, end: 8 } },
         ]),
         description: "it fails when bracket.close comes before bracket.open",
-        expectedError: "UNEXPECTED_TOKEN",
+        expectedError: "PARENS",
         expectedValue: ")",
         expectedPosition: { start: 2, end: 3 },
       },
@@ -455,7 +452,7 @@ describe("ast", () => {
           { type: "parens", value: ")", position: { start: 9, end: 10 } },
         ]),
         description: "it fails on missing bracket.open after function keyword",
-        expectedError: "UNEXPECTED_TOKEN",
+        expectedError: "PARENS",
         expectedValue: "+",
         expectedPosition: { start: 3, end: 4 },
       },
@@ -503,7 +500,7 @@ describe("ast", () => {
           { type: "parens", value: ")", position: { start: 12, end: 13 } },
         ]),
         description: "it fails on ill-formed range B",
-        expectedError: "UNEXPECTED_TOKEN",
+        expectedError: "PARENS",
         expectedValue: ":",
         expectedPosition: { start: 9, end: 10 },
       },

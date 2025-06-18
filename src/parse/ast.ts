@@ -221,7 +221,7 @@ export class Parser {
         // Consume function keyword
         this.consume()
 
-        // Expect bracket.open
+        // Expect "("
         const next = this.peek()
 
         if (next.value !== "(") {
@@ -237,6 +237,7 @@ export class Parser {
         // Expect range.
         const range = this.parseRange()
 
+        // Error path: Not a valid range.
         if (range.ok === false) {
           return range
         }
@@ -263,6 +264,13 @@ export class Parser {
           ...range.value,
         })
       }
+
+      case "eof":
+        return this.createError({
+          type: "UNEXPECTED_TOKEN",
+          token,
+          expected: "a factor",
+        })
 
       // Unexpected token.type == something went seriously wrong in the tokenizer.
       // Unknown state, so we crash.
