@@ -23,7 +23,6 @@
 //      --> ast
 //
 // * [CELL_NOT_A_NUMBER] Non-numeric value from cell reference. "A1 + A2" and A1 contains "foo".
-// * [CELL_UNDEFINED] Attempt to get cell from cells array returned undefined: cell is empty.
 // * [CIRCULAR_CEL_REF] Cell references itself, e.g. in A1 "A0+A1", "SUM(A0:B4)"
 // * [DIVIDE_BY_0] Divide by 0
 //      --> interpret
@@ -54,10 +53,8 @@ export type ASTErrorType = "UNEXPECTED_TOKEN" | "PARENS"
 
 export type InterpretErrorType =
   | "CELL_NOT_A_NUMBER"
-  | "CELL_UNDEFINED"
   | "CIRCULAR_CELL_REF"
   | "DIVIDE_BY_0"
-  | "UNKNOWN_FUNCTION" // Safety net if tokenizer fails. Not sure if we really need this.
   | "UNKNOWN_ERROR"
 
 // ########################################################################
