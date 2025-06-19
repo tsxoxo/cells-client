@@ -7,6 +7,15 @@ import { ALPHABET_WITH_FILLER } from "../../config/constants"
 // # TEST DATA
 // =================================================
 
+// TODO: Test cases to add
+// for cellValueProvider
+// * "it fails when single cell is not a number" (formula: "1+A1" where A1.value === undefined), "it fails when cell in range is not a number (formula: "1+SUM(A0:B1)" where A1.value == undefined and rest of cells contains numbers); "it fails on circular cell ref in getCellValue", "it fails on circular cell ref in getRangeValues"
+//
+// for range parser:
+// * handles forward range (A0:A3)
+// * handles reverse range (A3:A0)
+// * edge: handles single-cell range (A1:A1)
+//
 describe("cell utils", () => {
   it("extracts range", () => {
     const numOfCols = ALPHABET_WITH_FILLER.length - 1

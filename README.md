@@ -71,9 +71,6 @@ returns appropiate error:
 
 - **tidy up example tests**
 - START_HERE: Do what I did for tokenize.test for interpret.test
-- edgecases:
-  - DIVIDE_BY_0: numeric and cellref and result (1/(E2-E2))
-  - range: one single invalid cell in range: leftboundary, inner, rightboundary
 - write integration tests for full parsing pipeline
 - Go over the properties mentioned above under "Property tests" -- add any of those?
 
@@ -86,6 +83,8 @@ returns appropiate error:
 
   - Furthermore, it does not make sense to me that consume() returns a value, yet we never use that return value, instead calling it strictly for its side-effects.
 
+- add E2E test runner and write a basic UI test. Do this before rebuilding UI so You know what makes a UI testable.
+
 - off to Figma -> redesign UI
 
 - Build basic UI for errors
@@ -96,14 +95,16 @@ returns appropiate error:
 
 - write test for state updates
 
-- write tests for UI
   -> introduce networking
 
 **@BACKLOG**
 
 ## SECURITY
 
-- Protect again numeric overflow. Look into [ decimal.js ](https://mikemcl.github.io/decimal.js/#)
+- Protect again numeric overflow. Look into [ decimal.js ](https://mikemcl.github.io/decimal.js/#). Then add tests:
+  - "handles operations resulting in Infinity" // 1/0.0000001 repeatedly
+    - remember: 0/0, 1/0, -1/0 == NaN, Infinity, -Infinity, respectively
+  - "handles very large numbers" // potential overflow
 - Escape user input
 
 ## FEAT
@@ -122,6 +123,7 @@ returns appropiate error:
 - stagger animations?
 - parse: add functions "mult" | "avg" | "max" | "min" | "count"
 - parse: add negation
+  - add test: "handles negative numbers in calculations" // -5 \* -3
 - parse: add nested functions
 
 ## ERRORS

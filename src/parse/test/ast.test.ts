@@ -505,7 +505,7 @@ describe("ast", () => {
         expectedPosition: { start: 9, end: 10 },
       },
     ])(
-      "given input based on '$description', $description",
+      "$description",
       ({ input, expectedError, expectedValue, expectedPosition }) => {
         const parser = new Parser(input)
         const result = parser.makeAST()

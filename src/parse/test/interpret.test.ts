@@ -1,267 +1,195 @@
 import { describe, expect, it } from "vitest"
 import { interpret } from "../interpret"
+import { assertIsFail, assertIsSuccess, success } from "../types/errors"
+import { CellValueProvider, createCellValueProvider } from "../cellUtils"
 import { Cell } from "../../types/types"
-import { Node_Binary, Node_Func } from "../types/grammar"
-import { assertIsFail, assertIsSuccess } from "../types/errors"
+import { NUM_OF_COLS } from "../../config/constants"
 
-// =================================================
-// # TEST DATA
-// =================================================
+// Test case ideas for interpret unit
 
-// "2+3"
-const validExpressionTree = {
-  type: "binary_op",
-  value: "+",
-  position: { start: 0, end: 3 },
-  left: { type: "number", value: "2", position: { start: 0, end: 1 } },
-  right: { type: "number", value: "3", position: { start: 2, end: 3 } },
-} as const
+// NOTE: for consistency, only use these values in tests:
+// A0 for single cell refs containing non-zero value
+// Z99 for single cell refs containing zero value
+// A0:B1 for ranges
+const mockCellValueProviderNonZero: CellValueProvider = {
+  getCellValue: (name) =>
+    name === "A0"
+      ? success({ cellValue: 5, cellIndex: 0 })
+      : success({ cellValue: 10, cellIndex: 1 }),
+  getRangeValues: () =>
+    success({
+      cellValuesInRange: [5, 10, 15, 20],
+      cellIndexesInRange: [0, 1, 2, 3],
+    }),
+}
 
-// "2*3"
-const validTermTree = {
-  type: "binary_op",
-  value: "*",
-  position: { start: 0, end: 3 },
-  left: { type: "number", value: "2", position: { start: 0, end: 1 } },
-  right: { type: "number", value: "3", position: { start: 2, end: 3 } },
-} as const
+const mockCellValueProviderZero: CellValueProvider = {
+  getCellValue: (name) =>
+    name === "A0"
+      ? success({ cellValue: 0, cellIndex: 0 })
+      : success({ cellValue: 10, cellIndex: 1 }), // sic! used for testing "1/(A1-A1)"
+  getRangeValues: () =>
+    success({
+      cellValuesInRange: [0, 0, 0, 0],
+      cellIndexesInRange: [0, 1, 2, 3],
+    }),
+}
 
-// "1+2*3"
-const validExpressionWithTermTree = {
-  type: "binary_op",
-  value: "+",
-  position: { start: 0, end: 5 },
-  left: { type: "number", value: "1", position: { start: 0, end: 1 } },
-  right: {
-    type: "binary_op",
-    value: "*",
-    position: { start: 2, end: 5 },
-    left: { type: "number", value: "2", position: { start: 2, end: 3 } },
-    right: { type: "number", value: "3", position: { start: 4, end: 5 } },
-  },
-} as const
+describe("interpret", () => {
+  describe("computes and collects deps from standard valid cases (no edge cases)", () => {
+    it.each([
+      {
+        // formula: "11+31"
+        description: "numeric expression",
+        inputAST: {},
+        expectedResult: {
+          res: 42,
+          deps: [],
+        },
+      },
+      {
+        // formula: "(11+31)"
+        description: "bracketed numeric expression",
+        inputAST: {},
+        expectedResult: {
+          res: 42,
+          deps: [],
+        },
+      },
+      {
+        // formula: "11+A0"
+        description: "cell expression",
+        inputAST: {},
+        expectedResult: {
+          res: 42,
+          deps: [0],
+        },
+      },
+      {
+        // formula: "11+SUM(A0:B1)"
+        description: "function expression",
+        inputAST: {},
+        expectedResult: {
+          res: 42,
+          deps: [0, 1, 2, 3],
+        },
+      },
+      {
+        // formula: "combine all the above"
+        description: "complex expression (should not duplicate deps)",
+        inputAST: {},
+        expectedResult: {
+          res: 42,
+          deps: [0, 1, 2, 3],
+        },
+      },
+    ])("$description", ({ inputAST, expectedResult }) => {
+      // TODO: mock cellValueProvider
+      const result = interpret(inputAST, mockCellValueProviderNonZero)
+      assertIsSuccess(result)
+      expect(result.value).toEqual(expectedResult)
+    })
+  })
 
-// "A0*B00"
-const validWithCells = {
-  type: "binary_op",
-  value: "*",
-  position: { start: 0, end: 6 },
-  left: { type: "cell", value: "A0", position: { start: 0, end: 2 } },
-  right: { type: "cell", value: "B00", position: { start: 3, end: 6 } },
-} as const
+  // * trees with single nodes
+  describe("edge cases", () => {
+    it.each([
+      {
+        // formula: "1"
+        description: "single numeric node",
+        inputAST: {},
+        expectedResult: {
+          res: 1,
+          deps: [],
+        },
+      },
+      {
+        // formula: "A0"
+        description: "single cell node",
+        inputAST: {},
+        expectedResult: {
+          res: 5,
+          deps: [0],
+        },
+      },
+      {
+        // formula: "SUM(A0:B1)"
+        description: "single function node",
+        inputAST: {},
+        expectedResult: {
+          res: 42,
+          deps: [0, 1, 2, 3],
+        },
+      },
+    ])("$description", ({ inputAST, expectedResult }) => {
+      const result = interpret(inputAST, mockCellValueProviderNonZero)
+      assertIsSuccess(result)
+      expect(result.value).toEqual(expectedResult)
+    })
+  })
 
-const cellsA0andB0: Cell[] = [
-  {
-    content: "0",
-    value: 0,
-    dependencies: [],
-    dependents: [],
-  },
-  {
-    content: "1",
-    value: 1,
-    dependencies: [],
-    dependents: [],
-  },
-]
+  it("(smoke test) Works with the real cellValueProvider", () => {
+    // Formula: "A0+A1"
+    const cells: Cell[] = [] // fill in
+    const cellValueProvider = createCellValueProvider(cells, NUM_OF_COLS)
+    const ast = {}
 
-// "(1+2)*3"
-const validFromParens: Node_Binary = {
-  type: "binary_op",
-  value: "*",
-  position: { start: 0, end: 7 },
-  left: {
-    type: "binary_op",
-    value: "+",
-    position: { start: 1, end: 4 },
-    left: { type: "number", value: "1", position: { start: 1, end: 2 } },
-    right: { type: "number", value: "2", position: { start: 3, end: 4 } },
-  },
-  right: { type: "number", value: "3", position: { start: 6, end: 7 } },
-} as const
+    const result = interpret(ast, cellValueProvider)
 
-// With functions
-// "SUM(A0:F0)*3"
-const validWithFunc: Node_Binary = {
-  type: "binary_op",
-  value: "*",
-  position: { start: 0, end: 12 },
-  left: {
-    type: "func",
-    value: "sum",
-    position: { start: 0, end: 10 },
-    from: { type: "cell", value: "A0", position: { start: 4, end: 6 } },
-    to: { type: "cell", value: "F0", position: { start: 7, end: 9 } },
-  },
-  right: {
-    type: "number",
-    value: "3",
-    position: { start: 11, end: 12 },
-  },
-} as const
-
-// INVALID
-//
-// * [CELL_NOT_A_NUMBER] Invalid value from cell reference: "A1 + A2", where A1 === 'something invalid'
-//const invalid
-// * [DIVIDE_BY_0] Divide by 0
-// NOTE: Consider also infinity? not sure
-
-// Catches 0/0, 1/0, -1/0 == NaN, Infinity, -Infinity, respectively
-// if (!isFinite(jsResult)) {
-//   expect(ourResult.ok).toBe(false) // Should be an error
-// } else {
-//   assertIsSuccess(ourResult)
-//   expect(ourResult.value.res).toBeCloseTo(jsResult)
-// }
-
-const divideByZero = {
-  type: "binary_op",
-  value: "/",
-  position: { start: 0, end: 3 },
-  left: { type: "number", value: "1", position: { start: 0, end: 1 } },
-  right: { type: "number", value: "0", position: { start: 2, end: 3 } },
-} as const
-
-// =================================================
-// # TEST
-// =================================================
-describe("Interpreter", () => {
-  it("does number arithmetics no brackets", () => {
-    let result = interpret(validExpressionTree, [])
     assertIsSuccess(result)
-    // 'result.value.res': yes, this is stupid
-    expect(result.value.res).toEqual(5)
-
-    result = interpret(validTermTree, [])
-    assertIsSuccess(result)
-    expect(result.value.res).toEqual(6)
-
-    result = interpret(validExpressionWithTermTree, [])
-    assertIsSuccess(result)
-    expect(result.value.res).toEqual(7)
+    expect(result.value).toBe({
+      res: 42,
+      deps: [0, 1],
+    })
   })
 
-  it("uses values from cells and extracts dependencies", () => {
-    const result = interpret(validWithCells, cellsA0andB0)
-    assertIsSuccess(result)
-    expect(result.value.res).toEqual(0)
-    expect(result.value.deps).toEqual([0, 1])
+  describe("Error Handling", () => {
+    it.each([
+      {
+        // formula: "1/0"
+        description: "divide by 0: numeric",
+        inputAST: {},
+        expectedErrorType: "DIVIDE_BY_0",
+        expectedPayload: {}, // the 'right' node from inputAST
+        expectedCellIndex: -1,
+      },
+      {
+        // formula: "1/A0"
+        description: "divide by 0: cell ref",
+        inputAST: {},
+        expectedErrorType: "DIVIDE_BY_0",
+        expectedPayload: {}, // the 'right' node from inputAST
+        expectedCellIndex: -1,
+      },
+      {
+        // NOTE: use A1
+        // formula: "1 / (A1-A1)"
+        description: "divide by 0: 0 value resulting from substraction",
+        inputAST: {},
+        expectedErrorType: "DIVIDE_BY_0",
+        expectedPayload: {}, // the 'right' node from inputAST
+        expectedCellIndex: -1,
+      },
+      {
+        // formula: "1 / SUM(A0:B1)"
+        description: "divide by 0: 0 value resulting from range",
+        inputAST: {},
+        expectedErrorType: "DIVIDE_BY_0",
+        expectedPayload: {}, // the 'right' node from inputAST
+        expectedCellIndex: -1,
+      },
+    ])(
+      "$description",
+      ({ inputAST, expectedErrorType, expectedPayload, expectedCellIndex }) => {
+        const result = interpret(inputAST, mockCellValueProviderZero)
+
+        assertIsFail(result)
+        expect(result.error.type).toBe(expectedErrorType)
+        expect(result.error.payload).toBe(expectedPayload)
+        if (expectedCellIndex > -1) {
+          expect(result.error.cell).toEqual(expectedCellIndex)
+        }
+      },
+    )
   })
-
-  it("parses tree derived from expr containing parens", () => {
-    const result = interpret(validFromParens, [])
-    assertIsSuccess(result)
-    expect(result.value.res).toEqual(9)
-    expect(result.value.deps).toEqual([])
-  })
-
-  it("interprets functions with ranges", () => {
-    const mockCells = [
-      { value: 10 }, // A0
-      { value: 20 },
-      { value: 30 },
-      { value: 15 },
-      { value: 25 },
-      { value: 35 }, // F0
-    ] as Cell[]
-
-    // "SUM(A0:F0)*3"
-    // SUM(A0:F0) = 10 + 20 + 30 + 15 + 25 + 35 = 135
-    // result = 135 * 3 = 405
-    const result = interpret(validWithFunc, mockCells)
-    assertIsSuccess(result)
-    expect(result.value.res).toEqual(405)
-    expect(result.value.deps).toEqual([0, 1, 2, 3, 4, 5])
-  })
-
-  // INVALID CASES
-  // TODO: test the following formula
-  // WARN: !!! Test can still occasionally fail on formulas like 1/(E2-E2)
-  it("handles divide by zero", () => {
-    const result = interpret(divideByZero, [])
-    assertIsFail(result)
-    expect(result.error.type).toEqual("DIVIDE_BY_0")
-  })
-})
-
-it("produces correct error CELL_NOT_A_NUMBER", () => {
-  // "SUM(A0:B1)"
-  const sumWithBadCell: Node_Func = {
-    type: "func",
-    value: "sum",
-    position: { start: 0, end: 10 },
-    from: { type: "cell", value: "A0", position: { start: 4, end: 6 } },
-    to: { type: "cell", value: "B1", position: { start: 7, end: 9 } },
-  }
-
-  const mockCells: Cell[] = [
-    { content: "10", value: 10, dependencies: [], dependents: [] }, // A0
-    { content: "20", value: 20, dependencies: [], dependents: [] }, // A1
-    { content: "30", value: 30, dependencies: [], dependents: [] }, // B0
-    { content: "foo", value: undefined, dependencies: [], dependents: [] }, // B1 - non-numeric!
-  ]
-
-  const result = interpret(sumWithBadCell, mockCells, 2)
-
-  assertIsFail(result)
-  expect(result.error.type).toBe("CELL_NOT_A_NUMBER")
-  expect(result.error.cell).toBe(3) // B1's index
-  expect(result.error.payload!.position).toEqual({ start: 0, end: 10 }) // To mark the range string "A0:B1"
-  expect(result.error.payload).toEqual(sumWithBadCell) // The node that failed
-})
-
-it("catches error CELL_UNDEFINED", () => {
-  // "A1"
-  const undefinedCellTree = {
-    type: "cell",
-    value: "A1",
-    position: { start: 0, end: 2 },
-  } as const
-
-  // Mock cells array with only 26 elements (A0-Z0), so A1 (index 26) is undefined
-  const mockCells: Cell[] = Array(26).fill({
-    content: "0",
-    value: 0,
-    dependencies: [],
-    dependents: [],
-  })
-
-  const result = interpret(undefinedCellTree, mockCells)
-  assertIsFail(result)
-  expect(result.error.type).toBe("CELL_UNDEFINED")
-  expect(result.error.payload).toEqual(undefinedCellTree)
-})
-
-it("catches error CIRCULAR_CELL_REF", () => {
-  // Test A: Direct self-reference "A1"
-  const selfRefTree = {
-    type: "cell",
-    value: "A1",
-    position: { start: 0, end: 2 },
-  } as const
-
-  const mockCells: Cell[] = Array(30).fill({
-    content: "0",
-    value: 0,
-    dependencies: [],
-    dependents: [],
-  })
-
-  const directResult = interpret(selfRefTree, mockCells, 26, 26) // A1 is index 26
-  assertIsFail(directResult)
-  expect(directResult.error.type).toBe("CIRCULAR_CELL_REF")
-
-  // Test B: Self-reference in range "SUM(A0:B1)"
-  const rangeWithSelfTree = {
-    type: "func",
-    value: "sum",
-    position: { start: 0, end: 10 },
-    from: { type: "cell", value: "A0", position: { start: 4, end: 6 } },
-    to: { type: "cell", value: "B1", position: { start: 7, end: 9 } },
-  } as const
-
-  const rangeResult = interpret(rangeWithSelfTree, mockCells, 26, 26) // A1 is in range A0:B1
-  assertIsFail(rangeResult)
-  expect(rangeResult.error.type).toBe("CIRCULAR_CELL_REF")
 })
