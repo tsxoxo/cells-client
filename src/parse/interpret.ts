@@ -1,10 +1,4 @@
-import { ALPHABET_WITH_FILLER } from "../config/constants"
-import { Cell } from "../types/types"
-import {
-  getNumbersFromCells,
-  getCellsInRange,
-  getIndexFromCellName,
-} from "./cellUtils"
+import { type CellValueProvider } from "./cellUtils"
 import { applyFuncToValues } from "./func"
 import {
   Failure,
@@ -19,145 +13,135 @@ import { Node } from "./types/grammar"
 
 export function interpret(
   tree: Node,
-  cells: Cell[],
-  _numberOfCols?: number,
+  cellValueProvider?: CellValueProvider,
   currentCellIndex?: number,
 ): Result<{ res: number; deps: number[] }, ParseError> {
-  const numberOfCols = _numberOfCols ?? ALPHABET_WITH_FILLER.length - 1
   const deps: number[] = []
+
+  const res = solveNode(tree)
+  return res.ok ? success({ res: res.value, deps }) : res
 
   function solveNode(node: Node): Result<number, ParseError> {
     let calcResult
 
-    // base case
-    if (node.type === "number") {
-      return success(parseFloat(node.value))
-    }
+    switch (node.type) {
+      // base case
+      case "number":
+        return success(parseFloat(node.value))
 
-    if (node.type === "cell") {
-      const cellIndex = getIndexFromCellName(node.value)
+      case "cell": {
+        if (cellValueProvider === undefined) {
+          throw new Error(
+            "Interpret: missing argument 'cellValueProvider' while evaluating node of type 'cell'",
+          )
+        }
 
-      if (cellIndex === currentCellIndex) {
-        return createError({
-          type: "CIRCULAR_CELL_REF",
-          node,
-          expected: "cell to not contain reference to itself",
-        })
-      }
-      const cell = cells[cellIndex]
+        const cellValueResult = cellValueProvider.getCellValue(
+          node.value,
+          currentCellIndex,
+        )
+        if (!isSuccess(cellValueResult)) {
+          switch (cellValueResult.error.type) {
+            case "CIRCULAR_CELL_REF":
+              return createError({
+                type: cellValueResult.error.type,
+                node,
+                expected: "cell to not contain reference to itself",
+              })
 
-      if (cell === undefined) {
-        return createError({
-          type: "CELL_UNDEFINED",
-          node,
-          cell: cellIndex,
-          expected: "cell to contain numerical value",
-        })
-      }
+            case "CELL_NOT_A_NUMBER":
+              return createError({
+                type: cellValueResult.error.type,
+                node,
+                cell: cellValueResult.error.cellIndex,
+                expected: "cell to contain a number",
+              })
 
-      if (typeof cell.value !== "number") {
-        return createError({
-          type: "CELL_NOT_A_NUMBER",
-          node,
-          cell: cellIndex,
-          expected: "cell to contain a number",
-        })
-      }
+            // Unexpected error type == something went seriously wrong.
+            // Unknown state, so we crash.
+            default:
+              throw new Error(
+                `Interpret received unknown error from cellValueProvider.getCellValue: ${cellValueResult.error.type}.`,
+              )
+          }
+        }
 
-      // Happy path: cell contains a number
-      deps.push(cellIndex)
+        // Happy path: cell contains a number
+        deps.push(cellValueResult.value.cellIndex)
 
-      return success(cell.value)
-    }
-
-    if (node.type === "binary_op") {
-      const leftResult = solveNode(node.left)
-      const rightResult = solveNode(node.right)
-
-      // If either operand is already an error, just return it
-      if (!isSuccess(leftResult)) return leftResult
-      if (!isSuccess(rightResult)) return rightResult
-
-      calcResult = calculate(node, leftResult.value, rightResult.value)
-
-      if (!isSuccess(calcResult)) {
-        return createError({
-          type: calcResult.error.type,
-          node,
-          expected: "valid calculation result",
-        })
+        return success(cellValueResult.value.cellValue)
       }
 
-      return calcResult
-    }
+      case "binary_op": {
+        const leftResult = solveNode(node.left)
+        const rightResult = solveNode(node.right)
 
-    if (node.type === "func") {
-      const from = getIndexFromCellName(node.from.value)
-      const to = getIndexFromCellName(node.to.value)
+        // If either operand is already an error, just return it
+        if (!isSuccess(leftResult)) return leftResult
+        if (!isSuccess(rightResult)) return rightResult
 
-      // Arg order of from and to does not matter, cells get sorted in getCellsinRange.
-      const cellsInRange: number[] = getCellsInRange(
-        from,
-        to,
-        // Subtract the filler
-        numberOfCols,
-      )
+        calcResult = calculate(node, leftResult.value, rightResult.value)
 
-      // Does range contain circular reference?
-      for (let i = 0; i < cellsInRange.length; i++) {
-        if (cellsInRange[i] === currentCellIndex) {
+        if (!isSuccess(calcResult)) {
           return createError({
-            type: "CIRCULAR_CELL_REF",
+            type: calcResult.error.type,
             node,
-            expected: "cell to not contain reference to itself",
+            expected: "valid calculation result",
           })
         }
+
+        return calcResult
       }
 
-      // No circuar refs. Try to get all values.
-      const resolvedRange = getNumbersFromCells(cellsInRange, cells)
+      case "func": {
+        if (cellValueProvider === undefined) {
+          throw new Error(
+            "Interpret: missing argument 'cellValueProvider' while evaluating node of type 'func'",
+          )
+        }
 
-      if (!isSuccess(resolvedRange)) {
-        // Some cell contains not a number.
-        // Enrich error from getNumbersFromCells
-        return createError({
-          type: resolvedRange.error.type, // "CELL_NOT_A_NUMBER"
-          node,
-          cell: resolvedRange.error.cell,
-          expected: "all cells in range to contain valid numbers",
-        })
+        const rangeValuesResult = cellValueProvider.getRangeValues(
+          node.from.value,
+          node.to.value,
+          currentCellIndex,
+        )
+        if (!isSuccess(rangeValuesResult)) {
+          return createError({
+            type: rangeValuesResult.error.type,
+            node,
+            expected: "cells in range to contain numeric values",
+          })
+        }
+
+        // Happy path
+        const result = applyFuncToValues(
+          node.value,
+          rangeValuesResult.value.cellValuesInRange,
+        )
+
+        // This should only happen if the tokenizer lets through an invalid func reference
+        // TODO:: throw here, something went seriously wrong?
+        if (!isSuccess(result)) {
+          return createError({
+            type: result.error.type,
+            node,
+            expected: "valid result from applyFuncToValues",
+          })
+        }
+
+        // Happy path: func processed successfully.
+        deps.push(...rangeValuesResult.value.cellIndexesInRange)
+
+        return result
       }
 
-      const result = applyFuncToValues(node.value, resolvedRange.value)
-
-      // This should only happen if the tokenizer lets through an invalid func reference
-      if (!isSuccess(result)) {
-        return createError({
-          type: result.error.type,
-          node,
-          expected: "valid result from applyFuncToValues",
-        })
-      }
-
-      // Happy path: func processed successfully.
-      deps.push(...cellsInRange)
-
-      return result
+      default:
+        // unexpected node type, something went seriously wrong
+        throw new Error(
+          `Interpreter received unknown node type: ${node.type}. This indicates a bug in Parser.makeAST.`,
+        )
     }
-
-    // unexpected node type
-    // safety net.
-    // not sure how we would get here.
-    return createError({
-      type: "UNKNOWN_ERROR",
-      node,
-      expected: "valid node type",
-    })
   }
-
-  const res = solveNode(tree)
-
-  return res.ok ? success({ res: res.value, deps }) : res
 }
 
 // Takes node of type binary_op and its resolved operands.

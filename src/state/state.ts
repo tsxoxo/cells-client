@@ -12,6 +12,8 @@ import {
 import { AppError } from "../errors/errors"
 import { interpret } from "../parse/interpret"
 import { isNumber } from "../parse/match"
+import { createCellValueProvider } from "../parse/cellUtils"
+import { NUM_OF_COLS } from "../config/constants"
 
 // CONTROL FLOW
 export function handleCellContentChange(
@@ -117,7 +119,14 @@ function safeEval(
     return maybeAST
   }
 
-  const maybeFormula = interpret(maybeAST.value, cells, cellIndex)
+  const cellValueProvider = createCellValueProvider(cells, NUM_OF_COLS)
+  const maybeFormula = interpret(
+    maybeAST.value,
+    cells,
+    cellValueProvider,
+    NUM_OF_COLS,
+    cellIndex,
+  )
 
   // Pass along either error or result
   // If this crashes, let it crash.

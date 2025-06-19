@@ -1,8 +1,15 @@
 import { ALPHABET_WITH_FILLER } from "../config/constants"
 import { Cell } from "../types/types"
-import { Result, fail, success } from "./types/errors"
+import { Result, fail, isSuccess, success } from "./types/errors"
 
-// used in vue template
+//============================================================
+// CELL COORDINATES
+//
+// Helpers for converting cell name to cell index.
+// E.g. "A0" to 0
+//
+//============================================================
+// Get cell index based on the coordinate scheme in our Vue template.
 export function getCellIndexfromXY(x: number, y: number): number {
   return (y - 1) * (ALPHABET_WITH_FILLER.length - 1) + x - 1
 }
@@ -15,6 +22,107 @@ export function getIndexFromCellName(cellName: string): number {
   const y = Number(cellName.slice(1)) + 1
 
   return getCellIndexfromXY(x, y)
+}
+
+//============================================================
+// CELL API
+//
+// API for extracting values from cells.
+// Used in interpret parsing module.
+// Returns fail when any cell does not contain a number.
+//
+//============================================================
+export interface CellValueProvider {
+  getCellValue(
+    cellName: string,
+    currentCellIndex?: number,
+  ): Result<
+    { cellValue: number; cellIndex: number },
+    { type: string; cellIndex?: number }
+  >
+
+  getRangeValues(
+    fromName: string,
+    toName: string,
+    currentCellIndex?: number,
+  ): Result<
+    { cellValuesInRange: number[]; cellIndexesInRange: number[] },
+    { type: "CIRCULAR_CELL_REF" | "CELL_NOT_A_NUMBER"; cellIndex?: number }
+  >
+}
+
+export function createCellValueProvider(cells: Cell[], numOfCols: number) {
+  return {
+    getCellValue(
+      cellName: string,
+      currentCellIndex?: number,
+    ): Result<
+      { cellValue: number; cellIndex: number },
+      { type: string; cellIndex?: number }
+    > {
+      // Convert name to index and check if it's us.
+      const cellIndex = getIndexFromCellName(cellName)
+      if (currentCellIndex !== undefined && cellIndex === currentCellIndex) {
+        return fail({ type: "CIRCULAR_CELL_REF" })
+      }
+
+      // Get the value
+      const cell = cells[cellIndex]
+      if (cell === undefined || typeof cell.value !== "number") {
+        return fail({
+          type: "CELL_NOT_A_NUMBER",
+          cellIndex,
+        })
+      }
+
+      // Happy path: cell's value is a number
+      return success({ cellValue: cell.value, cellIndex })
+    },
+
+    getRangeValues(
+      fromName: string,
+      toName: string,
+      currentCellIndex?: number,
+    ): Result<
+      { cellValuesInRange: number[]; cellIndexesInRange: number[] },
+      { type: "CIRCULAR_CELL_REF" | "CELL_NOT_A_NUMBER"; cellIndex?: number }
+    > {
+      const from = getIndexFromCellName(fromName)
+      const to = getIndexFromCellName(toName)
+
+      // Arg order of from and to does not matter, cells get sorted in getCellsinRange.
+      const cellIndexesInRange: number[] = getCellsInRange(from, to, numOfCols)
+
+      // Does range contain circular reference?
+      for (let i = 0; i < cellIndexesInRange.length; i++) {
+        if (cellIndexesInRange[i] === currentCellIndex) {
+          return fail({
+            type: "CIRCULAR_CELL_REF",
+          })
+        }
+      }
+
+      // No circuar refs. Try to get all values.
+      const valuesInRangeResult = getNumbersFromCells(cellIndexesInRange, cells)
+
+      if (!isSuccess(valuesInRangeResult)) {
+        // Some cell contains non-numeric value.
+        // Enrich error from getNumbersFromCells
+        return fail({
+          type: valuesInRangeResult.error.type, // "CELL_NOT_A_NUMBER"
+          cellIndex: valuesInRangeResult.error.cellIndex,
+          expected: "all cells in range to contain valid numbers",
+        })
+      }
+
+      // Happy path
+      // return values in range and indexes
+      return success({
+        cellValuesInRange: valuesInRangeResult.value,
+        cellIndexesInRange,
+      })
+    },
+  }
 }
 
 // Calculate the range of cells between 2 given cells in the spreadsheet.
@@ -58,22 +166,26 @@ export function getCellsInRange(
 // Returns cell values or
 // error if any value is not a number.
 export function getNumbersFromCells(
-  cellsToResolve: number[],
-  all: Cell[],
-): Result<number[], { type: "CELL_NOT_A_NUMBER"; cell: number }> {
+  cellIndexes: number[],
+  cellsData: Cell[],
+): Result<number[], { type: "CELL_NOT_A_NUMBER"; cellIndex: number }> {
   const values = []
 
-  for (let i = 0; i < cellsToResolve.length; i++) {
-    const cellToResolve = cellsToResolve[i]
-    const val = all[cellToResolve].value
-    if (typeof val !== "number") {
+  for (let i = 0; i < cellIndexes.length; i++) {
+    const cellIndex = cellIndexes[i]
+    const cell = cellsData[cellIndex]
+
+    // Fail immediately on any non-numeric value
+    if (cell === undefined || typeof cell.value !== "number") {
       return fail({
         type: "CELL_NOT_A_NUMBER",
-        cell: cellToResolve,
+        cellIndex,
       })
     }
 
-    values.push(val)
+    // Happy path
+    // Add value to result array
+    values.push(cell.value)
   }
   return success(values)
 }

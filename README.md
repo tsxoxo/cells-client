@@ -70,7 +70,7 @@ returns appropiate error:
 [x] test funcs A: all cells valid
 
 - **tidy up example tests**
-- START_HERE: Do what I did for tokenize.test for ast.test and interpret.test
+- START_HERE: Do what I did for tokenize.test for interpret.test
 - edgecases:
   - DIVIDE_BY_0: numeric and cellref and result (1/(E2-E2))
   - range: one single invalid cell in range: leftboundary, inner, rightboundary

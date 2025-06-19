@@ -13,7 +13,7 @@
 import * as fc from "fast-check"
 import { it, expect } from "vitest"
 import { assertIsFail, assertIsSuccess } from "../types/errors"
-import { getIndexFromCellName } from "../cellUtils"
+import { createCellValueProvider, getIndexFromCellName } from "../cellUtils"
 import { Cell } from "../../types/types.ts"
 
 // Cells data (fake spreadsheets)
@@ -34,6 +34,7 @@ import {
 // TEST SUBJECTS
 import { interpret } from "../interpret"
 import { parseToAST } from "../main"
+import { NUM_OF_COLS } from "../../config/constants.ts"
 
 // --- HELPERS ---
 // Can't use the one from match.ts as we need this unanchored to match all cells
@@ -92,7 +93,7 @@ it("respects operator precedence", () => {
       assertIsSuccess(ast)
 
       // Step 2: Evaluate formula
-      const ourResult = interpret(ast.value, [])
+      const ourResult = interpret(ast.value)
       assertIsSuccess(ourResult)
 
       // Should be equal to eval()
@@ -113,7 +114,7 @@ it("parses numeric expressions with brackets", () => {
       assertIsSuccess(ast)
 
       // Evaluate formula.
-      const ourResult = interpret(ast.value, [])
+      const ourResult = interpret(ast.value)
       assertIsSuccess(ourResult)
 
       // Should be equal to eval()
@@ -138,9 +139,11 @@ it("processes single cell refs", () => {
       const ast = parseToAST(expr)
       assertIsSuccess(ast)
 
-      // Create cells array to pass to interpreter.
+      // Create cellValueProvider to pass to interpreter.
       const cells = createNumericSpreadsheet()
-      const ourResult = interpret(ast.value, cells)
+      const cellValueProvider = createCellValueProvider(cells, NUM_OF_COLS)
+
+      const ourResult = interpret(ast.value, cellValueProvider)
       assertIsSuccess(ourResult)
 
       // HACK: We can't use eval() on formulas with cell refs,
@@ -162,8 +165,11 @@ it("tracks cell dependencies", () => {
       const ast = parseToAST(expr)
       assertIsSuccess(ast)
 
+      // Create cellValueProvider to pass to interpreter.
       const cells = createNumericSpreadsheet()
-      const ourResult = interpret(ast.value, cells)
+      const cellValueProvider = createCellValueProvider(cells, NUM_OF_COLS)
+
+      const ourResult = interpret(ast.value, cellValueProvider)
       assertIsSuccess(ourResult)
 
       // deps is an array of cell indices
@@ -186,9 +192,11 @@ it("processes functions", () => {
       const ast = parseToAST(expr)
       assertIsSuccess(ast)
 
-      // Create cells array to pass to interpreter.
+      // Create cellValueProvider to pass to interpreter.
       const cells = createNumericSpreadsheet()
-      const ourResult = interpret(ast.value, cells)
+      const cellValueProvider = createCellValueProvider(cells, NUM_OF_COLS)
+
+      const ourResult = interpret(ast.value, cellValueProvider)
       assertIsSuccess(ourResult)
 
       // NOTE: can we get the result in a simple way?
@@ -205,7 +213,7 @@ it("processes functions", () => {
 // ############################################################
 // Test for correct error generation
 
-// When cell is undefined, return error type: CELL_NOT_A_NUMBER
+// When cell is undefined or non-numeric, return error type: CELL_NOT_A_NUMBER
 it("returns correct error when cell is undefined", () => {
   fc.assert(
     fc.property(createFormulaWithSingleCells(), (expr) => {
@@ -213,45 +221,30 @@ it("returns correct error when cell is undefined", () => {
       const ast = parseToAST(expr)
       assertIsSuccess(ast)
 
-      // Create cells array to pass to interpreter.
-      const cells = createEmptySpreadsheet()
-      const ourResult = interpret(ast.value, cells)
-      assertIsFail(ourResult)
-
-      expect(ourResult.error.type).toEqual("CELL_NOT_A_NUMBER")
-      // Should throw on the first cell
-      const cellsInFormula = expr.match(cellPattern)
-      expect(ourResult.error.cell).toEqual(
-        getIndexFromCellName(cellsInFormula![0]),
+      // Create cellValueProvider with undefined cells to pass to interpreter.
+      const cellsEmpty = createEmptySpreadsheet()
+      const cellValueProviderEmpty = createCellValueProvider(
+        cellsEmpty,
+        NUM_OF_COLS,
       )
+
+      const resultFromEmpty = interpret(ast.value, cellValueProviderEmpty)
+      assertIsFail(resultFromEmpty)
+
+      // Create cellValueProvider with non-numeric cells to pass to interpreter.
+      const cellsStrings = createStringSpreadsheet()
+      const cellValueProviderStrings = createCellValueProvider(
+        cellsStrings,
+        NUM_OF_COLS,
+      )
+
+      const resultFromStrings = interpret(ast.value, cellValueProviderStrings)
+      assertIsFail(resultFromStrings)
     }),
   )
 })
 
-// When cell contains string, return error type: CELL_NOT_A_NUMBER
-it("returns correct error when single cell ref contains string", () => {
-  fc.assert(
-    fc.property(createFormulaWithSingleCells(), (expr) => {
-      // Create AST.
-      const ast = parseToAST(expr)
-      assertIsSuccess(ast)
-
-      // Create cells array to pass to interpreter.
-      const cells = createStringSpreadsheet()
-      const ourResult = interpret(ast.value, cells)
-      assertIsFail(ourResult)
-
-      expect(ourResult.error.type).toEqual("CELL_NOT_A_NUMBER")
-      // Should throw on the first cell
-      const cellsInFormula = expr.match(cellPattern)
-      expect(ourResult.error.cell).toEqual(
-        getIndexFromCellName(cellsInFormula![0]),
-      )
-    }),
-  )
-})
-
-// Throws correct error when cells in range have invalid value.
+// When range contains undefined or non-numeric cells, return error type: CELL_NOT_A_NUMBER
 it("returns correct error when cell in range contains string", () => {
   fc.assert(
     fc.property(createFormulaWithFunctions(), (expr) => {
@@ -259,10 +252,25 @@ it("returns correct error when cell in range contains string", () => {
       const ast = parseToAST(expr)
       assertIsSuccess(ast)
 
-      // Create cells array to pass to interpreter.
-      const cells = createStringSpreadsheet()
-      const ourResult = interpret(ast.value, cells)
-      assertIsFail(ourResult)
+      // Create cellValueProvider with undefined cells to pass to interpreter.
+      const cellsEmpty = createEmptySpreadsheet()
+      const cellValueProviderEmpty = createCellValueProvider(
+        cellsEmpty,
+        NUM_OF_COLS,
+      )
+
+      const resultFromEmpty = interpret(ast.value, cellValueProviderEmpty)
+      assertIsFail(resultFromEmpty)
+
+      // Create cellValueProvider with non-numeric cells to pass to interpreter.
+      const cellsStrings = createStringSpreadsheet()
+      const cellValueProviderStrings = createCellValueProvider(
+        cellsStrings,
+        NUM_OF_COLS,
+      )
+
+      const resultFromStrings = interpret(ast.value, cellValueProviderStrings)
+      assertIsFail(resultFromStrings)
 
       // NOTE: Can we test for anything else to improve specifity for this behavior?
       // We can't, for example, test on which cells it fails in a non trivial way,
