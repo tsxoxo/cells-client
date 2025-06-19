@@ -70,7 +70,6 @@ returns appropiate error:
 [x] test funcs A: all cells valid
 
 - **tidy up example tests**
-- START_HERE: Do what I did for tokenize.test for interpret.test
 - write integration tests for full parsing pipeline
 - Go over the properties mentioned above under "Property tests" -- add any of those?
 

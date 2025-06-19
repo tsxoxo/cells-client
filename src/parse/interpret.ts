@@ -19,7 +19,9 @@ export function interpret(
   const deps: number[] = []
 
   const res = solveNode(tree)
-  return res.ok ? success({ res: res.value, deps }) : res
+  return res.ok
+    ? success({ res: res.value, deps: [...new Set(deps)] }) // de-duplicate deps
+    : res
 
   function solveNode(node: Node): Result<number, ParseError> {
     let calcResult
@@ -85,7 +87,7 @@ export function interpret(
         if (!isSuccess(calcResult)) {
           return createError({
             type: calcResult.error.type,
-            node,
+            node: node.right,
             expected: "valid calculation result",
           })
         }
@@ -119,14 +121,12 @@ export function interpret(
           rangeValuesResult.value.cellValuesInRange,
         )
 
-        // This should only happen if the tokenizer lets through an invalid func reference
-        // TODO:: throw here, something went seriously wrong?
+        // This should only happen if the tokenizer lets through an invalid func reference.
+        // Something went very wrong. Abort mission.
         if (!isSuccess(result)) {
-          return createError({
-            type: result.error.type,
-            node,
-            expected: "valid result from applyFuncToValues",
-          })
+          throw new Error(
+            `interpret: got unknown function keyword ${node.value}. This indicates an error in the tokenizer`,
+          )
         }
 
         // Happy path: func processed successfully.
