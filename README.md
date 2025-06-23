@@ -73,6 +73,11 @@ returns appropiate error:
 - write integration tests for full parsing pipeline
 - Go over the properties mentioned above under "Property tests" -- add any of those?
 
+**TEST CASES TO ADD**
+
+- whitespace between nums and cells: "12 23 + 23", "A1 A2+1"
+- no whitespace between num and letter: "123sum(A1:B2)"
+
 ## After that
 
 - Try and simplify/unify each module of the parse pipeline. Underlying question: this whole parsing business seems like a state machine pattern--roughly:

@@ -1,282 +1,217 @@
-// =================================================
+// ========================================================
 // TOKENIZER
-// =================================================
+// ========================================================
 //
-// Takes string.
-// Outputs a list of objects that
-// is easier to work with.
+// Tokenizes a string. First module of parse pipeline.
+//
+// IN: string.
+// OUT: array of objects that are easier to work with.
 //
 // Example
-// In: "11*(2+3)"
-// Out (simplified): [{ value: "11"}, {value: "*"}, ...]
+// IN: "11*(2+3)"
+// OUT (simplified): [{ value: "11"}, {value: "*"}, ...]
 //
 // NB: Fails fast -- Throws on the first error
 
 import {
-  isCellRef,
-  isFunc,
-  isNumber,
-  isOp,
-  isParens,
-  isWhitespace,
+    isCellRef,
+    isFunc,
+    isDigit,
+    isOp,
+    isParens,
+    isWhitespace,
+    isDigitOrComma,
+    isLetter,
+    isNumber,
 } from "./match"
+
 import {
-  Failure,
-  ParseError,
-  Result,
-  TokenizeErrorType,
-  fail,
-  success,
+    BrokenToken,
+    Failure,
+    ParseError,
+    Result,
+    TokenizeErrorType,
+    fail,
+    isSuccess,
+    success,
 } from "./types/errors"
+
 import { Token } from "./types/grammar"
 
-const ALPHANUM = /[a-zA-Z0-9]/
+// Main API
+// IN: string
+// OUT: Token[]
+//
+// Feeds the string to getNextToken, bit by bit,
+// and accrues the token array if result is ok.
+export function tokenize(
+    str: string,
+): Result<Token[], ParseError & { payload: BrokenToken }> {
+    const tokens = [] as Token[]
+    let ind = 0
 
-export function tokenize(str: string): Result<Token[], ParseError> {
-  const tokens = [] as Token[]
-  let ind = 0
+    while (ind < str.length) {
+        // Ignore whitespace
+        if (isWhitespace(str[ind])) {
+            ind++
+            continue
+        }
 
-  while (ind < str.length) {
-    // Ignore whitespace
-    if (isWhitespace(str[ind])) {
-      ind++
-      continue
+        const result = getNextToken(ind, str)
+
+        // Fail fast.
+        if (!isSuccess(result)) {
+            return result
+        }
+
+        // Happy path.
+        // Add to token array.
+        const token = result.value
+        token.position.end = token.position.start + token.value.length
+        tokens.push(token)
+        ind += token.value.length
     }
 
-    const result = getNextToken(ind, str)
+    // loop is over with no errors
+    return success(tokens)
+}
 
-    if (result.ok === true) {
-      const token = result.value
-      token.position.end = token.position.start + token.value.length
-      // DEBUG
-      // if (token.type === "func")
-      //   console.log(`in tokenize, token = [${JSON.stringify(token)}]`)
+// The meat and potatoes of token matching.
+//
+// IN: string, startIndex
+// OUT: valid Token or error
+//
+// Uses matchers
+function getNextToken(
+    start: number,
+    str: string,
+): Result<Token, ParseError & { payload: BrokenToken }> {
+    // const token = createEmptyToken(start)
+    const char = str[start]
 
-      tokens.push(token)
-      ind += token.value.length
-
-      // after that, loop continues
-    } else {
-      // error state
-      const token = result.error.payload as Token
-
-      token.position.end = token.position.start + token.value.length
-
-      return result
+    // It's an operator: +, -, *, /, :
+    if (isOp(char)) {
+        return success({
+            type: "op",
+            value: char,
+            position: { start, end: start + char.length },
+        })
     }
-  }
 
-  // loop over with no errors
-  return success(tokens)
+    // It's a parens: ( or ), etc.
+    if (isParens(char)) {
+        return success({
+            type: "parens",
+            value: char,
+            position: { start, end: start + char.length },
+        })
+    }
+
+    // It's a digit, so we accrue all following numeric symbols.
+    if (isDigit(char)) {
+        let maybeNumber = char
+        let ind = start
+
+        while (++ind < str.length) {
+            const nextChar = str[ind]
+
+            // Accrue valid char
+            if (isDigitOrComma(nextChar)) {
+                maybeNumber += nextChar
+
+                continue
+            }
+
+            // Stop loop on anything else
+            break
+        }
+
+        // Validate result.
+        // Value could be "1.2.3" at this point.
+        if (!isNumber(maybeNumber)) {
+            return createError({
+                type: "INVALID_NUMBER",
+                payload: { start, value: maybeNumber },
+                expected: "number",
+            })
+        }
+
+        return success({
+            type: "number",
+            value: maybeNumber,
+            position: { start, end: start + maybeNumber.length },
+        })
+    }
+
+    // It's a letter, so we accrue all following letters and digits.
+    // Could be either a cell reference (A11) or a function keyword (sum)
+    if (isLetter(char)) {
+        let maybeCellOrFunc = char
+        let ind = start
+
+        while (++ind < str.length) {
+            const nextChar = str[ind]
+
+            // Accrue valid char
+            if (isLetter(nextChar) || isDigit(nextChar)) {
+                maybeCellOrFunc += nextChar
+
+                continue
+            }
+
+            // Stop loop on anything else
+            break
+        }
+
+        // Validate result.
+        // Separate cells from functions, throw away the rest.
+        // prettier-ignore
+        const tokenType = 
+        isCellRef(maybeCellOrFunc) ? "cell" 
+      : isFunc(maybeCellOrFunc) ? "func"
+      : null
+
+        if (tokenType) {
+            return success({
+                type: tokenType,
+                value: maybeCellOrFunc,
+                position: { start, end: start + maybeCellOrFunc.length },
+            })
+        }
+
+        return createError({
+            type: "INVALID_TOKEN",
+            payload: { value: maybeCellOrFunc, start },
+            expected:
+                "cell reference (e.g. 'A42') or function keyword (e.g. 'sum')",
+        })
+    }
+
+    // Neither an op, a parens, a number, a cell, or a function keyword.
+    // Examples: ~`^'$
+    return createError({
+        type: "INVALID_CHAR",
+        payload: { value: char, start },
+        expected: "valid character",
+    })
 }
 
 // =================================================
 // UTILS
 // =================================================
 // Factories
-function createEmptyToken(start: number): Token {
-  // Initialize with start pos and dummy values.
-  return {
-    position: {
-      start: start,
-      end: -1,
-    },
-    value: "",
-    type: undefined,
-  }
-}
-
 function createError({
-  type,
-  token,
-  expected,
-}: {
-  type: TokenizeErrorType
-  token: Token
-  expected: string
-}): Failure<ParseError & { payload: Token }> {
-  return fail({
     type,
-    payload: token,
-    msg: `${type} in Tokenizer: expected [${expected}], got [${token.value}]`,
-  })
-}
-
-// The meat and potatoes
-function getNextToken(start: number, str: string): Result<Token, ParseError> {
-  const token = createEmptyToken(start)
-  const char = str[start]
-
-  if (isOp(char)) {
-    token.type = "op"
-    token.value = char
-    return success(token)
-  }
-
-  if (isParens(char)) {
-    token.type = "parens"
-    token.value = char
-    return success(token)
-  }
-
-  // Is it a number?
-  const CHARS_NUM = /[0-9,.]/
-  if (CHARS_NUM.test(char)) {
-    // Build up the token.
-    let _ind = start
-    while (_ind < str.length) {
-      const char = str[_ind]
-      if (CHARS_NUM.test(char)) {
-        token.value += char
-        _ind++
-      } else {
-        if (isOp(char)) {
-          break
-        }
-        if (isParens(char)) {
-          break
-        }
-        if (isWhitespace(char)) {
-          _ind++
-          continue
-        }
-
-        // Unexpected char.
-        // Exampes: "3a", "5$"
-        // (does not differentiate invalid char from unexpected but valid char)
-        //
-        // Add faulty char for error handling.
-        token.value += char
-        return createError({
-          type: "INVALID_NUMBER",
-          token,
-          expected: "number-symbol [0-9,.]",
-        })
-      }
-    }
-
-    // Potential token has been collected and can be evaluated.
-    if (isNumber(token.value)) {
-      token.type = "number"
-      return success(token)
-    }
-
-    // Number-like chars but an invalid pattern.
-    // Examples: "12,3.", "."
-    // We throw the same error as above
-    //
-    // Add faulty char for error handling.
-    token.value += char
-    return createError({
-      type: "INVALID_NUMBER",
-      token,
-      expected: "correctly formed number",
+    payload,
+    expected,
+}: {
+    type: TokenizeErrorType
+    payload: BrokenToken
+    expected: string
+}): Failure<ParseError & { payload: BrokenToken }> {
+    return fail({
+        type,
+        payload,
+        msg: `${type} in Tokenizer: expected [${expected}], got [${payload.value}]`,
     })
-  }
-
-  if (ALPHANUM.test(char)) {
-    return parseAlphaNumeric(start, token, str)
-  }
-
-  // Neither an op, a parens, a number, a cell, or a function keyword.
-  // Examples: ~`^'$
-  //
-  // Add faulty char for error handling.
-  token.value += char
-  return createError({
-    type: "INVALID_CHAR",
-    token,
-    expected: "valid char",
-  })
-}
-// ###########################################################################
-// Specialized tokenizers (cells, funcs)
-// ###########################################################################
-//
-// Parses potential cell refs and function names.
-// Merrily accrues all valid chars.
-// Validation happens separately.
-function parseAlphaNumeric(
-  start: number,
-  token: Token,
-  str: string,
-): Result<Token, ParseError> {
-  let _ind = start
-  // We already know the first char is alphanumeric
-  token.value += str[_ind]
-  _ind++
-
-  while (_ind < str.length) {
-    const char = str[_ind]
-    if (ALPHANUM.test(char)) {
-      token.value += char
-      _ind++
-    } else {
-      if (isOp(char)) {
-        break
-      }
-      if (isParens(char)) {
-        break
-      }
-      if (isWhitespace(char)) {
-        _ind++
-        continue
-      }
-
-      // Unexpected char.
-      // Catch  "A_", etc.
-      // (does not differentiate between invalid and unexpected)
-      //
-      // Add to token for error handling
-      token.value += char
-      return createError({
-        type: "INVALID_CELL",
-        token,
-        expected: "cell reference",
-      })
-    }
-  }
-
-  // Potential token has been collected and can be evaluated.
-  return validateAlphaNumericToken(token)
-}
-
-// Validates token that starts with a-zA-Z.
-// Could be a cell, a func or garbage.
-function validateAlphaNumericToken(token: Token): Result<Token, ParseError> {
-  // HAPPY STATES
-  if (isCellRef(token.value)) {
-    token.type = "cell"
-    return success(token)
-  }
-  if (isFunc(token.value)) {
-    token.type = "func"
-    return success(token)
-  }
-
-  // ERRORS
-  // Differentiate between malformed cell refs and unknown func names
-  // Example: "a999" vs "foo"
-  //
-  // If it's letters and a number, treat it as a malformed cell
-  if (/^[a-zA-Z]{1}[0-9]+/.test(token.value)) {
-    return createError({
-      type: "INVALID_CELL",
-      token,
-      expected: "valid cell reference",
-    })
-  }
-  // If it's just letters, treat it as an unknown function
-  if (/^[a-zA-Z]+/.test(token.value)) {
-    return createError({
-      type: "UNKNOWN_FUNCTION",
-      token,
-      expected: "valid function reference",
-    })
-  }
-
-  // Unknown state. We should never get here.
-  throw new Error(
-    `tokenize[validateAlphaNumericToken]: could not classify token with value ${token.value}`,
-  )
 }

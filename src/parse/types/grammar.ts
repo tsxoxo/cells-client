@@ -18,58 +18,60 @@
 
 import { FunctionKeyword } from "../func"
 
-export const OPS = ["+", "-", "*", "/"] as const
+export const OPS = ["+", "-", "*", "/", ":"] as const
 export type Operator = (typeof OPS)[number]
 
+export const CHARS_NUM = /[0-9,.]/
+
 export type TokenType =
-  | "number"
-  | "cell"
-  | "op"
-  | "parens"
-  | "func"
-  | undefined // Used for INVALID_CHAR error and as initial value in factory function.
-  | "eof" // Used for end-of-file error
+    | "number"
+    | "cell"
+    | "op"
+    | "parens"
+    | "func"
+    | undefined // Used for INVALID_CHAR error and as initial value in factory function.
+    | "eof" // Used for end-of-file error
 
 export type Token = {
-  value: string
-  type: TokenType
-  position: {
-    start: number
-    end: number
-  }
+    value: string
+    type: TokenType
+    position: {
+        start: number
+        end: number
+    }
 }
 
 export type Node = Node_Binary | Node_Number | Node_Cell | Node_Func
 
 interface Node_Base {
-  type: string
-  value: string
-  // Position of corresponding token within the formula string.
-  // Currently used only in failure cases: the interpreter module passes along the whole Node.
-  position: {
-    start: number
-    end: number
-  }
+    type: string
+    value: string
+    // Position of corresponding token within the formula string.
+    // Currently used only in failure cases: the interpreter module passes along the whole Node.
+    position: {
+        start: number
+        end: number
+    }
 }
 
 // Binary operators: ['+', '-', '*', '/'],
 export interface Node_Binary extends Node_Base {
-  type: "binary_op"
-  left: Node
-  right: Node
+    type: "binary_op"
+    left: Node
+    right: Node
 }
 
 export interface Node_Number extends Node_Base {
-  type: "number"
+    type: "number"
 }
 
 export interface Node_Cell extends Node_Base {
-  type: "cell"
+    type: "cell"
 }
 
 export interface Node_Func extends Node_Base {
-  type: "func"
-  value: FunctionKeyword
-  from: Node_Cell
-  to: Node_Cell
+    type: "func"
+    value: FunctionKeyword
+    from: Node_Cell
+    to: Node_Cell
 }
