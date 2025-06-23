@@ -1,4 +1,5 @@
 import { FUNCTION_KEYWORDS, FunctionKeyword } from "./func"
+import { OPS, Operator } from "./types/grammar"
 
 export const cellPatternAnchored = /^[a-zA-Z]{1}[0-9]{1,2}$/
 
@@ -13,7 +14,7 @@ export function isCellRef(str: string): boolean {
 }
 
 export function isOp(str: string): boolean {
-  return /^[+\-*/:]$/.test(str)
+  return OPS.includes(str as Operator)
 }
 
 export function isParens(str: string): boolean {
@@ -27,8 +28,4 @@ export function isWhitespace(str: string): boolean {
 export function isFunc(str: string): str is FunctionKeyword {
   const normalizedStr = str.toLowerCase() as FunctionKeyword
   return FUNCTION_KEYWORDS.includes(normalizedStr as FunctionKeyword)
-}
-
-export function isValidValue(char: string): boolean {
-  return /[a-zA-Z0-9.,]/.test(char)
 }

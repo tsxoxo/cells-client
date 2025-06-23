@@ -7,6 +7,7 @@
 //
 // Uses the grammar specified in ./types/grammar.ts
 
+import { FunctionKeyword } from "./func.ts"
 import {
   Failure,
   Result,
@@ -15,6 +16,7 @@ import {
   isSuccess,
   ASTErrorType,
   ParseError,
+  assertNever,
 } from "./types/errors.ts"
 import { Node_Binary, Node_Cell, Token, Node } from "./types/grammar.ts"
 
@@ -256,7 +258,7 @@ export class Parser {
 
         return success({
           type: "func",
-          value: token.value,
+          value: token.value.toLowerCase() as FunctionKeyword,
           position: {
             start: token.position.start,
             end: range.value.to.position.end + 1,
@@ -265,6 +267,7 @@ export class Parser {
         })
       }
 
+      // Ran out of tokens unexpectedly.
       case "eof":
         return this.createError({
           type: "UNEXPECTED_TOKEN",
@@ -275,9 +278,7 @@ export class Parser {
       // Unexpected token.type == something went seriously wrong in the tokenizer.
       // Unknown state, so we crash.
       default:
-        throw new Error(
-          `Parser received unknown token type: ${token.type}. This indicates a bug in the tokenizer.`,
-        )
+        assertNever("ast", "token.type", token.type as never)
     }
   }
 

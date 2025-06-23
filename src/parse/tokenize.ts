@@ -238,10 +238,12 @@ function parseAlphaNumeric(
   }
 
   // Potential token has been collected and can be evaluated.
-  return validateToken(token)
+  return validateAlphaNumericToken(token)
 }
 
-function validateToken(token: Token): Result<Token, ParseError> {
+// Validates token that starts with a-zA-Z.
+// Could be a cell, a func or garbage.
+function validateAlphaNumericToken(token: Token): Result<Token, ParseError> {
   // HAPPY STATES
   if (isCellRef(token.value)) {
     token.type = "cell"
@@ -273,10 +275,8 @@ function validateToken(token: Token): Result<Token, ParseError> {
     })
   }
 
-  // Safety net. Not sure how we would hit this.
-  return createError({
-    type: "UNKNOWN_ERROR",
-    token,
-    expected: "valid token (this is an unknown error)",
-  })
+  // Unknown state. We should never get here.
+  throw new Error(
+    `tokenize[validateAlphaNumericToken]: could not classify token with value ${token.value}`,
+  )
 }

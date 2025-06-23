@@ -16,14 +16,19 @@
 // * Number: /[0-9]+((,|\.)[0-9]+)?/
 // * Cell_ref: /[a-zA-Z]{1}[0-9]{1,2}
 
+import { FunctionKeyword } from "../func"
+
+export const OPS = ["+", "-", "*", "/"] as const
+export type Operator = (typeof OPS)[number]
+
 export type TokenType =
   | "number"
   | "cell"
   | "op"
   | "parens"
   | "func"
-  | undefined
-  | "eof" // We use "eof" type rather than null.
+  | undefined // Used for INVALID_CHAR error and as initial value in factory function.
+  | "eof" // Used for end-of-file error
 
 export type Token = {
   value: string
@@ -64,6 +69,7 @@ export interface Node_Cell extends Node_Base {
 
 export interface Node_Func extends Node_Base {
   type: "func"
+  value: FunctionKeyword
   from: Node_Cell
   to: Node_Cell
 }

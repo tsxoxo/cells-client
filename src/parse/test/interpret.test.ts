@@ -472,7 +472,7 @@ describe("interpret", () => {
         expect(result.error.type).toBe(expectedErrorType)
         expect(result.error.payload).toEqual(expectedPayload)
         if (expectedCellIndex !== undefined) {
-          expect(result.error.cell).toEqual(expectedCellIndex)
+          expect(result.error.cellIndex).toEqual(expectedCellIndex)
         }
       },
     )

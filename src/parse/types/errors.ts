@@ -26,9 +26,6 @@
 // * [CIRCULAR_CEL_REF] Cell references itself, e.g. in A1 "A0+A1", "SUM(A0:B4)"
 // * [DIVIDE_BY_0] Divide by 0
 //      --> interpret
-//
-// * [UNKNOWN_ERROR]: Safety net. Not sure if we ever hit this one. Possibly throw instead.
-//      --> tokenizer
 
 import { Node_Binary, Token, Node } from "./grammar"
 
@@ -37,7 +34,12 @@ export type ParseError = {
   type: TokenizeErrorType | ASTErrorType | InterpretErrorType
   payload: Token | Node
   msg: string
-  cell?: number // Cell index which contains an invalid value
+  cellIndex?: number // Cell which contains an invalid value
+}
+
+export type CellError = {
+  type: CellErrorType
+  cellIndex?: number
 }
 
 // Base types for parsing errors
@@ -47,15 +49,12 @@ export type TokenizeErrorType =
   | "INVALID_CELL"
   | "INVALID_NUMBER"
   | "UNKNOWN_FUNCTION"
-  | "UNKNOWN_ERROR"
 
 export type ASTErrorType = "UNEXPECTED_TOKEN" | "PARENS"
 
-export type InterpretErrorType =
-  | "CELL_NOT_A_NUMBER"
-  | "CIRCULAR_CELL_REF"
-  | "DIVIDE_BY_0"
-  | "UNKNOWN_ERROR"
+export type InterpretErrorType = "DIVIDE_BY_0" | "OVERFLOW" | CellErrorType
+
+export type CellErrorType = "CIRCULAR_CELL_REF" | "CELL_NOT_A_NUMBER"
 
 // ########################################################################
 // RESULT PATTERN
@@ -75,6 +74,16 @@ export function fail<E>(error: E): Failure<E> {
 // Type guards
 export function isSuccess<T, E>(result: Result<T, E>): result is Success<T> {
   return result.ok === true
+}
+
+export function assertNever(
+  module: string,
+  context: string,
+  obj: never,
+): never {
+  throw new Error(
+    `Module [${module}] encountered unknown [${context}]: ${JSON.stringify(obj)}`,
+  )
 }
 
 // Used for testing

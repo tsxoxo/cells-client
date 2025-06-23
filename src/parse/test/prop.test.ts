@@ -56,7 +56,9 @@ function replaceCellRefsWithValues(formula: string, cells: Cell[]): string {
     const cellStartIndex = match.index // Returned array has additional 'index' property
 
     if (cellStartIndex === undefined) {
-      throw new Error("cellStartIndex undefined in replaceCellRefsWithValues")
+      throw new Error(
+        "[prop.test.ts, replaceCellRefsWithValues]: cellStartIndex undefined",
+      )
     }
 
     // Convert cellName to index
@@ -65,7 +67,9 @@ function replaceCellRefsWithValues(formula: string, cells: Cell[]): string {
     const cellValue = cells[cellIndex].value
 
     if (typeof cellValue !== "number") {
-      throw new Error("cellValue not a number in replaceCellRefsWithValues")
+      throw new Error(
+        "[prop.test.ts, replaceCellRefsWithValues]: cellValue not a number",
+      )
     }
 
     // Splice in value

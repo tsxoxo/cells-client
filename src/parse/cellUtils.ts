@@ -1,6 +1,6 @@
-import { ALPHABET_WITH_FILLER } from "../config/constants"
+import { ALPHABET_WITH_FILLER, NUM_OF_COLS } from "../config/constants"
 import { Cell } from "../types/types"
-import { Result, fail, isSuccess, success } from "./types/errors"
+import { CellError, Result, fail, isSuccess, success } from "./types/errors"
 
 //============================================================
 // CELL COORDINATES
@@ -9,11 +9,6 @@ import { Result, fail, isSuccess, success } from "./types/errors"
 // E.g. "A0" to 0
 //
 //============================================================
-// Get cell index based on the coordinate scheme in our Vue template.
-export function getCellIndexfromXY(x: number, y: number): number {
-  return (y - 1) * (ALPHABET_WITH_FILLER.length - 1) + x - 1
-}
-
 // Takes cell name like 'A1', 'B99'.
 // Returns index in one-dimensional cell array in the range(0, NUMBER_OF_CELLS from ../constants)
 export function getIndexFromCellName(cellName: string): number {
@@ -24,10 +19,15 @@ export function getIndexFromCellName(cellName: string): number {
   return getCellIndexfromXY(x, y)
 }
 
+// Get cell index based on the coordinate scheme in our Vue template.
+export function getCellIndexfromXY(x: number, y: number): number {
+  return (y - 1) * NUM_OF_COLS + x - 1
+}
+
 //============================================================
-// CELL API
+// ==================== CELL API =============================
 //
-// API for extracting values from cells.
+// Main function for extracting values from cells.
 // Used in interpret parsing module.
 // Returns fail when any cell does not contain a number.
 //
@@ -36,10 +36,7 @@ export interface CellValueProvider {
   getCellValue(
     cellName: string,
     currentCellIndex?: number,
-  ): Result<
-    { cellValue: number; cellIndex: number },
-    { type: string; cellIndex?: number }
-  >
+  ): Result<{ cellValue: number; cellIndex: number }, CellError>
 
   getRangeValues(
     fromName: string,
@@ -47,27 +44,32 @@ export interface CellValueProvider {
     currentCellIndex?: number,
   ): Result<
     { cellValuesInRange: number[]; cellIndexesInRange: number[] },
-    { type: "CIRCULAR_CELL_REF" | "CELL_NOT_A_NUMBER"; cellIndex?: number }
+    CellError
   >
 }
 
-export function createCellValueProvider(cells: Cell[], numOfCols: number) {
+export function createCellValueProvider(
+  cells: Cell[],
+  numOfCols: number,
+): CellValueProvider {
   return {
-    getCellValue(
-      cellName: string,
-      currentCellIndex?: number,
-    ): Result<
-      { cellValue: number; cellIndex: number },
-      { type: string; cellIndex?: number }
-    > {
-      // Convert name to index and check if it's us.
+    // -------------------------------
+    // Get value from single cell ref.
+    // -------------------------------
+    // Types defined on CellValueProvider
+    getCellValue(cellName, currentCellIndex?) {
+      // Convert name to index.
       const cellIndex = getIndexFromCellName(cellName)
+
+      // Abort if the passed cell name refers back to the current cell.
       if (currentCellIndex !== undefined && cellIndex === currentCellIndex) {
         return fail({ type: "CIRCULAR_CELL_REF" })
       }
 
-      // Get the value
+      // Get the cell object.
       const cell = cells[cellIndex]
+
+      // Fail if value is non-numeric.
       if (cell === undefined || typeof cell.value !== "number") {
         return fail({
           type: "CELL_NOT_A_NUMBER",
@@ -79,14 +81,12 @@ export function createCellValueProvider(cells: Cell[], numOfCols: number) {
       return success({ cellValue: cell.value, cellIndex })
     },
 
-    getRangeValues(
-      fromName: string,
-      toName: string,
-      currentCellIndex?: number,
-    ): Result<
-      { cellValuesInRange: number[]; cellIndexesInRange: number[] },
-      { type: "CIRCULAR_CELL_REF" | "CELL_NOT_A_NUMBER"; cellIndex?: number }
-    > {
+    // ---------------------
+    // Get values from range.
+    // ---------------------
+    // Types defined on CellValueProvider
+    getRangeValues(fromName, toName, currentCellIndex?) {
+      // Convert names to indexes.
       const from = getIndexFromCellName(fromName)
       const to = getIndexFromCellName(toName)
 
@@ -105,18 +105,13 @@ export function createCellValueProvider(cells: Cell[], numOfCols: number) {
       // No circuar refs. Try to get all values.
       const valuesInRangeResult = getNumbersFromCells(cellIndexesInRange, cells)
 
+      // Fail fast if some cell contains non-numeric value.
       if (!isSuccess(valuesInRangeResult)) {
-        // Some cell contains non-numeric value.
-        // Enrich error from getNumbersFromCells
-        return fail({
-          type: valuesInRangeResult.error.type, // "CELL_NOT_A_NUMBER"
-          cellIndex: valuesInRangeResult.error.cellIndex,
-          expected: "all cells in range to contain valid numbers",
-        })
+        return valuesInRangeResult
       }
 
       // Happy path
-      // return values in range and indexes
+      // Return values in range and indexes
       return success({
         cellValuesInRange: valuesInRangeResult.value,
         cellIndexesInRange,

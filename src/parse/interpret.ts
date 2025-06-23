@@ -5,6 +5,7 @@ import {
   InterpretErrorType,
   ParseError,
   Result,
+  assertNever,
   fail,
   isSuccess,
   success,
@@ -32,21 +33,24 @@ export function interpret(
         return success(parseFloat(node.value))
 
       case "cell": {
+        // If we didn't get the cell API, something went very wrong.
         if (cellValueProvider === undefined) {
           throw new Error(
-            "Interpret: missing argument 'cellValueProvider' while evaluating node of type 'cell'",
+            "Interpret: 'cellValueProvider' was undefined while evaluating node of type 'cell'",
           )
         }
 
+        // Try and get the cell's value.
         const cellValueResult = cellValueProvider.getCellValue(
           node.value,
           currentCellIndex,
         )
+
         if (!isSuccess(cellValueResult)) {
           switch (cellValueResult.error.type) {
             case "CIRCULAR_CELL_REF":
               return createError({
-                type: cellValueResult.error.type,
+                ...cellValueResult.error,
                 node,
                 expected: "cell to not contain reference to itself",
               })
@@ -62,8 +66,10 @@ export function interpret(
             // Unexpected error type == something went seriously wrong.
             // Unknown state, so we crash.
             default:
-              throw new Error(
-                `Interpret received unknown error from cellValueProvider.getCellValue: ${cellValueResult.error.type}.`,
+              assertNever(
+                "interpret",
+                "error.type from cellValueProvider.getCellValue",
+                cellValueResult.error.type,
               )
           }
         }
@@ -96,26 +102,48 @@ export function interpret(
       }
 
       case "func": {
+        // If we didn't get the cell API, something went very wrong.
         if (cellValueProvider === undefined) {
           throw new Error(
-            "Interpret: missing argument 'cellValueProvider' while evaluating node of type 'func'",
+            "Interpret: 'cellValueProvider' was undefined while evaluating node of type 'func'",
           )
         }
 
+        // Try to get cell values and indexes in range.
         const rangeValuesResult = cellValueProvider.getRangeValues(
           node.from.value,
           node.to.value,
           currentCellIndex,
         )
-        if (!isSuccess(rangeValuesResult)) {
-          return createError({
-            type: rangeValuesResult.error.type,
-            node,
-            expected: "cells in range to contain numeric values",
-          })
-        }
 
-        // Happy path
+        // Enrich error.
+        if (!isSuccess(rangeValuesResult)) {
+          switch (rangeValuesResult.error.type) {
+            case "CIRCULAR_CELL_REF":
+              return createError({
+                ...rangeValuesResult.error,
+                node,
+                expected: "cell to not contain reference to itself",
+              })
+
+            case "CELL_NOT_A_NUMBER":
+              return createError({
+                ...rangeValuesResult.error,
+                node,
+                expected: "cell to contain a number",
+              })
+
+            // Unexpected error type == something went seriously wrong.
+            // Unknown state, so we crash.
+            default:
+              assertNever(
+                "interpret",
+                "error.type from cellValueProvider.getRangeValues",
+                rangeValuesResult.error.type,
+              )
+          }
+        }
+        // Happy path: all values are numeric and no circular ref.
         const result = applyFuncToValues(
           node.value,
           rangeValuesResult.value.cellValuesInRange,
@@ -124,9 +152,7 @@ export function interpret(
         // This should only happen if the tokenizer lets through an invalid func reference.
         // Something went very wrong. Abort mission.
         if (!isSuccess(result)) {
-          throw new Error(
-            `interpret: got unknown function keyword ${node.value}. This indicates an error in the tokenizer`,
-          )
+          assertNever("interpret", "function keyword", node.value as never)
         }
 
         // Happy path: func processed successfully.
@@ -137,9 +163,7 @@ export function interpret(
 
       default:
         // unexpected node type, something went seriously wrong
-        throw new Error(
-          `Interpreter received unknown node type: ${node.type}. This indicates a bug in Parser.makeAST.`,
-        )
+        assertNever("interpret", "node type", node)
     }
   }
 }
@@ -152,7 +176,7 @@ function calculate(
   node: Node,
   left: number,
   right: number,
-): Result<number, { type: "DIVIDE_BY_0" | "UNKNOWN_ERROR" }> {
+): Result<number, { type: "DIVIDE_BY_0" }> {
   const op = node.value
 
   switch (op) {
@@ -166,7 +190,7 @@ function calculate(
       return right === 0 ? fail({ type: "DIVIDE_BY_0" }) : success(left / right)
     default:
       // If we got here, something went seriously wrong during tokenizing.
-      return fail({ type: "UNKNOWN_ERROR" })
+      assertNever("interpret.calculate", "operator", op)
   }
 }
 

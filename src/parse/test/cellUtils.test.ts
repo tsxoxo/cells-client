@@ -7,7 +7,7 @@ import { ALPHABET_WITH_FILLER } from "../../config/constants"
 // # TEST DATA
 // =================================================
 
-// TODO: Test cases to add
+// START_HERE: Test cases to add
 // for cellValueProvider
 // * "it fails when single cell is not a number" (formula: "1+A1" where A1.value === undefined), "it fails when cell in range is not a number (formula: "1+SUM(A0:B1)" where A1.value == undefined and rest of cells contains numbers); "it fails on circular cell ref in getCellValue", "it fails on circular cell ref in getRangeValues"
 //
@@ -17,17 +17,19 @@ import { ALPHABET_WITH_FILLER } from "../../config/constants"
 // * edge: handles single-cell range (A1:A1)
 //
 describe("cell utils", () => {
-  it("extracts range", () => {
-    const numOfCols = ALPHABET_WITH_FILLER.length - 1
-    const rangeSimple: [number, number] = [0, 10]
-    const rangeSingle: [number, number] = [0, 0]
-    const rangeOverY: [number, number] = [1, 28]
+  describe("range parser", () => {
+    it("extracts range", () => {
+      const numOfCols = ALPHABET_WITH_FILLER.length - 1
+      const rangeSimple: [number, number] = [0, 10]
+      const rangeSingle: [number, number] = [0, 0]
+      const rangeOverY: [number, number] = [1, 28]
 
-    expect(getCellsInRange(...rangeSimple, numOfCols)).toEqual([
-      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-    ])
-    expect(getCellsInRange(...rangeSingle, numOfCols)).toEqual([0])
-    expect(getCellsInRange(...rangeOverY, numOfCols)).toEqual([1, 2, 27, 28])
+      expect(getCellsInRange(...rangeSimple, numOfCols)).toEqual([
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+      ])
+      expect(getCellsInRange(...rangeSingle, numOfCols)).toEqual([0])
+      expect(getCellsInRange(...rangeOverY, numOfCols)).toEqual([1, 2, 27, 28])
+    })
   })
 
   it("converts cell names to indices", () => {

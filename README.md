@@ -75,14 +75,19 @@ returns appropiate error:
 
 ## After that
 
-- Try and simplify Parser class. For example: why do I use a 'return early on fail' pattern in parseFactor under case('func'),
-  while nesting in parseRange. Underlying question: this whole parsing business seems like a state machine pattern--roughly:
+- Try and simplify/unify each module of the parse pipeline. Underlying question: this whole parsing business seems like a state machine pattern--roughly:
   `state: {name: expect_open_bracket, onFail: createError, onSuccess: consumeNext}`.
-  I think I could substantially simplify this part of the parsing pipeline, even if only by unifying the patterns for the control-flow.
 
-  - Furthermore, it does not make sense to me that consume() returns a value, yet we never use that return value, instead calling it strictly for its side-effects.
+  - all: do everything with a switch statement?
+  - ast: why do I use a 'return early on fail' pattern in parseFactor under case('func'), while nesting in parseRange?
+  - ast: it does not make sense to me that consume() returns a value, yet we never use that return value, instead calling it strictly for its side-effects.
+  - tokenize: try to make parseFactor be aware of possible tokens instead of casting `token.type as never`
 
 - add E2E test runner and write a basic UI test. Do this before rebuilding UI so You know what makes a UI testable.
+
+- refactor: try to apply lessons from talk 'data oriented design'
+
+  - Token type: remove position.end -- can be calculated from start and value.length
 
 - off to Figma -> redesign UI
 
