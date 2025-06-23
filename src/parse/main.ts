@@ -10,15 +10,15 @@ import { Node } from "./types/grammar.ts"
 // so I don't have to mock Cells[] if I want to test this.
 // In hindsight, I'm not sure it's necessary to test this very simple pipe.
 export function parseToAST(formula: string): Result<Node, ParseError> {
-  const tokenResult = tokenize(formula)
-  if (!tokenResult.ok) {
-    return tokenResult // TokenizeError passes through
-  }
+    const tokenResult = tokenize(formula)
+    if (!tokenResult.ok) {
+        return tokenResult // TokenizeError passes through
+    }
 
-  const astResult = new Parser(tokenResult.value).makeAST()
-  if (!astResult.ok) {
-    return astResult // ASTError passes through
-  }
+    const astResult = new Parser(tokenResult.value).makeAST()
+    if (!astResult.ok) {
+        return astResult // ASTError passes through
+    }
 
-  return astResult
+    return astResult
 }

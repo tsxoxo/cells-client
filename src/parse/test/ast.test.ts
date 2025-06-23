@@ -7,29 +7,32 @@ import { Token, TokenType } from "../types/grammar"
 import { assertIsFail, assertIsSuccess } from "../types/errors"
 
 // =================================================
-// # UTILS
+// ==================== UTILS ======================
 // =================================================
-
-// Make dummy tokens.
-// Position data is optional.
+// Token factory.
 function makeTokens(
-    simplifiedTokens: {
+    tokenArray: {
         type: TokenType
         value: string
-        position: { start: number; end: number }
+        start: number
     }[],
 ): Token[] {
-    const tokens = simplifiedTokens.map(
-        ({ type, value, position }): Token => ({
-            type,
-            value,
-            position,
-        }),
-    )
+    // Vestige of a time when we were using dummy values.
+    // Not worth refactoring.
+    // const tokens = tokenArray.map(
+    //     ({ type, value, start }): Token => ({
+    //         type,
+    //         value,
+    //         start,
+    //     }),
+    // )
 
-    return tokens
+    return tokenArray
 }
 
+// =================================================
+// ===================== TEST ======================
+// =================================================
 describe("ast", () => {
     describe("standard valid cases (no edge-cases)", () => {
         it.each([
@@ -37,41 +40,25 @@ describe("ast", () => {
                 description: "parenthesized addition",
                 // formula: "(1+2)"
                 inputTokens: makeTokens([
-                    {
-                        type: "parens",
-                        value: "(",
-                        position: { start: 0, end: 1 },
-                    },
-                    {
-                        type: "number",
-                        value: "1",
-                        position: { start: 1, end: 2 },
-                    },
-                    { type: "op", value: "+", position: { start: 2, end: 3 } },
-                    {
-                        type: "number",
-                        value: "2",
-                        position: { start: 3, end: 4 },
-                    },
-                    {
-                        type: "parens",
-                        value: ")",
-                        position: { start: 4, end: 5 },
-                    },
+                    { type: "parens", value: "(", start: 0 },
+                    { type: "number", value: "1", start: 1 },
+                    { type: "op", value: "+", start: 2 },
+                    { type: "number", value: "2", start: 3 },
+                    { type: "parens", value: ")", start: 4 },
                 ]),
                 expectedAST: {
                     type: "binary_op",
                     value: "+",
-                    position: { start: 0, end: 5 },
+                    start: 0,
                     left: {
                         type: "number",
                         value: "1",
-                        position: { start: 1, end: 2 },
+                        start: 1,
                     },
                     right: {
                         type: "number",
                         value: "2",
-                        position: { start: 3, end: 4 },
+                        start: 3,
                     },
                 },
             },
@@ -79,46 +66,26 @@ describe("ast", () => {
                 description: "function with range",
                 // formula: "SUM(A1:B2)"
                 inputTokens: makeTokens([
-                    {
-                        type: "func",
-                        value: "SUM",
-                        position: { start: 0, end: 3 },
-                    },
-                    {
-                        type: "parens",
-                        value: "(",
-                        position: { start: 3, end: 4 },
-                    },
-                    {
-                        type: "cell",
-                        value: "A1",
-                        position: { start: 4, end: 6 },
-                    },
-                    { type: "op", value: ":", position: { start: 6, end: 7 } },
-                    {
-                        type: "cell",
-                        value: "B2",
-                        position: { start: 7, end: 9 },
-                    },
-                    {
-                        type: "parens",
-                        value: ")",
-                        position: { start: 9, end: 10 },
-                    },
+                    { type: "func", value: "SUM", start: 0 },
+                    { type: "parens", value: "(", start: 3 },
+                    { type: "cell", value: "A1", start: 4 },
+                    { type: "op", value: ":", start: 6 },
+                    { type: "cell", value: "B2", start: 7 },
+                    { type: "parens", value: ")", start: 9 },
                 ]),
                 expectedAST: {
                     type: "func",
                     value: "sum",
-                    position: { start: 0, end: 10 },
+                    start: 0,
                     from: {
                         type: "cell",
                         value: "A1",
-                        position: { start: 4, end: 6 },
+                        start: 4,
                     },
                     to: {
                         type: "cell",
                         value: "B2",
-                        position: { start: 7, end: 9 },
+                        start: 7,
                     },
                 },
             },
@@ -126,31 +93,23 @@ describe("ast", () => {
                 description: "simple division",
                 // formula: "6/3"
                 inputTokens: makeTokens([
-                    {
-                        type: "number",
-                        value: "6",
-                        position: { start: 0, end: 1 },
-                    },
-                    { type: "op", value: "/", position: { start: 1, end: 2 } },
-                    {
-                        type: "number",
-                        value: "3",
-                        position: { start: 2, end: 3 },
-                    },
+                    { type: "number", value: "6", start: 0 },
+                    { type: "op", value: "/", start: 1 },
+                    { type: "number", value: "3", start: 2 },
                 ]),
                 expectedAST: {
                     type: "binary_op",
                     value: "/",
-                    position: { start: 0, end: 3 },
+                    start: 0,
                     left: {
                         type: "number",
                         value: "6",
-                        position: { start: 0, end: 1 },
+                        start: 0,
                     },
                     right: {
                         type: "number",
                         value: "3",
-                        position: { start: 2, end: 3 },
+                        start: 2,
                     },
                 },
             },
@@ -158,57 +117,37 @@ describe("ast", () => {
                 description: "parenthesized expression with multiplication",
                 // formula: "(1+2)*3"
                 inputTokens: makeTokens([
-                    {
-                        type: "parens",
-                        value: "(",
-                        position: { start: 0, end: 1 },
-                    },
-                    {
-                        type: "number",
-                        value: "1",
-                        position: { start: 1, end: 2 },
-                    },
-                    { type: "op", value: "+", position: { start: 2, end: 3 } },
-                    {
-                        type: "number",
-                        value: "2",
-                        position: { start: 3, end: 4 },
-                    },
-                    {
-                        type: "parens",
-                        value: ")",
-                        position: { start: 4, end: 5 },
-                    },
-                    { type: "op", value: "*", position: { start: 5, end: 6 } },
-                    {
-                        type: "number",
-                        value: "3",
-                        position: { start: 6, end: 7 },
-                    },
+                    { type: "parens", value: "(", start: 0 },
+                    { type: "number", value: "1", start: 1 },
+                    { type: "op", value: "+", start: 2 },
+                    { type: "number", value: "2", start: 3 },
+                    { type: "parens", value: ")", start: 4 },
+                    { type: "op", value: "*", start: 5 },
+                    { type: "number", value: "3", start: 6 },
                 ]),
                 expectedAST: {
                     type: "binary_op",
                     value: "*",
-                    position: { start: 0, end: 7 },
+                    start: 0,
                     left: {
                         type: "binary_op",
                         value: "+",
-                        position: { start: 0, end: 5 },
+                        start: 0,
                         left: {
                             type: "number",
                             value: "1",
-                            position: { start: 1, end: 2 },
+                            start: 1,
                         },
                         right: {
                             type: "number",
                             value: "2",
-                            position: { start: 3, end: 4 },
+                            start: 3,
                         },
                     },
                     right: {
                         type: "number",
                         value: "3",
-                        position: { start: 6, end: 7 },
+                        start: 6,
                     },
                 },
             },
@@ -216,66 +155,38 @@ describe("ast", () => {
                 description: "function with division",
                 // formula: "SUM(A1:B2)/3"
                 inputTokens: makeTokens([
-                    {
-                        type: "func",
-                        value: "SUM",
-                        position: { start: 0, end: 3 },
-                    },
-                    {
-                        type: "parens",
-                        value: "(",
-                        position: { start: 3, end: 4 },
-                    },
-                    {
-                        type: "cell",
-                        value: "A1",
-                        position: { start: 4, end: 6 },
-                    },
-                    { type: "op", value: ":", position: { start: 6, end: 7 } },
-                    {
-                        type: "cell",
-                        value: "B2",
-                        position: { start: 7, end: 9 },
-                    },
-                    {
-                        type: "parens",
-                        value: ")",
-                        position: { start: 9, end: 10 },
-                    },
-                    {
-                        type: "op",
-                        value: "/",
-                        position: { start: 10, end: 11 },
-                    },
-                    {
-                        type: "number",
-                        value: "3",
-                        position: { start: 11, end: 12 },
-                    },
+                    { type: "func", value: "SUM", start: 0 },
+                    { type: "parens", value: "(", start: 3 },
+                    { type: "cell", value: "A1", start: 4 },
+                    { type: "op", value: ":", start: 6 },
+                    { type: "cell", value: "B2", start: 7 },
+                    { type: "parens", value: ")", start: 9 },
+                    { type: "op", value: "/", start: 10 },
+                    { type: "number", value: "3", start: 11 },
                 ]),
                 expectedAST: {
                     type: "binary_op",
                     value: "/",
-                    position: { start: 0, end: 12 },
+                    start: 0,
                     left: {
                         type: "func",
                         value: "sum",
-                        position: { start: 0, end: 10 },
+                        start: 0,
                         from: {
                             type: "cell",
                             value: "A1",
-                            position: { start: 4, end: 6 },
+                            start: 4,
                         },
                         to: {
                             type: "cell",
                             value: "B2",
-                            position: { start: 7, end: 9 },
+                            start: 7,
                         },
                     },
                     right: {
                         type: "number",
                         value: "3",
-                        position: { start: 11, end: 12 },
+                        start: 11,
                     },
                 },
             },
@@ -283,112 +194,64 @@ describe("ast", () => {
                 description: "complete formula with all operations",
                 // formula: "(1+2)*SUM(A1:B2)/3"
                 inputTokens: makeTokens([
-                    {
-                        type: "parens",
-                        value: "(",
-                        position: { start: 0, end: 1 },
-                    },
-                    {
-                        type: "number",
-                        value: "1",
-                        position: { start: 1, end: 2 },
-                    },
-                    { type: "op", value: "+", position: { start: 2, end: 3 } },
-                    {
-                        type: "number",
-                        value: "2",
-                        position: { start: 3, end: 4 },
-                    },
-                    {
-                        type: "parens",
-                        value: ")",
-                        position: { start: 4, end: 5 },
-                    },
-                    { type: "op", value: "*", position: { start: 5, end: 6 } },
-                    {
-                        type: "func",
-                        value: "SUM",
-                        position: { start: 6, end: 9 },
-                    },
-                    {
-                        type: "parens",
-                        value: "(",
-                        position: { start: 9, end: 10 },
-                    },
-                    {
-                        type: "cell",
-                        value: "A1",
-                        position: { start: 10, end: 12 },
-                    },
-                    {
-                        type: "op",
-                        value: ":",
-                        position: { start: 12, end: 13 },
-                    },
-                    {
-                        type: "cell",
-                        value: "B2",
-                        position: { start: 13, end: 15 },
-                    },
-                    {
-                        type: "parens",
-                        value: ")",
-                        position: { start: 15, end: 16 },
-                    },
-                    {
-                        type: "op",
-                        value: "/",
-                        position: { start: 16, end: 17 },
-                    },
-                    {
-                        type: "number",
-                        value: "3",
-                        position: { start: 17, end: 18 },
-                    },
+                    { type: "parens", value: "(", start: 0 },
+                    { type: "number", value: "1", start: 1 },
+                    { type: "op", value: "+", start: 2 },
+                    { type: "number", value: "2", start: 3 },
+                    { type: "parens", value: ")", start: 4 },
+                    { type: "op", value: "*", start: 5 },
+                    { type: "func", value: "SUM", start: 6 },
+                    { type: "parens", value: "(", start: 9 },
+                    { type: "cell", value: "A1", start: 10 },
+                    { type: "op", value: ":", start: 12 },
+                    { type: "cell", value: "B2", start: 13 },
+                    { type: "parens", value: ")", start: 15 },
+                    { type: "op", value: "/", start: 16 },
+                    { type: "number", value: "3", start: 17 },
                 ]),
                 expectedAST: {
                     type: "binary_op",
                     value: "/",
-                    position: { start: 0, end: 18 },
+                    start: 0,
                     left: {
                         type: "binary_op",
                         value: "*",
-                        position: { start: 0, end: 16 },
+                        start: 0,
                         left: {
                             type: "binary_op",
                             value: "+",
-                            position: { start: 0, end: 5 },
+                            start: 0,
                             left: {
                                 type: "number",
                                 value: "1",
-                                position: { start: 1, end: 2 },
+                                start: 1,
                             },
                             right: {
                                 type: "number",
                                 value: "2",
-                                position: { start: 3, end: 4 },
+                                start: 3,
                             },
                         },
                         right: {
                             type: "func",
                             value: "sum",
-                            position: { start: 6, end: 16 },
+                            start: 6,
                             from: {
                                 type: "cell",
                                 value: "A1",
-                                position: { start: 10, end: 12 },
+                                start: 10,
                             },
                             to: {
                                 type: "cell",
                                 value: "B2",
-                                position: { start: 13, end: 15 },
+                                start: 13,
                             },
                         },
                     },
                     right: {
                         type: "number",
                         value: "3",
-                        position: { start: 17, end: 18 },
+                        start: 17,
                     },
                 },
             },
@@ -405,78 +268,50 @@ describe("ast", () => {
                 description: "single number",
                 // formula: "42"
                 inputTokens: makeTokens([
-                    {
-                        type: "number",
-                        value: "42",
-                        position: { start: 0, end: 2 },
-                    },
+                    { type: "number", value: "42", start: 0 },
                 ]),
                 expectedAST: {
                     type: "number",
                     value: "42",
-                    position: { start: 0, end: 2 },
+                    start: 0,
                 },
             },
             {
                 description: "single cell reference",
                 // formula: "A99"
                 inputTokens: makeTokens([
-                    {
-                        type: "cell",
-                        value: "A99",
-                        position: { start: 0, end: 3 },
-                    },
+                    { type: "cell", value: "A99", start: 0 },
                 ]),
                 expectedAST: {
                     type: "cell",
                     value: "A99",
-                    position: { start: 0, end: 3 },
+                    start: 0,
                 },
             },
             {
                 description: "single function",
                 // formula: "SUM(A1:A9)"
                 inputTokens: makeTokens([
-                    {
-                        type: "func",
-                        value: "SUM",
-                        position: { start: 0, end: 3 },
-                    },
-                    {
-                        type: "parens",
-                        value: "(",
-                        position: { start: 3, end: 4 },
-                    },
-                    {
-                        type: "cell",
-                        value: "A1",
-                        position: { start: 4, end: 6 },
-                    },
-                    { type: "op", value: ":", position: { start: 6, end: 7 } },
-                    {
-                        type: "cell",
-                        value: "A9",
-                        position: { start: 7, end: 9 },
-                    },
-                    {
-                        type: "parens",
-                        value: ")",
-                        position: { start: 9, end: 10 },
-                    },
+                    { type: "func", value: "SUM", start: 0 },
+                    { type: "parens", value: "(", start: 3 },
+                    { type: "cell", value: "A1", start: 4 },
+                    { type: "op", value: ":", start: 6 },
+                    { type: "cell", value: "A9", start: 7 },
+                    { type: "parens", value: ")", start: 9 },
                 ]),
                 expectedAST: {
                     type: "func",
                     value: "sum",
-                    position: { start: 0, end: 10 },
+                    start: 0,
                     from: {
                         type: "cell",
                         value: "A1",
-                        position: { start: 4, end: 6 },
+                        start: 4,
                     },
                     to: {
                         type: "cell",
                         value: "A9",
-                        position: { start: 7, end: 9 },
+                        start: 7,
                     },
                 },
             },
@@ -484,124 +319,68 @@ describe("ast", () => {
                 description: "nested expression",
                 // formula: "1*(10/(1-(2*6))+7)"
                 inputTokens: makeTokens([
-                    {
-                        type: "number",
-                        value: "1",
-                        position: { start: 0, end: 1 },
-                    },
-                    { type: "op", value: "*", position: { start: 1, end: 2 } },
-                    {
-                        type: "parens",
-                        value: "(",
-                        position: { start: 2, end: 3 },
-                    },
-                    {
-                        type: "number",
-                        value: "10",
-                        position: { start: 3, end: 5 },
-                    },
-                    { type: "op", value: "/", position: { start: 5, end: 6 } },
-                    {
-                        type: "parens",
-                        value: "(",
-                        position: { start: 6, end: 7 },
-                    },
-                    {
-                        type: "number",
-                        value: "1",
-                        position: { start: 7, end: 8 },
-                    },
-                    { type: "op", value: "-", position: { start: 8, end: 9 } },
-                    {
-                        type: "parens",
-                        value: "(",
-                        position: { start: 9, end: 10 },
-                    },
-                    {
-                        type: "number",
-                        value: "2",
-                        position: { start: 10, end: 11 },
-                    },
-                    {
-                        type: "op",
-                        value: "*",
-                        position: { start: 11, end: 12 },
-                    },
-                    {
-                        type: "number",
-                        value: "6",
-                        position: { start: 12, end: 13 },
-                    },
-                    {
-                        type: "parens",
-                        value: ")",
-                        position: { start: 13, end: 14 },
-                    },
-                    {
-                        type: "parens",
-                        value: ")",
-                        position: { start: 14, end: 15 },
-                    },
-                    {
-                        type: "op",
-                        value: "+",
-                        position: { start: 15, end: 16 },
-                    },
-                    {
-                        type: "number",
-                        value: "7",
-                        position: { start: 16, end: 17 },
-                    },
-                    {
-                        type: "parens",
-                        value: ")",
-                        position: { start: 17, end: 18 },
-                    },
+                    { type: "number", value: "1", start: 0 },
+                    { type: "op", value: "*", start: 1 },
+                    { type: "parens", value: "(", start: 2 },
+                    { type: "number", value: "10", start: 3 },
+                    { type: "op", value: "/", start: 5 },
+                    { type: "parens", value: "(", start: 6 },
+                    { type: "number", value: "1", start: 7 },
+                    { type: "op", value: "-", start: 8 },
+                    { type: "parens", value: "(", start: 9 },
+                    { type: "number", value: "2", start: 10 },
+                    { type: "op", value: "*", start: 11 },
+                    { type: "number", value: "6", start: 12 },
+                    { type: "parens", value: ")", start: 13 },
+                    { type: "parens", value: ")", start: 14 },
+                    { type: "op", value: "+", start: 15 },
+                    { type: "number", value: "7", start: 16 },
+                    { type: "parens", value: ")", start: 17 },
                 ]),
                 expectedAST: {
                     type: "binary_op",
                     value: "*",
-                    position: { start: 0, end: 18 },
+                    start: 0,
                     left: {
                         type: "number",
                         value: "1",
-                        position: { start: 0, end: 1 },
+                        start: 0,
                     },
                     right: {
                         type: "binary_op",
                         value: "+",
-                        position: { start: 2, end: 18 },
+                        start: 2,
                         left: {
                             type: "binary_op",
                             value: "/",
-                            position: { start: 3, end: 15 },
+                            start: 3,
                             left: {
                                 type: "number",
                                 value: "10",
-                                position: { start: 3, end: 5 },
+                                start: 3,
                             },
                             right: {
                                 type: "binary_op",
                                 value: "-",
-                                position: { start: 6, end: 15 },
+                                start: 6,
                                 left: {
                                     type: "number",
                                     value: "1",
-                                    position: { start: 7, end: 8 },
+                                    start: 7,
                                 },
                                 right: {
                                     type: "binary_op",
                                     value: "*",
-                                    position: { start: 9, end: 14 },
+                                    start: 9,
                                     left: {
                                         type: "number",
                                         value: "2",
-                                        position: { start: 10, end: 11 },
+                                        start: 10,
                                     },
                                     right: {
                                         type: "number",
                                         value: "6",
-                                        position: { start: 12, end: 13 },
+                                        start: 12,
                                     },
                                 },
                             },
@@ -609,7 +388,7 @@ describe("ast", () => {
                         right: {
                             type: "number",
                             value: "7",
-                            position: { start: 16, end: 17 },
+                            start: 16,
                         },
                     },
                 },
@@ -627,345 +406,169 @@ describe("ast", () => {
             {
                 // formula: "1+"
                 input: makeTokens([
-                    {
-                        type: "number",
-                        value: "1",
-                        position: { start: 0, end: 1 },
-                    },
-                    { type: "op", value: "+", position: { start: 1, end: 2 } },
+                    { type: "number", value: "1", start: 0 },
+                    { type: "op", value: "+", start: 1 },
                 ]),
                 description: "it fails on EOF after op",
                 expectedError: "UNEXPECTED_TOKEN",
                 expectedValue: "",
-                expectedPosition: { start: -1, end: -1 },
+                expectedStart: -1,
             },
             {
                 // formula: "1+SUM"
                 input: makeTokens([
-                    {
-                        type: "number",
-                        value: "1",
-                        position: { start: 0, end: 1 },
-                    },
-                    { type: "op", value: "+", position: { start: 1, end: 2 } },
-                    {
-                        type: "func",
-                        value: "SUM",
-                        position: { start: 2, end: 5 },
-                    },
+                    { type: "number", value: "1", start: 0 },
+                    { type: "op", value: "+", start: 1 },
+                    { type: "func", value: "SUM", start: 2 },
                 ]),
                 description: "it fails on EOF after func keyword",
                 expectedError: "PARENS",
                 expectedValue: "",
-                expectedPosition: { start: -1, end: -1 },
+                expectedStart: -1,
             },
             {
                 // formula: "1+SUM(A2:"
                 input: makeTokens([
-                    {
-                        type: "number",
-                        value: "1",
-                        position: { start: 0, end: 1 },
-                    },
-                    { type: "op", value: "+", position: { start: 1, end: 2 } },
-                    {
-                        type: "func",
-                        value: "SUM",
-                        position: { start: 2, end: 5 },
-                    },
-                    {
-                        type: "parens",
-                        value: "(",
-                        position: { start: 5, end: 6 },
-                    },
-                    {
-                        type: "cell",
-                        value: "A2",
-                        position: { start: 6, end: 8 },
-                    },
-                    { type: "op", value: ":", position: { start: 8, end: 9 } },
+                    { type: "number", value: "1", start: 0 },
+                    { type: "op", value: "+", start: 1 },
+                    { type: "func", value: "SUM", start: 2 },
+                    { type: "parens", value: "(", start: 5 },
+                    { type: "cell", value: "A2", start: 6 },
+                    { type: "op", value: ":", start: 8 },
                 ]),
                 description: "it fails on EOF within range expression",
                 expectedError: "UNEXPECTED_TOKEN",
                 expectedValue: "",
-                expectedPosition: { start: -1, end: -1 },
+                expectedStart: -1,
             },
             {
                 // formula: "1+)3*A3)"
                 input: makeTokens([
-                    {
-                        type: "number",
-                        value: "1",
-                        position: { start: 0, end: 1 },
-                    },
-                    { type: "op", value: "+", position: { start: 1, end: 2 } },
-                    {
-                        type: "parens",
-                        value: ")",
-                        position: { start: 2, end: 3 },
-                    },
-                    {
-                        type: "number",
-                        value: "3",
-                        position: { start: 3, end: 4 },
-                    },
-                    { type: "op", value: "*", position: { start: 4, end: 5 } },
-                    {
-                        type: "cell",
-                        value: "A3",
-                        position: { start: 5, end: 7 },
-                    },
-                    {
-                        type: "parens",
-                        value: ")",
-                        position: { start: 7, end: 8 },
-                    },
+                    { type: "number", value: "1", start: 0 },
+                    { type: "op", value: "+", start: 1 },
+                    { type: "parens", value: ")", start: 2 },
+                    { type: "number", value: "3", start: 3 },
+                    { type: "op", value: "*", start: 4 },
+                    { type: "cell", value: "A3", start: 5 },
+                    { type: "parens", value: ")", start: 7 },
                 ]),
                 description:
                     "it fails when bracket.close comes before bracket.open",
                 expectedError: "PARENS",
                 expectedValue: ")",
-                expectedPosition: { start: 2, end: 3 },
+                expectedStart: 2,
             },
             {
                 // formula: "1+(3*A3"
                 input: makeTokens([
-                    {
-                        type: "number",
-                        value: "1",
-                        position: { start: 0, end: 1 },
-                    },
-                    { type: "op", value: "+", position: { start: 1, end: 2 } },
-                    {
-                        type: "parens",
-                        value: "(",
-                        position: { start: 2, end: 3 },
-                    },
-                    {
-                        type: "number",
-                        value: "3",
-                        position: { start: 3, end: 4 },
-                    },
-                    { type: "op", value: "*", position: { start: 4, end: 5 } },
-                    {
-                        type: "cell",
-                        value: "A3",
-                        position: { start: 5, end: 7 },
-                    },
+                    { type: "number", value: "1", start: 0 },
+                    { type: "op", value: "+", start: 1 },
+                    { type: "parens", value: "(", start: 2 },
+                    { type: "number", value: "3", start: 3 },
+                    { type: "op", value: "*", start: 4 },
+                    { type: "cell", value: "A3", start: 5 },
                 ]),
                 description: "it fails on missing bracket.close",
                 expectedError: "PARENS",
                 expectedValue: "",
-                expectedPosition: { start: -1, end: -1 },
+                expectedStart: -1,
             },
             {
                 // formula: "1+(3*A3/(2+4)"
                 input: makeTokens([
-                    {
-                        type: "number",
-                        value: "1",
-                        position: { start: 0, end: 1 },
-                    },
-                    { type: "op", value: "+", position: { start: 1, end: 2 } },
-                    {
-                        type: "parens",
-                        value: "(",
-                        position: { start: 2, end: 3 },
-                    },
-                    {
-                        type: "number",
-                        value: "3",
-                        position: { start: 3, end: 4 },
-                    },
-                    { type: "op", value: "*", position: { start: 4, end: 5 } },
-                    {
-                        type: "cell",
-                        value: "A3",
-                        position: { start: 5, end: 7 },
-                    },
-                    { type: "op", value: "/", position: { start: 7, end: 8 } },
-                    {
-                        type: "parens",
-                        value: "(",
-                        position: { start: 8, end: 9 },
-                    },
-                    {
-                        type: "number",
-                        value: "2",
-                        position: { start: 9, end: 10 },
-                    },
-                    {
-                        type: "op",
-                        value: "+",
-                        position: { start: 10, end: 11 },
-                    },
-                    {
-                        type: "number",
-                        value: "4",
-                        position: { start: 11, end: 12 },
-                    },
+                    { type: "number", value: "1", start: 0 },
+                    { type: "op", value: "+", start: 1 },
+                    { type: "parens", value: "(", start: 2 },
+                    { type: "number", value: "3", start: 3 },
+                    { type: "op", value: "*", start: 4 },
+                    { type: "cell", value: "A3", start: 5 },
+                    { type: "op", value: "/", start: 7 },
+                    { type: "parens", value: "(", start: 8 },
+                    { type: "number", value: "2", start: 9 },
+                    { type: "op", value: "+", start: 10 },
+                    { type: "number", value: "4", start: 11 },
                 ]),
                 description:
                     "it fails on missing bracket.close in nested formula",
                 expectedError: "PARENS",
                 expectedValue: "",
-                expectedPosition: { start: -1, end: -1 },
+                expectedStart: -1,
             },
             {
                 // formula: "SUM+A1:A3)"
                 input: makeTokens([
-                    {
-                        type: "func",
-                        value: "SUM",
-                        position: { start: 0, end: 3 },
-                    },
-                    { type: "op", value: "+", position: { start: 3, end: 4 } },
-                    {
-                        type: "cell",
-                        value: "A1",
-                        position: { start: 4, end: 6 },
-                    },
-                    { type: "op", value: ":", position: { start: 6, end: 7 } },
-                    {
-                        type: "cell",
-                        value: "A3",
-                        position: { start: 7, end: 9 },
-                    },
-                    {
-                        type: "parens",
-                        value: ")",
-                        position: { start: 9, end: 10 },
-                    },
+                    { type: "func", value: "SUM", start: 0 },
+                    { type: "op", value: "+", start: 3 },
+                    { type: "cell", value: "A1", start: 4 },
+                    { type: "op", value: ":", start: 6 },
+                    { type: "cell", value: "A3", start: 7 },
+                    { type: "parens", value: ")", start: 9 },
                 ]),
                 description:
                     "it fails on missing bracket.open after function keyword",
                 expectedError: "PARENS",
                 expectedValue: "+",
-                expectedPosition: { start: 3, end: 4 },
+                expectedStart: 3,
             },
             {
                 // formula: "SUM(A1:A3*4"
                 input: makeTokens([
-                    {
-                        type: "func",
-                        value: "SUM",
-                        position: { start: 0, end: 3 },
-                    },
-                    {
-                        type: "parens",
-                        value: "(",
-                        position: { start: 3, end: 4 },
-                    },
-                    {
-                        type: "cell",
-                        value: "A1",
-                        position: { start: 4, end: 6 },
-                    },
-                    { type: "op", value: ":", position: { start: 6, end: 7 } },
-                    {
-                        type: "cell",
-                        value: "A3",
-                        position: { start: 7, end: 9 },
-                    },
-                    { type: "op", value: "*", position: { start: 9, end: 10 } },
-                    {
-                        type: "number",
-                        value: "4",
-                        position: { start: 10, end: 11 },
-                    },
+                    { type: "func", value: "SUM", start: 0 },
+                    { type: "parens", value: "(", start: 3 },
+                    { type: "cell", value: "A1", start: 4 },
+                    { type: "op", value: ":", start: 6 },
+                    { type: "cell", value: "A3", start: 7 },
+                    { type: "op", value: "*", start: 9 },
+                    { type: "number", value: "4", start: 10 },
                 ]),
                 description:
                     "it fails on missing bracket.close after function range",
                 expectedError: "PARENS",
                 expectedValue: "*",
-                expectedPosition: { start: 9, end: 10 },
+                expectedStart: 9,
             },
             {
                 // formula: "SUM(A1+A3)"
                 input: makeTokens([
-                    {
-                        type: "func",
-                        value: "SUM",
-                        position: { start: 0, end: 3 },
-                    },
-                    {
-                        type: "parens",
-                        value: "(",
-                        position: { start: 3, end: 4 },
-                    },
-                    {
-                        type: "cell",
-                        value: "A1",
-                        position: { start: 4, end: 6 },
-                    },
-                    { type: "op", value: "+", position: { start: 6, end: 7 } },
-                    {
-                        type: "cell",
-                        value: "A3",
-                        position: { start: 7, end: 9 },
-                    },
-                    {
-                        type: "parens",
-                        value: ")",
-                        position: { start: 9, end: 10 },
-                    },
+                    { type: "func", value: "SUM", start: 0 },
+                    { type: "parens", value: "(", start: 3 },
+                    { type: "cell", value: "A1", start: 4 },
+                    { type: "op", value: "+", start: 6 },
+                    { type: "cell", value: "A3", start: 7 },
+                    { type: "parens", value: ")", start: 9 },
                 ]),
                 description: "it fails on ill-formed range A",
                 expectedError: "UNEXPECTED_TOKEN",
                 expectedValue: "+",
-                expectedPosition: { start: 6, end: 7 },
+                expectedStart: 6,
             },
             {
                 // formula: "SUM(A1:A3:A7)"
                 input: makeTokens([
-                    {
-                        type: "func",
-                        value: "SUM",
-                        position: { start: 0, end: 3 },
-                    },
-                    {
-                        type: "parens",
-                        value: "(",
-                        position: { start: 3, end: 4 },
-                    },
-                    {
-                        type: "cell",
-                        value: "A1",
-                        position: { start: 4, end: 6 },
-                    },
-                    { type: "op", value: ":", position: { start: 6, end: 7 } },
-                    {
-                        type: "cell",
-                        value: "A3",
-                        position: { start: 7, end: 9 },
-                    },
-                    { type: "op", value: ":", position: { start: 9, end: 10 } },
-                    {
-                        type: "cell",
-                        value: "A7",
-                        position: { start: 10, end: 12 },
-                    },
-                    {
-                        type: "parens",
-                        value: ")",
-                        position: { start: 12, end: 13 },
-                    },
+                    { type: "func", value: "SUM", start: 0 },
+                    { type: "parens", value: "(", start: 3 },
+                    { type: "cell", value: "A1", start: 4 },
+                    { type: "op", value: ":", start: 6 },
+                    { type: "cell", value: "A3", start: 7 },
+                    { type: "op", value: ":", start: 9 },
+                    { type: "cell", value: "A7", start: 10 },
+                    { type: "parens", value: ")", start: 12 },
                 ]),
                 description: "it fails on ill-formed range B",
                 expectedError: "PARENS",
                 expectedValue: ":",
-                expectedPosition: { start: 9, end: 10 },
+                expectedStart: 9,
             },
         ])(
             "$description",
-            ({ input, expectedError, expectedValue, expectedPosition }) => {
+            ({ input, expectedError, expectedValue, expectedStart }) => {
                 const parser = new Parser(input)
                 const result = parser.makeAST()
 
                 assertIsFail(result)
                 expect(result.error.type).toBe(expectedError)
-                expect(result.error.payload!.value).toBe(expectedValue)
-                expect(result.error.payload!.position).toEqual(expectedPosition)
+                expect(result.error.payload.value).toBe(expectedValue)
+                expect(result.error.payload.start).toEqual(expectedStart)
             },
         )
     })

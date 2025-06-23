@@ -67,7 +67,6 @@ export function tokenize(
         // Happy path.
         // Add to token array.
         const token = result.value
-        token.position.end = token.position.start + token.value.length
         tokens.push(token)
         ind += token.value.length
     }
@@ -94,7 +93,7 @@ function getNextToken(
         return success({
             type: "op",
             value: char,
-            position: { start, end: start + char.length },
+            start,
         })
     }
 
@@ -103,7 +102,7 @@ function getNextToken(
         return success({
             type: "parens",
             value: char,
-            position: { start, end: start + char.length },
+            start,
         })
     }
 
@@ -139,7 +138,7 @@ function getNextToken(
         return success({
             type: "number",
             value: maybeNumber,
-            position: { start, end: start + maybeNumber.length },
+            start,
         })
     }
 
@@ -175,7 +174,7 @@ function getNextToken(
             return success({
                 type: tokenType,
                 value: maybeCellOrFunc,
-                position: { start, end: start + maybeCellOrFunc.length },
+                start,
             })
         }
 

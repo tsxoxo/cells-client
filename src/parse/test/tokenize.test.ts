@@ -4,28 +4,29 @@
 import { describe, expect, it } from "vitest"
 import { tokenize } from "../tokenize"
 import { assertIsFail, assertIsSuccess } from "../types/errors"
+import { Token } from "../types/grammar"
 
 describe("tokenizer", () => {
     it("handles complete formula", () => {
         const result = tokenize("11+2*(A1-B99)/SUM(C1:D2)")
         const expected = [
-            { type: "number", value: "11", position: { start: 0, end: 2 } },
-            { type: "op", value: "+", position: { start: 2, end: 3 } },
-            { type: "number", value: "2", position: { start: 3, end: 4 } },
-            { type: "op", value: "*", position: { start: 4, end: 5 } },
-            { type: "parens", value: "(", position: { start: 5, end: 6 } },
-            { type: "cell", value: "A1", position: { start: 6, end: 8 } },
-            { type: "op", value: "-", position: { start: 8, end: 9 } },
-            { type: "cell", value: "B99", position: { start: 9, end: 12 } },
-            { type: "parens", value: ")", position: { start: 12, end: 13 } },
-            { type: "op", value: "/", position: { start: 13, end: 14 } },
-            { type: "func", value: "SUM", position: { start: 14, end: 17 } },
-            { type: "parens", value: "(", position: { start: 17, end: 18 } },
-            { type: "cell", value: "C1", position: { start: 18, end: 20 } },
-            { type: "op", value: ":", position: { start: 20, end: 21 } },
-            { type: "cell", value: "D2", position: { start: 21, end: 23 } },
-            { type: "parens", value: ")", position: { start: 23, end: 24 } },
-        ]
+            { type: "number", value: "11", start: 0 },
+            { type: "op", value: "+", start: 2 },
+            { type: "number", value: "2", start: 3 },
+            { type: "op", value: "*", start: 4 },
+            { type: "parens", value: "(", start: 5 },
+            { type: "cell", value: "A1", start: 6 },
+            { type: "op", value: "-", start: 8 },
+            { type: "cell", value: "B99", start: 9 },
+            { type: "parens", value: ")", start: 12 },
+            { type: "op", value: "/", start: 13 },
+            { type: "func", value: "SUM", start: 14 },
+            { type: "parens", value: "(", start: 17 },
+            { type: "cell", value: "C1", start: 18 },
+            { type: "op", value: ":", start: 20 },
+            { type: "cell", value: "D2", start: 21 },
+            { type: "parens", value: ")", start: 23 },
+        ] as Token[]
 
         assertIsSuccess(result)
         expect(result.value).toEqual(expected)
@@ -40,59 +41,59 @@ describe("tokenizer", () => {
                     {
                         type: "number",
                         value: "42",
-                        position: { start: 2, end: 4 },
+                        start: 2,
                     },
-                    { type: "op", value: "+", position: { start: 5, end: 6 } },
+                    { type: "op", value: "+", start: 5 },
                     {
                         type: "number",
                         value: "7",
-                        position: { start: 7, end: 8 },
+                        start: 7,
                     },
-                    { type: "op", value: "*", position: { start: 9, end: 10 } },
+                    { type: "op", value: "*", start: 9 },
                     {
                         type: "parens",
                         value: "(",
-                        position: { start: 11, end: 12 },
+                        start: 11,
                     },
                     {
                         type: "cell",
                         value: "A1",
-                        position: { start: 13, end: 15 },
+                        start: 13,
                     },
                     {
                         type: "op",
                         value: "-",
-                        position: { start: 16, end: 17 },
+                        start: 16,
                     },
                     {
                         type: "cell",
                         value: "B2",
-                        position: { start: 18, end: 20 },
+                        start: 18,
                     },
                     {
                         type: "parens",
                         value: ")",
-                        position: { start: 21, end: 22 },
+                        start: 21,
                     },
-                ],
+                ] as Token[],
             },
             {
                 description: "it handles formula starting with negative number",
                 input: "-11+2",
                 expected: [
-                    { type: "op", value: "-", position: { start: 0, end: 1 } },
+                    { type: "op", value: "-", start: 0 },
                     {
                         type: "number",
                         value: "11",
-                        position: { start: 1, end: 3 },
+                        start: 1,
                     },
-                    { type: "op", value: "+", position: { start: 3, end: 4 } },
+                    { type: "op", value: "+", start: 3 },
                     {
                         type: "number",
                         value: "2",
-                        position: { start: 4, end: 5 },
+                        start: 4,
                     },
-                ],
+                ] as Token[],
             },
             {
                 description: "it handles single number",
@@ -101,9 +102,9 @@ describe("tokenizer", () => {
                     {
                         type: "number",
                         value: "42",
-                        position: { start: 0, end: 2 },
+                        start: 0,
                     },
-                ],
+                ] as Token[],
             },
             {
                 description: "it handles single cell reference",
@@ -112,9 +113,9 @@ describe("tokenizer", () => {
                     {
                         type: "cell",
                         value: "A99",
-                        position: { start: 0, end: 3 },
+                        start: 0,
                     },
-                ],
+                ] as Token[],
             },
         ])("$description", ({ input, expected }) => {
             const result = tokenize(input)
@@ -132,30 +133,21 @@ describe("tokenizer", () => {
                 description: "it fails on invalid starting character",
                 expectedError: "INVALID_CHAR",
                 expectedValue: "$",
-                expectedPosition: {
-                    start: 0,
-                    end: 1,
-                },
+                expectedStart: 0,
             },
             {
                 input: "A11+B001",
                 description: "it fails on ill-formed cell reference",
                 expectedError: "INVALID_TOKEN",
                 expectedValue: "B001",
-                expectedPosition: {
-                    start: 4,
-                    end: 8,
-                },
+                expectedStart: 4,
             },
             {
                 input: "a99+02+37b",
                 description: "it fails on char after number",
                 expectedError: "INVALID_TOKEN",
                 expectedValue: "b",
-                expectedPosition: {
-                    start: 9,
-                    end: 11,
-                },
+                expectedStart: 9,
             },
             {
                 input: "SUMA1:B2)*3",
@@ -163,22 +155,17 @@ describe("tokenizer", () => {
                     "it fails on function name without opening parenthesis",
                 expectedError: "INVALID_TOKEN",
                 expectedValue: "SUMA1",
-                expectedPosition: {
-                    start: 0,
-                    end: 5,
-                },
+                expectedStart: 0,
             },
         ])(
             "given input '$input', $description",
-            ({ input, expectedError, expectedValue, expectedPosition }) => {
+            ({ input, expectedError, expectedValue, expectedStart }) => {
                 const result = tokenize(input)
 
                 assertIsFail(result)
                 expect(result.error.type).toBe(expectedError)
                 expect(result.error.payload.value).toBe(expectedValue)
-                expect(result.error.payload.start).toEqual(
-                    expectedPosition.start,
-                )
+                expect(result.error.payload.start).toEqual(expectedStart)
             },
         )
     })

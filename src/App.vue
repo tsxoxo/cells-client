@@ -3,5 +3,5 @@ import Cells from "./CellsCanvas.vue"
 </script>
 
 <template>
-  <Cells />
+    <Cells />
 </template>

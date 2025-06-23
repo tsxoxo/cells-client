@@ -35,10 +35,7 @@ export type TokenType =
 export type Token = {
     value: string
     type: TokenType
-    position: {
-        start: number
-        end: number
-    }
+    start: number
 }
 
 export type Node = Node_Binary | Node_Number | Node_Cell | Node_Func
@@ -48,10 +45,7 @@ interface Node_Base {
     value: string
     // Position of corresponding token within the formula string.
     // Currently used only in failure cases: the interpreter module passes along the whole Node.
-    position: {
-        start: number
-        end: number
-    }
+    start: number
 }
 
 // Binary operators: ['+', '-', '*', '/'],

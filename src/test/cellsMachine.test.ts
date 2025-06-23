@@ -20,8 +20,8 @@
 import { assert, describe, it } from "vitest"
 
 describe.skip("skipped suite", () => {
-  it("test", () => {
-    // Suite skipped, no error
-    assert.equal(Math.sqrt(4), 3)
-  })
+    it("test", () => {
+        // Suite skipped, no error
+        assert.equal(Math.sqrt(4), 3)
+    })
 })
