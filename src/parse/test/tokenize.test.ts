@@ -14,18 +14,18 @@ describe("tokenizer", () => {
             { type: "op", value: "+", start: 2 },
             { type: "number", value: "2", start: 3 },
             { type: "op", value: "*", start: 4 },
-            { type: "parens", value: "(", start: 5 },
+            { type: "parens_open", value: "(", start: 5 },
             { type: "cell", value: "A1", start: 6 },
             { type: "op", value: "-", start: 8 },
             { type: "cell", value: "B99", start: 9 },
-            { type: "parens", value: ")", start: 12 },
+            { type: "parens_close", value: ")", start: 12 },
             { type: "op", value: "/", start: 13 },
             { type: "func", value: "SUM", start: 14 },
-            { type: "parens", value: "(", start: 17 },
+            { type: "parens_open", value: "(", start: 17 },
             { type: "cell", value: "C1", start: 18 },
             { type: "op", value: ":", start: 20 },
             { type: "cell", value: "D2", start: 21 },
-            { type: "parens", value: ")", start: 23 },
+            { type: "parens_close", value: ")", start: 23 },
         ] as Token[]
 
         assertIsSuccess(result)
@@ -51,7 +51,7 @@ describe("tokenizer", () => {
                     },
                     { type: "op", value: "*", start: 9 },
                     {
-                        type: "parens",
+                        type: "parens_open",
                         value: "(",
                         start: 11,
                     },
@@ -71,7 +71,7 @@ describe("tokenizer", () => {
                         start: 18,
                     },
                     {
-                        type: "parens",
+                        type: "parens_close",
                         value: ")",
                         start: 21,
                     },

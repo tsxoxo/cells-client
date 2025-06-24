@@ -171,17 +171,15 @@ export class Parser {
                     start: token.start,
                 })
 
-            case "parens": {
-                // Expect bracket.open
-                if (token?.value === ")") {
-                    return this.createError({
-                        type: "PARENS",
-                        token,
-                        expected: "opening parenthesis",
-                    })
-                }
+            case "parens_close": {
+                return this.createError({
+                    type: "PARENS",
+                    token,
+                    expected: "opening parenthesis",
+                })
+            }
 
-                // Happy path.
+            case "parens_open": {
                 // Save bracket position.
                 const bracketOpenPosition = token.start
                 // Consume bracket.open and parse expression.

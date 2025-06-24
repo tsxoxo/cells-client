@@ -40,11 +40,11 @@ describe("ast", () => {
                 description: "parenthesized addition",
                 // formula: "(1+2)"
                 inputTokens: makeTokens([
-                    { type: "parens", value: "(", start: 0 },
+                    { type: "parens_open", value: "(", start: 0 },
                     { type: "number", value: "1", start: 1 },
                     { type: "op", value: "+", start: 2 },
                     { type: "number", value: "2", start: 3 },
-                    { type: "parens", value: ")", start: 4 },
+                    { type: "parens_close", value: ")", start: 4 },
                 ]),
                 expectedAST: {
                     type: "binary_op",
@@ -67,11 +67,11 @@ describe("ast", () => {
                 // formula: "SUM(A1:B2)"
                 inputTokens: makeTokens([
                     { type: "func", value: "SUM", start: 0 },
-                    { type: "parens", value: "(", start: 3 },
+                    { type: "parens_open", value: "(", start: 3 },
                     { type: "cell", value: "A1", start: 4 },
                     { type: "op", value: ":", start: 6 },
                     { type: "cell", value: "B2", start: 7 },
-                    { type: "parens", value: ")", start: 9 },
+                    { type: "parens_close", value: ")", start: 9 },
                 ]),
                 expectedAST: {
                     type: "func",
@@ -117,11 +117,11 @@ describe("ast", () => {
                 description: "parenthesized expression with multiplication",
                 // formula: "(1+2)*3"
                 inputTokens: makeTokens([
-                    { type: "parens", value: "(", start: 0 },
+                    { type: "parens_open", value: "(", start: 0 },
                     { type: "number", value: "1", start: 1 },
                     { type: "op", value: "+", start: 2 },
                     { type: "number", value: "2", start: 3 },
-                    { type: "parens", value: ")", start: 4 },
+                    { type: "parens_close", value: ")", start: 4 },
                     { type: "op", value: "*", start: 5 },
                     { type: "number", value: "3", start: 6 },
                 ]),
@@ -156,11 +156,11 @@ describe("ast", () => {
                 // formula: "SUM(A1:B2)/3"
                 inputTokens: makeTokens([
                     { type: "func", value: "SUM", start: 0 },
-                    { type: "parens", value: "(", start: 3 },
+                    { type: "parens_open", value: "(", start: 3 },
                     { type: "cell", value: "A1", start: 4 },
                     { type: "op", value: ":", start: 6 },
                     { type: "cell", value: "B2", start: 7 },
-                    { type: "parens", value: ")", start: 9 },
+                    { type: "parens_close", value: ")", start: 9 },
                     { type: "op", value: "/", start: 10 },
                     { type: "number", value: "3", start: 11 },
                 ]),
@@ -194,18 +194,18 @@ describe("ast", () => {
                 description: "complete formula with all operations",
                 // formula: "(1+2)*SUM(A1:B2)/3"
                 inputTokens: makeTokens([
-                    { type: "parens", value: "(", start: 0 },
+                    { type: "parens_open", value: "(", start: 0 },
                     { type: "number", value: "1", start: 1 },
                     { type: "op", value: "+", start: 2 },
                     { type: "number", value: "2", start: 3 },
-                    { type: "parens", value: ")", start: 4 },
+                    { type: "parens_close", value: ")", start: 4 },
                     { type: "op", value: "*", start: 5 },
                     { type: "func", value: "SUM", start: 6 },
-                    { type: "parens", value: "(", start: 9 },
+                    { type: "parens_open", value: "(", start: 9 },
                     { type: "cell", value: "A1", start: 10 },
                     { type: "op", value: ":", start: 12 },
                     { type: "cell", value: "B2", start: 13 },
-                    { type: "parens", value: ")", start: 15 },
+                    { type: "parens_close", value: ")", start: 15 },
                     { type: "op", value: "/", start: 16 },
                     { type: "number", value: "3", start: 17 },
                 ]),
@@ -293,11 +293,11 @@ describe("ast", () => {
                 // formula: "SUM(A1:A9)"
                 inputTokens: makeTokens([
                     { type: "func", value: "SUM", start: 0 },
-                    { type: "parens", value: "(", start: 3 },
+                    { type: "parens_open", value: "(", start: 3 },
                     { type: "cell", value: "A1", start: 4 },
                     { type: "op", value: ":", start: 6 },
                     { type: "cell", value: "A9", start: 7 },
-                    { type: "parens", value: ")", start: 9 },
+                    { type: "parens_close", value: ")", start: 9 },
                 ]),
                 expectedAST: {
                     type: "func",
@@ -321,21 +321,21 @@ describe("ast", () => {
                 inputTokens: makeTokens([
                     { type: "number", value: "1", start: 0 },
                     { type: "op", value: "*", start: 1 },
-                    { type: "parens", value: "(", start: 2 },
+                    { type: "parens_open", value: "(", start: 2 },
                     { type: "number", value: "10", start: 3 },
                     { type: "op", value: "/", start: 5 },
-                    { type: "parens", value: "(", start: 6 },
+                    { type: "parens_open", value: "(", start: 6 },
                     { type: "number", value: "1", start: 7 },
                     { type: "op", value: "-", start: 8 },
-                    { type: "parens", value: "(", start: 9 },
+                    { type: "parens_open", value: "(", start: 9 },
                     { type: "number", value: "2", start: 10 },
                     { type: "op", value: "*", start: 11 },
                     { type: "number", value: "6", start: 12 },
-                    { type: "parens", value: ")", start: 13 },
-                    { type: "parens", value: ")", start: 14 },
+                    { type: "parens_close", value: ")", start: 13 },
+                    { type: "parens_close", value: ")", start: 14 },
                     { type: "op", value: "+", start: 15 },
                     { type: "number", value: "7", start: 16 },
-                    { type: "parens", value: ")", start: 17 },
+                    { type: "parens_close", value: ")", start: 17 },
                 ]),
                 expectedAST: {
                     type: "binary_op",
@@ -432,7 +432,7 @@ describe("ast", () => {
                     { type: "number", value: "1", start: 0 },
                     { type: "op", value: "+", start: 1 },
                     { type: "func", value: "SUM", start: 2 },
-                    { type: "parens", value: "(", start: 5 },
+                    { type: "parens_open", value: "(", start: 5 },
                     { type: "cell", value: "A2", start: 6 },
                     { type: "op", value: ":", start: 8 },
                 ]),
@@ -446,11 +446,11 @@ describe("ast", () => {
                 input: makeTokens([
                     { type: "number", value: "1", start: 0 },
                     { type: "op", value: "+", start: 1 },
-                    { type: "parens", value: ")", start: 2 },
+                    { type: "parens_close", value: ")", start: 2 },
                     { type: "number", value: "3", start: 3 },
                     { type: "op", value: "*", start: 4 },
                     { type: "cell", value: "A3", start: 5 },
-                    { type: "parens", value: ")", start: 7 },
+                    { type: "parens_close", value: ")", start: 7 },
                 ]),
                 description:
                     "it fails when bracket.close comes before bracket.open",
@@ -463,7 +463,7 @@ describe("ast", () => {
                 input: makeTokens([
                     { type: "number", value: "1", start: 0 },
                     { type: "op", value: "+", start: 1 },
-                    { type: "parens", value: "(", start: 2 },
+                    { type: "parens_open", value: "(", start: 2 },
                     { type: "number", value: "3", start: 3 },
                     { type: "op", value: "*", start: 4 },
                     { type: "cell", value: "A3", start: 5 },
@@ -478,12 +478,12 @@ describe("ast", () => {
                 input: makeTokens([
                     { type: "number", value: "1", start: 0 },
                     { type: "op", value: "+", start: 1 },
-                    { type: "parens", value: "(", start: 2 },
+                    { type: "parens_open", value: "(", start: 2 },
                     { type: "number", value: "3", start: 3 },
                     { type: "op", value: "*", start: 4 },
                     { type: "cell", value: "A3", start: 5 },
                     { type: "op", value: "/", start: 7 },
-                    { type: "parens", value: "(", start: 8 },
+                    { type: "parens_open", value: "(", start: 8 },
                     { type: "number", value: "2", start: 9 },
                     { type: "op", value: "+", start: 10 },
                     { type: "number", value: "4", start: 11 },
@@ -502,7 +502,7 @@ describe("ast", () => {
                     { type: "cell", value: "A1", start: 4 },
                     { type: "op", value: ":", start: 6 },
                     { type: "cell", value: "A3", start: 7 },
-                    { type: "parens", value: ")", start: 9 },
+                    { type: "parens_close", value: ")", start: 9 },
                 ]),
                 description:
                     "it fails on missing bracket.open after function keyword",
@@ -514,7 +514,7 @@ describe("ast", () => {
                 // formula: "SUM(A1:A3*4"
                 input: makeTokens([
                     { type: "func", value: "SUM", start: 0 },
-                    { type: "parens", value: "(", start: 3 },
+                    { type: "parens_open", value: "(", start: 3 },
                     { type: "cell", value: "A1", start: 4 },
                     { type: "op", value: ":", start: 6 },
                     { type: "cell", value: "A3", start: 7 },
@@ -531,11 +531,11 @@ describe("ast", () => {
                 // formula: "SUM(A1+A3)"
                 input: makeTokens([
                     { type: "func", value: "SUM", start: 0 },
-                    { type: "parens", value: "(", start: 3 },
+                    { type: "parens_open", value: "(", start: 3 },
                     { type: "cell", value: "A1", start: 4 },
                     { type: "op", value: "+", start: 6 },
                     { type: "cell", value: "A3", start: 7 },
-                    { type: "parens", value: ")", start: 9 },
+                    { type: "parens_close", value: ")", start: 9 },
                 ]),
                 description: "it fails on ill-formed range A",
                 expectedError: "UNEXPECTED_TOKEN",
@@ -546,13 +546,13 @@ describe("ast", () => {
                 // formula: "SUM(A1:A3:A7)"
                 input: makeTokens([
                     { type: "func", value: "SUM", start: 0 },
-                    { type: "parens", value: "(", start: 3 },
+                    { type: "parens_open", value: "(", start: 3 },
                     { type: "cell", value: "A1", start: 4 },
                     { type: "op", value: ":", start: 6 },
                     { type: "cell", value: "A3", start: 7 },
                     { type: "op", value: ":", start: 9 },
                     { type: "cell", value: "A7", start: 10 },
-                    { type: "parens", value: ")", start: 12 },
+                    { type: "parens_open", value: ")", start: 12 },
                 ]),
                 description: "it fails on ill-formed range B",
                 expectedError: "PARENS",

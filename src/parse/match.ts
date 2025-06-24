@@ -40,8 +40,11 @@ export function isOp(str: string): boolean {
     return OPS.includes(str as Operator)
 }
 
-export function isParens(str: string): boolean {
-    return /^[()]$/.test(str)
+export function isParensOpen(str: string): boolean {
+    return /^\($/.test(str)
+}
+export function isParensClose(str: string): boolean {
+    return /^\)$/.test(str)
 }
 
 export function isFunc(str: string): str is FunctionKeyword {

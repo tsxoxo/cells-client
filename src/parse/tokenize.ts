@@ -18,11 +18,12 @@ import {
     isFunc,
     isDigit,
     isOp,
-    isParens,
+    isParensOpen,
     isWhitespace,
     isDigitOrComma,
     isLetter,
     isNumber,
+    isParensClose,
 } from "./match"
 
 import {
@@ -97,10 +98,19 @@ function getNextToken(
         })
     }
 
-    // It's a parens: ( or ), etc.
-    if (isParens(char)) {
+    // It's a parens: ( or )
+    if (isParensOpen(char)) {
         return success({
-            type: "parens",
+            type: "parens_open",
+            value: char,
+            start,
+        })
+    }
+
+    // It's a parens: ( or )
+    if (isParensClose(char)) {
+        return success({
+            type: "parens_close",
             value: char,
             start,
         })
