@@ -80,19 +80,22 @@ returns appropiate error:
 
 ## After that
 
+- simplify project structure. see Gemini chat "cells: Data-Oriented Parsing of Function Expressions"
+
 - Try and simplify/unify each module of the parse pipeline. Underlying question: this whole parsing business seems like a state machine pattern--roughly:
   `state: {name: expect_open_bracket, onFail: createError, onSuccess: consumeNext}`.
 
-  - all: do everything with a switch statement?
-  - ast: why do I use a 'return early on fail' pattern in parseFactor under case('func'), while nesting in parseRange?
-  - ast: it does not make sense to me that consume() returns a value, yet we never use that return value, instead calling it strictly for its side-effects.
-  - tokenize: try to make parseFactor be aware of possible tokens instead of casting `token.type as never`
+    - all: do everything with a switch statement?
+    - ast: why do I use a 'return early on fail' pattern in parseFactor under case('func'), while nesting in parseRange?
+    - ast: it does not make sense to me that consume() returns a value, yet we never use that return value, instead calling it strictly for its side-effects.
+    - tokenize: try to make parseFactor be aware of possible tokens instead of casting `token.type as never`
+    - think about how I would add the following: unary ops like '-1', "3!"; funcs like 'avg(a1, a2, a3)' and even a comma-based, alternative syntax for sum.
 
 - add E2E test runner and write a basic UI test. Do this before rebuilding UI so You know what makes a UI testable.
 
 - refactor: try to apply lessons from talk 'data oriented design'
 
-  - Token type: remove position.end -- can be calculated from start and value.length
+    - Token type: remove position.end -- can be calculated from start and value.length
 
 - off to Figma -> redesign UI
 
@@ -104,16 +107,16 @@ returns appropiate error:
 
 - write test for state updates
 
-  -> introduce networking
+    -> introduce networking
 
 **@BACKLOG**
 
 ## SECURITY
 
 - Protect again numeric overflow. Look into [ decimal.js ](https://mikemcl.github.io/decimal.js/#). Then add tests:
-  - "handles operations resulting in Infinity" // 1/0.0000001 repeatedly
-    - remember: 0/0, 1/0, -1/0 == NaN, Infinity, -Infinity, respectively
-  - "handles very large numbers" // potential overflow
+    - "handles operations resulting in Infinity" // 1/0.0000001 repeatedly
+        - remember: 0/0, 1/0, -1/0 == NaN, Infinity, -Infinity, respectively
+    - "handles very large numbers" // potential overflow
 - Escape user input
 
 ## FEAT
@@ -132,7 +135,7 @@ returns appropiate error:
 - stagger animations?
 - parse: add functions "mult" | "avg" | "max" | "min" | "count"
 - parse: add negation
-  - add test: "handles negative numbers in calculations" // -5 \* -3
+    - add test: "handles negative numbers in calculations" // -5 \* -3
 - parse: add nested functions
 
 ## ERRORS

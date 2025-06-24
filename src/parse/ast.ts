@@ -7,7 +7,6 @@
 //
 // Uses the grammar specified in ./types/grammar.ts
 
-import { FunctionKeyword } from "./func.ts"
 import {
     Failure,
     Result,
@@ -18,7 +17,14 @@ import {
     ParseError,
     assertNever,
 } from "./types/errors.ts"
-import { Node_Binary, Node_Cell, Token, Node } from "./types/grammar.ts"
+import {
+    Node_Binary,
+    Node_Cell,
+    Token,
+    Node,
+    PATTERNS,
+    Node_Func,
+} from "./types/grammar.ts"
 
 export class Parser {
     readonly tokens: Token[]
@@ -206,48 +212,18 @@ export class Parser {
             }
 
             case "func": {
-                // Consume function keyword
-                this.consume()
+                const maybeCells = this.parseFunc()
 
-                // Expect "("
-                const next = this.peek()
-
-                if (next.value !== "(") {
-                    return this.createError({
-                        type: "PARENS",
-                        token: next,
-                        expected: "bracket after function keyword",
-                    })
+                if (!isSuccess(maybeCells)) {
+                    return maybeCells
                 }
-
-                // Happy path: consume bracket.
-                this.consume()
-                // Expect range.
-                const range = this.parseRange()
-
-                // Error path: Not a valid range.
-                if (range.ok === false) {
-                    return range
-                }
-
-                // Happy path. Expect bracket.close
-                if (this.peek()?.value !== ")") {
-                    return this.createError({
-                        type: "PARENS",
-                        token: this.peek()!,
-                        expected: "closing bracket of function expression",
-                    })
-                }
-
-                // Happy path: consume bracket.close and return
-                this.consume()
 
                 return success({
                     type: "func",
-                    value: token.value.toLowerCase() as FunctionKeyword,
+                    value: token.value.toLowerCase(),
                     start: token.start,
-                    ...range.value,
-                })
+                    ...maybeCells.value,
+                } as Node_Func)
             }
 
             // Ran out of tokens unexpectedly.
@@ -265,49 +241,44 @@ export class Parser {
         }
     }
 
-    // Function to parse range syntax, as in "SUM(A1:Z99)".
-    // Happy path: the next sequence of tokens is <cell_ref>, ":", <cell_ref>
-    private parseRange(): Result<
+    private parseFunc(): Result<
         { from: Node_Cell; to: Node_Cell },
         ParseError
     > {
-        const maybeFirstCell = this.peek()
+        // Initialize result container for cell refs in function expression.
+        // Example: if IN='sum(a1:z99)', this will hold [a1, z99]
+        const toAndFromCells = [] as Node_Cell[]
 
-        // Happy path
-        // Expect sequence `<cell_ref>, ":", <cell_ref>`
-        if (maybeFirstCell?.type === "cell") {
-            this.consume()
-            if (this.peek()?.value === ":") {
-                this.consume()
-                if (this.peek()?.type === "cell") {
-                    const from = {
-                        type: "cell" as const,
-                        value: maybeFirstCell!.value,
-                        start: maybeFirstCell.start,
-                    }
+        // match incoming tokens against function pattern
+        for (let i = 0; i < PATTERNS.function.length; i++) {
+            const token = this.peek()
 
-                    const to = {
-                        type: "cell" as const,
-                        value: this.peek()!.value,
-                        start: this.peek()!.start,
-                    }
-
-                    this.consume()
-
-                    return success({
-                        from,
-                        to,
-                    })
-                }
+            // Fail fast.
+            if (token.type !== PATTERNS.function[i].type) {
+                return this.createError({
+                    type: "UNEXPECTED_TOKEN",
+                    token,
+                    expected: `token of type ${PATTERNS.function[i].type} while parsing function pattern (for example 'sum(a1:z99)')`,
+                })
             }
+
+            // Happy path.
+            // Save cell refs and advance token stream.
+            if (token.type === "cell") {
+                toAndFromCells.push({
+                    type: "cell" as const,
+                    value: token.value,
+                    start: token.start,
+                })
+            }
+
+            this.consume()
         }
 
-        // Error path.
-        // We ran out of tokens or a token did not match range syntax
-        return this.createError({
-            type: "UNEXPECTED_TOKEN",
-            token: this.peek(),
-            expected: "valid range syntax",
+        // No errors. return cell nodes.
+        return success({
+            from: toAndFromCells[0],
+            to: toAndFromCells[1],
         })
     }
 }

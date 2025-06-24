@@ -1,5 +1,11 @@
 import { FUNCTION_KEYWORDS, FunctionKeyword } from "./func"
-import { CHARS_NUM, OPS, Operator } from "./types/grammar"
+import {
+    P_CHARS_NUM,
+    P_OPERATORS_BIN,
+    P_OPERATORS_RANGE,
+    Operator,
+    OperatorRange,
+} from "./types/grammar"
 
 export const cellPatternAnchored = /^[a-zA-Z]{1}[0-9]{1,2}$/
 
@@ -12,7 +18,7 @@ export function isDigit(str: string): boolean {
 }
 
 export function isDigitOrComma(str: string): boolean {
-    return CHARS_NUM.test(str)
+    return P_CHARS_NUM.test(str)
 }
 
 export function isLetter(str: string): boolean {
@@ -37,7 +43,11 @@ export function isCellRef(str: string): boolean {
 }
 
 export function isOp(str: string): boolean {
-    return OPS.includes(str as Operator)
+    return P_OPERATORS_BIN.includes(str as Operator)
+}
+
+export function isOpRange(str: string): boolean {
+    return P_OPERATORS_RANGE.includes(str as OperatorRange)
 }
 
 export function isParensOpen(str: string): boolean {

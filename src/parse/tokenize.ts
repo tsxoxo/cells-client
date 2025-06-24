@@ -24,6 +24,7 @@ import {
     isLetter,
     isNumber,
     isParensClose,
+    isOpRange,
 } from "./match"
 
 import {
@@ -89,10 +90,19 @@ function getNextToken(
     // const token = createEmptyToken(start)
     const char = str[start]
 
-    // It's an operator: +, -, *, /, :
+    // It's a standard arithmetic operator: +, -, *, /
     if (isOp(char)) {
         return success({
             type: "op",
+            value: char,
+            start,
+        })
+    }
+
+    // It's the range operator: [:]
+    if (isOpRange(char)) {
+        return success({
+            type: "op_range",
             value: char,
             start,
         })

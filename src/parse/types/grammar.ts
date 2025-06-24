@@ -1,6 +1,8 @@
-// =================================================
-// # GRAMMAR
-// =================================================
+// ===============================================================
+// --- GRAMMAR -------------------------------------------------
+//
+// The fundamental rules and patterns used in the parser.
+// ===============================================================
 //
 // * expression ::= term (('+' | '-') term)*
 // * term ::= factor (('*' | '/') factor)*
@@ -10,19 +12,33 @@
 // * number ::= [0-9]+ (( ',' | '.' ) [0-9]+)?
 // * cell ::= [a-zA-Z][0-9][0-9]?
 //
-// ## RegEx
-// * Bracket: /[()]/
-// * Operator: /[+-\/*]{1}/
-// * Number: /[0-9]+((,|\.)[0-9]+)?/
-// * Cell_ref: /[a-zA-Z]{1}[0-9]{1,2}
 // TODO: move matchers here, export one big matcher object.
 
 import { FunctionKeyword } from "../func"
 
-export const OPS = ["+", "-", "*", "/", ":"] as const
-export type Operator = (typeof OPS)[number]
+//============================================================
+// --- PATTERNS ----------------------------------------------
+//============================================================
+export const P_OPERATORS_BIN = ["+", "-", "*", "/"] as const
+export type Operator = (typeof P_OPERATORS_BIN)[number]
 
-export const CHARS_NUM = /[0-9,.]/
+export const P_OPERATORS_RANGE = [":"] as const
+export type OperatorRange = (typeof P_OPERATORS_RANGE)[number]
+
+export const P_CHARS_NUM = /[0-9,.]/
+
+const P_FUNCTION: Pick<Token, "type">[] = [
+    { type: "func" },
+    { type: "parens_open" },
+    { type: "cell" },
+    { type: "op_range" },
+    { type: "cell" },
+    { type: "parens_close" },
+] as const
+
+export const PATTERNS = {
+    function: P_FUNCTION,
+}
 
 //============================================================
 // --- TOKENS ------------------------------------------------
