@@ -34,7 +34,7 @@ export function isWhitespace(str: string): boolean {
 //==========================
 export function isNumber(str: string): boolean {
     // Allow both "," and "." for float input.
-    return /^[0-9]+((,|\.)[0-9]+)?$/.test(str)
+    return /^\d+(?:(?:,|\.)\d+)?$/.test(str)
 }
 
 export function isCellRef(str: string): boolean {

@@ -1,5 +1,9 @@
 {
     "compilerOptions": {
+        // For in-source testing
+        "types": ["vitest/importMeta"],
+        "declaration": true,
+        "declarationMap": true,
         "target": "es2022",
         "useDefineForClassFields": true,
         "module": "ESNext",
@@ -19,6 +23,7 @@
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true
     },
-    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "vite-env.d.ts"],
+    "include": ["src"],
+    "exclude": ["node_modules"],
     "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -89,6 +89,7 @@ returns appropiate error:
     - ast: why do I use a 'return early on fail' pattern in parseFactor under case('func'), while nesting in parseRange?
     - ast: it does not make sense to me that consume() returns a value, yet we never use that return value, instead calling it strictly for its side-effects.
     - tokenize: try to make parseFactor be aware of possible tokens instead of casting `token.type as never`
+    - tokenize: consider this control flow: parseNumber, parseCell, try{SYMBOLS[char]} where SYMBOLS = { '+': 'add', '(': "parens_open", ...}
     - think about how I would add the following: unary ops like '-1', "3!"; funcs like 'avg(a1, a2, a3)' and even a comma-based, alternative syntax for sum.
 
 - add E2E test runner and write a basic UI test. Do this before rebuilding UI so You know what makes a UI testable.
