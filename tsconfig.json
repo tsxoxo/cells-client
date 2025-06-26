@@ -19,8 +19,9 @@
         "jsx": "preserve",
 
         "strict": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
+        // use ESLint for flagging unused vars
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
         "noFallthroughCasesInSwitch": true
     },
     "include": ["src"],

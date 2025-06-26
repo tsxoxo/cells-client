@@ -17,7 +17,6 @@ import {
     ASTErrorType,
     ParseError,
     assertNever,
-    assertIsSuccess,
 } from "./types/errors.ts"
 import {
     Node_Binary,
@@ -26,88 +25,7 @@ import {
     Node,
     PATTERNS,
     Node_Func,
-    TokenType,
 } from "./types/grammar.ts"
-
-type ParseResult = Result<{ match: Token[]; rest: Token[] }, { msg: string }>
-
-// Take in pattern, match against stream of Token[]
-function matchTokenTypes(
-    expected: TokenType[],
-): (tokens: Token[]) => ParseResult {
-    return (tokens) => {
-        if (expected.length === 0) {
-            return fail({
-                msg: "Received empty array for parameter 'expected'",
-            })
-        }
-
-        // Compare tokens with expected one by one, the old-fashioned way.
-        // Fail fast.
-        for (let i = 0; i < expected.length; i++) {
-            if (tokens[i].type !== expected[i]) {
-                return fail({
-                    msg: `Pattern did not match at index [${i}]. Expected [${expected[i]}]. Got [${tokens[i].type}] instead.`,
-                })
-            }
-        }
-
-        return success({
-            match: tokens.slice(0, expected.length),
-            rest: tokens.slice(expected.length),
-        })
-    }
-}
-
-function map<A>(
-    parser: (pattern: TokenType[]) => ParseResult,
-    mapFn: (tokens: Token[]) => A,
-): (
-    pattern: TokenType[],
-) => Result<{ result: A; rest: Token[] }, { msg: string }> {
-    return (tokens) => {
-        const parseResult = parser(tokens)
-        if (!isSuccess(parseResult)) {
-            return fail({ msg: "Couldnt do it" })
-        }
-
-        const { match, rest } = parseResult.value
-
-        return success({
-            result: mapFn(match),
-            rest,
-        })
-    }
-}
-//
-
-// in-source test suites
-if (import.meta.vitest) {
-    const { it, expect } = import.meta.vitest
-
-    it("func_matchTypes", () => {
-        const func_pattern = matchTokenTypes(
-            PATTERNS.function.map(({ type }) => type),
-        )
-        const func_tokens_result = tokenize("sum(a1:a0)+35")
-        assertIsSuccess(func_tokens_result)
-        const func_tokens = func_tokens_result.value
-
-        const func_result = func_pattern(func_tokens)
-
-        assertIsSuccess(func_result)
-        const func_expected_result = {
-            match: func_tokens.slice(0, -2),
-            rest: func_tokens.slice(-2),
-        }
-        expect(func_result.value).toEqual(func_expected_result)
-    })
-
-    // START_HERE:
-    // * write test for map
-    // * try to recreate that clever builder thing with (_, __, cell1, ___, cell2, ____)
-    // so mb P_FUNC_WITH_RANGE = {pattern, builder}
-}
 
 export class Parser {
     readonly tokens: Token[]
@@ -333,15 +251,15 @@ export class Parser {
         const toAndFromCells = [] as Node_Cell[]
 
         // match incoming tokens against function pattern
-        for (let i = 0; i < PATTERNS.function.length; i++) {
+        for (let i = 0; i < PATTERNS.function_range.length; i++) {
             const token = this.peek()
 
             // Fail fast.
-            if (token.type !== PATTERNS.function[i].type) {
+            if (token.type !== PATTERNS.function_range[i].type) {
                 return this.createError({
                     type: "UNEXPECTED_TOKEN",
                     token,
-                    expected: `token of type ${PATTERNS.function[i].type} while parsing function pattern (for example 'sum(a1:z99)')`,
+                    expected: `token of type ${PATTERNS.function_range[i].type} while parsing function pattern (for example 'sum(a1:z99)')`,
                 })
             }
 

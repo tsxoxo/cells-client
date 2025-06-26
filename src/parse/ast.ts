@@ -7,6 +7,8 @@
 //
 // Uses the grammar specified in ./types/grammar.ts
 
+import { buildNode } from "./ast_builders.ts"
+import { FunctionKeyword } from "./func.ts"
 import {
     Failure,
     Result,
@@ -24,7 +26,9 @@ import {
     Node,
     PATTERNS,
     Node_Func,
+    Node_Func_Range,
 } from "./types/grammar.ts"
+import { makeTransformer, map, matchTokenTypes } from "./utils/funcs.ts"
 
 export class Parser {
     readonly tokens: Token[]
@@ -54,7 +58,8 @@ export class Parser {
     }: {
         type: ASTErrorType
         token: Token
-        expected: string
+        // TODO: expected should probably be TokenType
+        expected: string | undefined
     }): Failure<ParseError> {
         const tokenDisplayString = token.type === "eof" ? "eof" : token.value
         return fail({
@@ -212,18 +217,40 @@ export class Parser {
             }
 
             case "func": {
-                const maybeCells = this.parseFunc()
+                const tokenToNode_funcRange = makeTransformer(
+                    PATTERNS.FunctionRange.pattern.map(({ type }) => type),
+                    (match: Token[]) => {
+                        const [cellTokenA, cellTokenB] =
+                            PATTERNS.FunctionRange.extract(match)
 
-                if (!isSuccess(maybeCells)) {
-                    return maybeCells
+                        return buildNode.func_range({
+                            // TODO: get rid of cast
+                            value: token.value.toLowerCase() as FunctionKeyword,
+                            start: token.start,
+                            from: buildNode.cell(cellTokenA),
+                            to: buildNode.cell(cellTokenB),
+                        })
+                    },
+                )
+
+                const parseFuncRange = tokenToNode_funcRange(
+                    this.tokens.slice(this.current),
+                )
+
+                if (!isSuccess(parseFuncRange)) {
+                    return this.createError({
+                        type: "UNEXPECTED_TOKEN",
+                        token: parseFuncRange.error.received,
+                        expected: parseFuncRange.error.expectedType,
+                    })
                 }
 
-                return success({
-                    type: "func",
-                    value: token.value.toLowerCase(),
-                    start: token.start,
-                    ...maybeCells.value,
-                } as Node_Func)
+                // START_HERE:
+                // * fix typing here and in tests.
+                // * make tests OK again
+                // * Tidy up files: parse-combinators.ts, result.ts -- see recent chatGPT
+                // * look at Claude's suggestions
+                return success(parseFuncRange.value.result)
             }
 
             // Ran out of tokens unexpectedly.
@@ -241,44 +268,40 @@ export class Parser {
         }
     }
 
-    private parseFunc(): Result<
-        { from: Node_Cell; to: Node_Cell },
-        ParseError
-    > {
-        // Initialize result container for cell refs in function expression.
-        // Example: if IN='sum(a1:z99)', this will hold [a1, z99]
-        const toAndFromCells = [] as Node_Cell[]
-
-        // match incoming tokens against function pattern
-        for (let i = 0; i < PATTERNS.function.length; i++) {
-            const token = this.peek()
-
-            // Fail fast.
-            if (token.type !== PATTERNS.function[i].type) {
-                return this.createError({
-                    type: "UNEXPECTED_TOKEN",
-                    token,
-                    expected: `token of type ${PATTERNS.function[i].type} while parsing function pattern (for example 'sum(a1:z99)')`,
-                })
-            }
-
-            // Happy path.
-            // Save cell refs and advance token stream.
-            if (token.type === "cell") {
-                toAndFromCells.push({
-                    type: "cell" as const,
-                    value: token.value,
-                    start: token.start,
-                })
-            }
-
-            this.consume()
-        }
-
-        // No errors. return cell nodes.
-        return success({
-            from: toAndFromCells[0],
-            to: toAndFromCells[1],
-        })
-    }
+    // private parseFunc(): Result<
+    //     { from: Node_Cell; to: Node_Cell },
+    //     ParseError
+    // > {
+    //     // match incoming tokens against function pattern
+    //     for (let i = 0; i < PATTERNS.function_range.length; i++) {
+    //         const token = this.peek()
+    //
+    //         // Fail fast.
+    //         if (token.type !== PATTERNS.function_range[i].type) {
+    //             return this.createError({
+    //                 type: "UNEXPECTED_TOKEN",
+    //                 token,
+    //                 expected: `token of type ${PATTERNS.function_range[i].type} while parsing function pattern (for example 'sum(a1:z99)')`,
+    //             })
+    //         }
+    //
+    //         // Happy path.
+    //         // Save cell refs and advance token stream.
+    //         if (token.type === "cell") {
+    //             toAndFromCells.push({
+    //                 type: "cell" as const,
+    //                 value: token.value,
+    //                 start: token.start,
+    //             })
+    //         }
+    //
+    //         this.consume()
+    //     }
+    //
+    //     // No errors. return cell nodes.
+    //     return success({
+    //         from: toAndFromCells[0],
+    //         to: toAndFromCells[1],
+    //     })
+    // }
 }
