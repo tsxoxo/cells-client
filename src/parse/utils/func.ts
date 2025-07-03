@@ -3,7 +3,7 @@
 // #####################################################################
 // Functions called in formula via special keywords.
 // Example: 'sum' in '2+sum(a0:b12)'
-import { Result, success } from "./types/errors"
+import { Result, success } from "../types/result"
 
 // Define function keywords and their operations.
 const FUNCTIONS = {

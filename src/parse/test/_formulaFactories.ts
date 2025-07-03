@@ -1,6 +1,6 @@
 import * as fc from "fast-check"
-import { cellPatternAnchored } from "../match"
-import { FUNCTION_KEYWORDS } from "../func"
+import { cellPatternAnchored } from "../utils/match"
+import { FUNCTION_KEYWORDS } from "../utils/func"
 
 // --- BUILDING BLOCKS ---
 const op = fc.constantFrom("+", "-", "*", "/")

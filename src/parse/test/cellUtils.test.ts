@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { isCellRef } from "../match"
-import { getCellsInRange, getIndexFromCellName } from "../cellUtils"
+import { isCellRef } from "../utils/match"
+import { getCellsInRange, getIndexFromCellName } from "../utils/cells"
 import { ALPHABET_WITH_FILLER } from "../../config/constants"
 
 // =================================================

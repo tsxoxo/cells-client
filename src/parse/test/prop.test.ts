@@ -12,8 +12,11 @@
 // Test infrastructure
 import * as fc from "fast-check"
 import { it, expect } from "vitest"
-import { assertIsFail, assertIsSuccess } from "../types/errors"
-import { createCellValueProvider, getIndexFromCellName } from "../cellUtils"
+import { assertIsFail, assertIsSuccess } from "../types/result"
+import {
+    createCellValueProvider,
+    getIndexFromCellName,
+} from "../utils/cells.ts"
 import { Cell } from "../../types/types.ts"
 
 // Cells data (fake spreadsheets)

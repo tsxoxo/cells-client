@@ -1,12 +1,8 @@
 import { describe, expect, it } from "vitest"
 import { interpret } from "../interpret"
-import {
-    InterpretErrorType,
-    assertIsFail,
-    assertIsSuccess,
-    success,
-} from "../types/errors"
-import { CellValueProvider, createCellValueProvider } from "../cellUtils"
+import { assertIsFail, assertIsSuccess, success } from "../types/result"
+import { InterpretErrorType } from "../types/errors"
+import { CellValueProvider, createCellValueProvider } from "../utils/cells"
 import { Cell } from "../../types/types"
 import { NUM_OF_COLS } from "../../config/constants"
 import { Node } from "../types/grammar"

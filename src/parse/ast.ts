@@ -7,20 +7,19 @@
 //
 // Uses the grammar specified in ./types/grammar.ts
 
-import { buildNode } from "./ast_builders.ts"
-import { FunctionKeyword } from "./func.ts"
+import { buildNode } from "./utils/ast_builders.ts"
+import { FunctionKeyword } from "./utils/func.ts"
 import {
     Failure,
     Result,
     fail,
     success,
     isSuccess,
-    ASTErrorType,
-    ParseError,
     assertNever,
-} from "./types/errors.ts"
+} from "./types/result"
+import { ASTErrorType, ParseError } from "./types/errors.ts"
 import { Node_Binary, Token, Node, PATTERNS } from "./types/grammar.ts"
-import { makeTransformer } from "./utils/funcs.ts"
+import { makeTransformer } from "./utils/parse_combinators.ts"
 
 export class Parser {
     readonly tokens: Token[]
@@ -237,8 +236,6 @@ export class Parser {
                 }
 
                 // START_HERE:
-                // * fix typing here and in tests.
-                // * make tests OK again
                 // * Tidy up files: parse-combinators.ts, result.ts -- see recent chatGPT
                 // * look at Claude's suggestions
 

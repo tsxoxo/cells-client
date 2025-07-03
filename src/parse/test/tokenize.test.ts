@@ -3,8 +3,8 @@
 // =================================================
 import { describe, expect, it } from "vitest"
 import { tokenize } from "../tokenize"
-import { assertIsFail, assertIsSuccess } from "../types/errors"
-import { Token } from "../types/grammar"
+import { assertIsFail, assertIsSuccess } from "../types/result"
+import { Token } from "../types/token"
 
 describe("tokenizer", () => {
     it("handles complete formula", () => {

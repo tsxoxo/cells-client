@@ -5,7 +5,7 @@ import {
     P_OPERATORS_RANGE,
     Operator,
     OperatorRange,
-} from "./types/grammar"
+} from "../types/grammar"
 
 export const cellPatternAnchored = /^[a-zA-Z]{1}[0-9]{1,2}$/
 

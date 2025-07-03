@@ -2,7 +2,7 @@ import { setup, assign } from "xstate"
 import type { Cell } from "../types/types"
 import { INITIAL_CELLS } from "../test/INITIAL_DATA"
 import { handleCellContentChange } from "./state"
-import { isSuccess } from "../parse/types/errors"
+import { isSuccess } from "../parse/types/result"
 import { AppError } from "../errors/errors"
 
 export interface Context {

@@ -5,8 +5,9 @@ import {
     success,
     isSuccess,
     assertIsSuccess,
-} from "../types/errors"
-import { Token, TokenType, PATTERNS } from "../types/grammar"
+} from "../types/result"
+import { PATTERNS } from "../types/grammar"
+import { Token, TokenType } from "../types/token"
 
 type Parser = (tokens: Token[]) => ParseResult
 type ParseError = {
@@ -16,6 +17,31 @@ type ParseError = {
 }
 type ParseResult = Result<{ match: Token[]; rest: Token[] }, ParseError>
 
+// Produce something new from a parse result.
+// IN: a parser and a mapping function
+// OUT: a transformed result and the unparsed rest
+export function map<A>(
+    parser: (tokens: Token[]) => ParseResult,
+    mapFn: (tokens: Token[]) => A,
+): (tokens: Token[]) => Result<{ result: A; rest: Token[] }, ParseError> {
+    return (tokens) => {
+        const parseResult = parser(tokens)
+
+        if (!isSuccess(parseResult)) {
+            return parseResult
+        }
+
+        const { match, rest } = parseResult.value
+
+        return success({
+            result: mapFn(match),
+            rest,
+        })
+    }
+}
+
+// Syntactic sugar to simplify code in ast.ts
+// TODO: After I'm done with the parser combinators, I want to re-evaluate if we need this
 export function makeTransformer<Node>(
     pattern: TokenType[],
     transformFn: (matchedTokens: Token[]) => Node,
@@ -68,30 +94,6 @@ export function matchTokenTypes(expected: TokenType[]): Parser {
         })
     }
 }
-
-// Produce something new from a parse result.
-// IN: a parser and a mapping function
-// OUT: a transformed result and the unparsed rest
-export function map<A>(
-    parser: (tokens: Token[]) => ParseResult,
-    mapFn: (tokens: Token[]) => A,
-): (tokens: Token[]) => Result<{ result: A; rest: Token[] }, ParseError> {
-    return (tokens) => {
-        const parseResult = parser(tokens)
-
-        if (!isSuccess(parseResult)) {
-            return parseResult
-        }
-
-        const { match, rest } = parseResult.value
-
-        return success({
-            result: mapFn(match),
-            rest,
-        })
-    }
-}
-//
 
 // in-source test suites
 if (import.meta.vitest) {

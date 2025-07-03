@@ -1,15 +1,14 @@
-import { type CellValueProvider } from "./cellUtils"
-import { applyFuncToValues } from "./func"
+import { type CellValueProvider } from "./utils/cells"
+import { applyFuncToValues } from "./utils/func"
 import {
     Failure,
-    InterpretErrorType,
-    ParseError,
     Result,
     assertNever,
     fail,
     isSuccess,
     success,
-} from "./types/errors"
+} from "./types/result"
+import { InterpretErrorType, ParseError } from "./types/errors.ts"
 import { Node } from "./types/grammar"
 
 export function interpret(

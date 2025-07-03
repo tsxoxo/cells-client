@@ -1,6 +1,7 @@
-import { ALPHABET_WITH_FILLER, NUM_OF_COLS } from "../config/constants"
-import { Cell } from "../types/types"
-import { CellError, Result, fail, isSuccess, success } from "./types/errors"
+import { ALPHABET_WITH_FILLER, NUM_OF_COLS } from "../../config/constants"
+import { Cell } from "../../types/types"
+import { Result, fail, isSuccess, success } from "../types/result"
+import { CellError } from "../types/errors"
 
 //============================================================
 // CELL COORDINATES

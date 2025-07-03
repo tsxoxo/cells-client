@@ -8,11 +8,11 @@ import {
     fail,
     isSuccess,
     success,
-} from "../parse/types/errors"
+} from "../parse/types/result"
 import { AppError } from "../errors/errors"
 import { interpret } from "../parse/interpret"
-import { isNumber } from "../parse/match"
-import { createCellValueProvider } from "../parse/cellUtils"
+import { isNumber } from "../parse/utils/match"
+import { createCellValueProvider } from "../parse/utils/cells"
 import { NUM_OF_COLS } from "../config/constants"
 
 // CONTROL FLOW

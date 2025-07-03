@@ -5,7 +5,7 @@ import { createBrowserInspector } from "@statelyai/inspect"
 import { computed, watch } from "vue"
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./config/constants"
 import { handleErrors } from "./errors/errors"
-import { getCellIndexfromXY } from "./parse/cellUtils"
+import { getCellIndexfromXY } from "./parse/utils/cells"
 
 const { inspect } = createBrowserInspector({
     // Comment out the line below to start the inspector

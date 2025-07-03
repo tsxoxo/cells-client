@@ -25,20 +25,13 @@ import {
     isNumber,
     isParensClose,
     isOpRange,
-} from "./match"
+} from "./utils/match"
 
-import {
-    BrokenToken,
-    Failure,
-    ParseError,
-    Result,
-    TokenizeErrorType,
-    fail,
-    isSuccess,
-    success,
-} from "./types/errors"
+import { Failure, Result, fail, isSuccess, success } from "./types/result"
 
-import { Token } from "./types/grammar"
+import { BrokenToken, ParseError, TokenizeErrorType } from "./types/errors"
+
+import { Token } from "./types/token.ts"
 
 // Main API
 // IN: string

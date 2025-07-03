@@ -2,9 +2,9 @@
 // EXAMPLE-BASED UNIT TESTS FOR THE AST MODULE
 // =================================================
 import { describe, expect, it } from "vitest"
-import { Parser } from "../ast.ts"
-import { Token, TokenType } from "../types/grammar"
-import { assertIsFail, assertIsSuccess } from "../types/errors"
+import { Parser } from "../ast"
+import { Token, TokenType } from "../types/token"
+import { assertIsFail, assertIsSuccess } from "../types/result"
 
 // =================================================
 // ==================== UTILS ======================
