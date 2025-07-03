@@ -2,7 +2,7 @@
 // EXAMPLE-BASED UNIT TESTS FOR THE AST MODULE
 // =================================================
 import { describe, expect, it } from "vitest"
-import { Parser } from "../ast"
+import { Parser } from "../ast.ts"
 import { Token, TokenType } from "../types/grammar"
 import { assertIsFail, assertIsSuccess } from "../types/errors"
 
@@ -74,7 +74,7 @@ describe("ast", () => {
                     { type: "parens_close", value: ")", start: 9 },
                 ]),
                 expectedAST: {
-                    type: "func",
+                    type: "func_range",
                     value: "sum",
                     start: 0,
                     from: {
@@ -169,7 +169,7 @@ describe("ast", () => {
                     value: "/",
                     start: 0,
                     left: {
-                        type: "func",
+                        type: "func_range",
                         value: "sum",
                         start: 0,
                         from: {
@@ -233,7 +233,7 @@ describe("ast", () => {
                             },
                         },
                         right: {
-                            type: "func",
+                            type: "func_range",
                             value: "sum",
                             start: 6,
                             from: {
@@ -300,7 +300,7 @@ describe("ast", () => {
                     { type: "parens_close", value: ")", start: 9 },
                 ]),
                 expectedAST: {
-                    type: "func",
+                    type: "func_range",
                     value: "sum",
                     start: 0,
                     from: {

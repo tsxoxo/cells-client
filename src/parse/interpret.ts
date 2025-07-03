@@ -107,11 +107,11 @@ export function interpret(
                 return calcResult
             }
 
-            case "func": {
+            case "func_range": {
                 // If we didn't get the cell API, something went very wrong.
                 if (cellValueProvider === undefined) {
                     throw new Error(
-                        "Interpret: 'cellValueProvider' was undefined while evaluating node of type 'func'",
+                        "Interpret: 'cellValueProvider' was undefined while evaluating node of type 'func_range'",
                     )
                 }
 

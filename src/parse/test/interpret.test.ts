@@ -149,7 +149,7 @@ describe("interpret", () => {
                         position: { start: 0, end: 2 },
                     },
                     right: {
-                        type: "func",
+                        type: "func_range",
                         value: "sum",
                         position: { start: 3, end: 14 },
                         from: {
@@ -191,7 +191,7 @@ describe("interpret", () => {
                             position: { start: 3, end: 5 },
                         },
                         right: {
-                            type: "func",
+                            type: "func_range",
                             value: "sum",
                             position: { start: 6, end: 17 },
                             from: {
@@ -252,7 +252,7 @@ describe("interpret", () => {
                 // formula: "SUM(A0:B1)"
                 description: "single function node",
                 inputAST: {
-                    type: "func",
+                    type: "func_range",
                     value: "sum",
                     position: { start: 0, end: 11 },
                     from: {
@@ -421,7 +421,7 @@ describe("interpret", () => {
                         position: { start: 0, end: 1 },
                     },
                     right: {
-                        type: "func",
+                        type: "func_range",
                         value: "sum",
                         position: { start: 2, end: 12 },
                         from: {
@@ -438,7 +438,7 @@ describe("interpret", () => {
                 } as Node,
                 expectedErrorType: "DIVIDE_BY_0" as InterpretErrorType,
                 expectedPayload: {
-                    type: "func",
+                    type: "func_range",
                     value: "sum",
                     position: { start: 2, end: 12 },
                     from: {

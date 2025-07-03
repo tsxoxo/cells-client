@@ -79,7 +79,12 @@ export type Token = {
 // ============================================================
 // --- AST ----------------------------------------------------
 // ============================================================
-export type Node = Node_Binary | Node_Number | Node_Cell | Node_Func
+export type Node =
+    | Node_Binary
+    | Node_Number
+    | Node_Cell
+    | Node_Func
+    | Node_Func_Range
 
 interface Node_Base {
     type: string

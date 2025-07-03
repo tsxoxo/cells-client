@@ -38,6 +38,20 @@ export function matchTokenTypes(expected: TokenType[]): Parser {
         // Compare tokens with expected one by one, the old-fashioned way.
         // Fail fast.
         for (let i = 0; i < expected.length; i++) {
+            // Error: We ran out of tokens.
+            if (i >= tokens.length) {
+                return fail({
+                    expectedType: expected[i]!,
+                    received: {
+                        type: "eof",
+                        value: "",
+                        start: -1,
+                    },
+                    index: i,
+                })
+            }
+
+            // Error: Token does not match expected.
             if (tokens[i].type !== expected[i]) {
                 return fail({
                     expectedType: expected[i]!,
@@ -47,6 +61,7 @@ export function matchTokenTypes(expected: TokenType[]): Parser {
             }
         }
 
+        // Happy path == Loop ran without errors.
         return success({
             match: tokens.slice(0, expected.length),
             rest: tokens.slice(expected.length),
@@ -84,7 +99,7 @@ if (import.meta.vitest) {
 
     it("func_matchTypes", () => {
         const func_pattern = matchTokenTypes(
-            PATTERNS.function_range.pattern.map(({ type }) => type),
+            PATTERNS.FunctionRange.pattern.map(({ type }) => type),
         )
         const func_tokens_result = tokenize("sum(a1:a0)+35")
         assertIsSuccess(func_tokens_result)

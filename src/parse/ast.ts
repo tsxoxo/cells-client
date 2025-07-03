@@ -19,16 +19,8 @@ import {
     ParseError,
     assertNever,
 } from "./types/errors.ts"
-import {
-    Node_Binary,
-    Node_Cell,
-    Token,
-    Node,
-    PATTERNS,
-    Node_Func,
-    Node_Func_Range,
-} from "./types/grammar.ts"
-import { makeTransformer, map, matchTokenTypes } from "./utils/funcs.ts"
+import { Node_Binary, Token, Node, PATTERNS } from "./types/grammar.ts"
+import { makeTransformer } from "./utils/funcs.ts"
 
 export class Parser {
     readonly tokens: Token[]
@@ -233,9 +225,8 @@ export class Parser {
                     },
                 )
 
-                const parseFuncRange = tokenToNode_funcRange(
-                    this.tokens.slice(this.current),
-                )
+                const tokenSlice = this.tokens.slice(this.current)
+                const parseFuncRange = tokenToNode_funcRange(tokenSlice)
 
                 if (!isSuccess(parseFuncRange)) {
                     return this.createError({
@@ -250,6 +241,15 @@ export class Parser {
                 // * make tests OK again
                 // * Tidy up files: parse-combinators.ts, result.ts -- see recent chatGPT
                 // * look at Claude's suggestions
+
+                // Consume tokens: slice.length-rest.length
+                const numTokensToConsume =
+                    tokenSlice.length - parseFuncRange.value.rest.length
+
+                for (let i = 0; i < numTokensToConsume; i++) {
+                    this.consume()
+                }
+
                 return success(parseFuncRange.value.result)
             }
 
