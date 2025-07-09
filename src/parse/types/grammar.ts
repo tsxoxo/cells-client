@@ -14,6 +14,8 @@
 //
 // TODO: move matchers here, export one big matcher object.
 
+import { Token } from "./token"
+
 //============================================================
 // --- PATTERNS ----------------------------------------------
 //============================================================
@@ -24,7 +26,7 @@ export type Operator = (typeof P_OPERATORS_BIN)[number]
 export const P_OPERATORS_RANGE = [":"] as const
 export type OperatorRange = (typeof P_OPERATORS_RANGE)[number]
 
-export const P_OPERATORS_LIST = [":"] as const
+export const P_OPERATORS_LIST = [","] as const
 export type Operatorlist = (typeof P_OPERATORS_LIST)[number]
 
 export const P_CHARS_NUM = /[0-9,.]/

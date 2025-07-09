@@ -27,7 +27,8 @@
 // * [DIVIDE_BY_0] Divide by 0
 //      --> interpret
 
-import { Token, Node } from "./grammar"
+import { Token } from "./token"
+import { Node } from "./ast"
 
 // Error object that bubble up and get handled
 export type ParseError = {

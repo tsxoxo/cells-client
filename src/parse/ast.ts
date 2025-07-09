@@ -18,7 +18,9 @@ import {
     assertNever,
 } from "./types/result"
 import { ASTErrorType, ParseError } from "./types/errors.ts"
-import { Node_Binary, Token, Node, PATTERNS } from "./types/grammar.ts"
+import { PATTERNS } from "./types/grammar.ts"
+import { Token } from "./types/token.ts"
+import { Node_Binary, Node } from "./types/ast.ts"
 import { makeTransformer } from "./utils/parse_combinators.ts"
 
 export class Parser {
@@ -44,19 +46,20 @@ export class Parser {
 
     private createError({
         type,
-        token,
-        expected,
+        receivedToken,
+        expectedType,
     }: {
         type: ASTErrorType
-        token: Token
+        receivedToken: Token
         // TODO: expected should probably be TokenType
-        expected: string | undefined
+        expectedType: string | undefined
     }): Failure<ParseError> {
-        const tokenDisplayString = token.type === "eof" ? "eof" : token.value
+        const tokenDisplayString =
+            receivedToken.type === "eof" ? "eof" : receivedToken.value
         return fail({
             type,
-            payload: token,
-            msg: `${type} in makeAST: expected [${expected}], got [${tokenDisplayString}]`,
+            payload: receivedToken,
+            msg: `${type} in makeAST: expected [${expectedType}], got [${tokenDisplayString}]`,
         })
     }
 
@@ -176,8 +179,8 @@ export class Parser {
             case "parens_close": {
                 return this.createError({
                     type: "PARENS",
-                    token,
-                    expected: "opening parenthesis",
+                    receivedToken: token,
+                    expectedType: "opening parenthesis",
                 })
             }
 
@@ -192,8 +195,8 @@ export class Parser {
                 if (this.peek()?.value !== ")") {
                     return this.createError({
                         type: "PARENS",
-                        token: this.peek(),
-                        expected: "closing parenthesis",
+                        receivedToken: this.peek(),
+                        expectedType: "closing parenthesis",
                     })
                 }
 
@@ -228,16 +231,47 @@ export class Parser {
                 const parseFuncRange = tokenToNode_funcRange(tokenSlice)
 
                 if (!isSuccess(parseFuncRange)) {
-                    return this.createError({
-                        type: "UNEXPECTED_TOKEN",
-                        token: parseFuncRange.error.received,
-                        expected: parseFuncRange.error.expectedType,
-                    })
+                    return this.createError(parseFuncRange.error)
                 }
 
                 // START_HERE:
-                // * Tidy up files: parse-combinators.ts, result.ts -- see recent chatGPT
-                // * look at Claude's suggestions
+                // read through chatgpt chat 'fold vs. collect in fp', starting at heading '1. What do I mean by “invert control” in fromPattern()?'
+                // * think through adding func_list
+                //
+                // big picture:
+                // in ast.ts:
+                // explained:
+                // 1. call a function with IN==Token[] and OUT=Node
+                // 2. try parsing range syntax => return success or continue
+                // 2a. check tokens against hard-coded pattern -- easy.
+                // 3. try parsing list syntax => return success or fail
+                // 3b. try parsing single cell
+                // 3c. try parsing ", cell"
+                // 3d. when 3c fails, try parsing ')'
+                //
+                // pseudo-code:
+                // const func_range = matchPattern(PATTERNS.FunctionRange.pattern)
+                // const func_list = matchPattern(PATTERNS.FunctionList.pattern)
+                // const parseFunc  = choice(func_range, func_list)
+                // const maybeListOfCells = parseFunc(this.tokens.slice(this.current))
+                //
+                // with this approach, both range and list functions would produce the same type of node,
+                // containing a list of cell values
+                // PROs:
+                // simple
+                // CONs?:
+                // * lose differentiation -- but I'm not sure what we could need that for
+                // * parser would become slightly more coupled with cells data structure (it would have to call getCellsInRange) -- but I'm not sure that's so bad since that is a pure function
+                //
+                // big question:
+                // the pattern
+                // BNF: keyword ( cell (, cell)* )
+                // hunch: the pattern could be a function ?
+                // func_range.pattern: return an static array?
+                // for func_list:
+                //
+                // simplified problem:
+                // write just one of these parsers: many, sequence
 
                 // Consume tokens: slice.length-rest.length
                 const numTokensToConsume =
@@ -254,8 +288,8 @@ export class Parser {
             case "eof":
                 return this.createError({
                     type: "UNEXPECTED_TOKEN",
-                    token,
-                    expected: "a factor",
+                    receivedToken: token,
+                    expectedType: "a factor",
                 })
 
             // Unexpected token.type == something went seriously wrong in the tokenizer.

@@ -147,6 +147,8 @@ returns appropiate error:
 - THink about error boundaries
 - what does this mean for the program?: a cell is in an error state
 - put error types in arrays, get error type string from there
+- Error types in parsing pipeline could probably be simplified
+    - example: ast. we got a createError dispatcher that creates a message, we call that with structured expected/received data, and we have slightly different error type in the parser-combinators themselves. we could probably at least merge these into one less type. maybe even into a single one
 
 ## REFACTOR
 

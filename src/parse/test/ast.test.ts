@@ -3,7 +3,7 @@
 // =================================================
 import { describe, expect, it } from "vitest"
 import { Parser } from "../ast"
-import { Token, TokenType } from "../types/token"
+import { Token, TokenType } from "../types/grammar"
 import { assertIsFail, assertIsSuccess } from "../types/result"
 
 // =================================================
