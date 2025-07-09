@@ -14,12 +14,14 @@
 //
 // TODO: move matchers here, export one big matcher object.
 
+import { and, between, sepBy, t } from "../utils/parse_combinators"
 import { Token } from "./token"
 
 //============================================================
 // --- PATTERNS ----------------------------------------------
 //============================================================
 // Atoms
+// TODO: think: should this be all parsers?
 export const P_OPERATORS_BIN = ["+", "-", "*", "/"] as const
 export type Operator = (typeof P_OPERATORS_BIN)[number]
 
@@ -30,6 +32,24 @@ export const P_OPERATORS_LIST = [","] as const
 export type Operatorlist = (typeof P_OPERATORS_LIST)[number]
 
 export const P_CHARS_NUM = /[0-9,.]/
+
+// Parsers
+const func_shell = {
+    start: and(t("func"), t("parens_open")),
+    end: t("parens_close"),
+}
+
+const rangeArg = and(t("cell"), t("op_range"), t("cell"))
+const Func_Range = {
+    pattern: between(func_shell, rangeArg),
+    toNode: {}, // (tokens: Token[]) => Node
+}
+
+const listArg = sepBy(t("cell"), t("op_list"))
+const Func_List = {
+    pattern: between(func_shell, listArg),
+    toNode: {}, // (tokens: Token[]) => Node
+}
 
 // Molecules
 type Molecule = {
