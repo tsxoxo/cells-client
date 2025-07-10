@@ -4,11 +4,6 @@ import { tokenize } from "../tokenize"
 import { assertIsSuccess } from "../types/result"
 import { Func_List, Func_Range, func_shell } from "../types/grammar"
 
-// START_HERE: 07-10
-// * write combinator: or
-// * think about sepBy: Is there a better name?
-// * write the toNode and actually plug in the new patterns/parsers!
-
 describe("t", () => {
     it("matches correct token and returns rest", () => {
         const parser = t("number")

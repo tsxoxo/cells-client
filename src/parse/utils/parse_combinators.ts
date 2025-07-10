@@ -5,14 +5,15 @@ import { ASTErrorType } from "../types/errors"
 //============================================================
 // TYPES
 //============================================================
-type Parser = (tokens: Token[]) => ParseResult
+type Parser = (tokens: Token[]) => Result<ParseSuccess, ParseError>
 type ParseError = {
     type: ASTErrorType
     expectedType: TokenType
     receivedToken: Token
     index: number
 }
-type ParseResult = Result<{ match: Token[]; rest: Token[] }, ParseError>
+type ParseSuccess = { match: Token[]; rest: Token[] }
+// type ParseResult = Result<, ParseError>
 
 //============================================================
 // PARSERS
@@ -67,6 +68,43 @@ export function and(...parsers: Parser[]): Parser {
             match,
             rest: nextTokens,
         })
+    }
+}
+
+// Match any pattern.
+type ChoiceParser = (
+    tokens: Token[],
+) => Result<ChoiceParseSuccess, ParseError[]>
+type ChoiceParseSuccess = ParseSuccess & {
+    // NOTE: narrow this down to Handler_type? Node_Type?
+    tag: string
+}
+type TaggedParser = {
+    tag: string
+    parser: Parser
+}
+
+// Different from other combinators: returns tag of successful parser.
+export function any(...taggedParsers: TaggedParser[]): ChoiceParser {
+    return (tokens) => {
+        const errors = []
+        for (const parser of taggedParsers) {
+            const parseResult = parser.parser(tokens)
+
+            // Return on first matching parser.
+            if (isSuccess(parseResult)) {
+                return success({
+                    tag: parser.tag,
+                    ...parseResult.value,
+                })
+            }
+
+            // Collect errors
+            errors.push(parseResult.error)
+        }
+        // Pass all errors as is and process further up the chain.
+
+        return fail(errors)
     }
 }
 
@@ -203,7 +241,7 @@ export function matchTokenTypes(expected: TokenType[]): Parser {
 // IN: a parser and a mapping function
 // OUT: a transformed result and the unparsed rest
 export function map<A>(
-    parser: (tokens: Token[]) => ParseResult,
+    parser: Parser,
     mapFn: (tokens: Token[]) => A,
 ): (tokens: Token[]) => Result<{ result: A; rest: Token[] }, ParseError> {
     return (tokens) => {

@@ -211,6 +211,18 @@ export class Parser {
             }
 
             case "func": {
+                // START_HERE: 07-10
+                // * read Claude chat 'recursive descent vs...', from heading 'The Abstraction You're Building'
+                // * write tests for any
+                //
+                // * Parse errors that any returns
+                // We want to be able to display a message to the user like these:
+                // * SUM(12) → "Function arguments must be cell references"
+                // * SUM(A1:) → "Expected cell after ':'"
+                // * SUM(A1,) → "Expected cell after ','"
+                //
+                // * write the toNode and actually plug in the new patterns/parsers!
+                // * think about sepBy: Is there a better name?
                 const tokenToNode_funcRange = makeTransformer(
                     PATTERNS.FunctionRange.pattern.map(({ type }) => type),
                     (match: Token[]) => {
