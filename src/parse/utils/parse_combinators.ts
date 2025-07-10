@@ -43,24 +43,29 @@ export function t(tokenType: TokenType): Parser {
     }
 }
 
-// Match a sequence of parsers.
+// Match a sequence.
 export function and(...parsers: Parser[]): Parser {
     return (tokens) => {
         const match = []
-        let lastRest = tokens
+        let nextTokens = tokens
 
         for (const parser of parsers) {
-            const lastResult = parser(lastRest)
-            if (!isSuccess(lastResult)) {
-                return lastResult
+            const parseResult = parser(nextTokens)
+
+            // NOTE: will have to deal with returning index at some point
+            if (!isSuccess(parseResult)) {
+                return parseResult
             }
-            lastRest = lastResult.value.rest
-            match.push(...lastResult.value.match)
+
+            // Happy path.
+            // Add match to result array and set input for next parser.
+            nextTokens = parseResult.value.rest
+            match.push(...parseResult.value.match)
         }
 
         return success({
             match,
-            rest: lastRest,
+            rest: nextTokens,
         })
     }
 }

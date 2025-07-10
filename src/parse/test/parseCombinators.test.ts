@@ -1,22 +1,224 @@
 import { describe, expect, it } from "vitest"
-import { t } from "../utils/parse_combinators"
+import { and, between, sepBy, t, zeroOrMore } from "../utils/parse_combinators"
 import { tokenize } from "../tokenize"
 import { assertIsSuccess } from "../types/result"
+import { Func_List, Func_Range, func_shell } from "../types/grammar"
+
+// START_HERE: 07-10
+// * write combinator: or
+// * think about sepBy: Is there a better name?
+// * write the toNode and actually plug in the new patterns/parsers!
 
 describe("t", () => {
-    // START_HERE: think about scott wlaschin's 'unit tests are bullshit'
-    // (i would tend to at least write some simple regression tests)
-    // * then, write the toNode and actually plug in the new patterns/parsers!
-    it("matches single token", () => {
-        const parseNumber = t("number")
-        const tokenNumber = tokenize("42")
-        assertIsSuccess(tokenNumber)
+    it("matches correct token and returns rest", () => {
+        const parser = t("number")
+        const tokens = tokenize("42+12")
+        assertIsSuccess(tokens)
 
-        expect(parseNumber(tokenNumber.value)).toEqual({
+        expect(parser(tokens.value)).toEqual({
             ok: true,
             value: {
-                match: tokenNumber.value,
+                match: [tokens.value[0]],
+                rest: tokens.value.slice(1),
+            },
+        })
+    })
+
+    it("fails on incorrect token", () => {
+        const parser = t("cell")
+        const tokens = tokenize("42+12")
+        assertIsSuccess(tokens)
+
+        expect(parser(tokens.value)).toEqual({
+            ok: false,
+            error: {
+                type: "UNEXPECTED_TOKEN",
+                index: 0,
+                expectedType: "cell",
+                receivedToken: tokens.value[0],
+            },
+        })
+    })
+})
+
+describe("and", () => {
+    it("matches correct sequence and returns rest", () => {
+        const parser = and(t("number"), t("op"), t("number"))
+        const tokens = tokenize("42+12")
+        assertIsSuccess(tokens)
+
+        expect(parser(tokens.value)).toEqual({
+            ok: true,
+            value: {
+                match: tokens.value,
                 rest: [],
+            },
+        })
+    })
+
+    it("fails on incorrect sequence", () => {
+        const parser = and(
+            t("number"),
+            t("op"),
+            t("number"),
+            t("op"),
+            t("cell"),
+        )
+        const tokens = tokenize("42+12")
+        assertIsSuccess(tokens)
+
+        expect(parser(tokens.value)).toEqual({
+            ok: false,
+            error: {
+                type: "UNEXPECTED_TOKEN",
+                index: 0,
+                expectedType: "op",
+                receivedToken: {
+                    start: -1,
+                    type: "eof",
+                    value: "",
+                },
+            },
+        })
+    })
+})
+
+describe("zeroOrMore", () => {
+    it("matches correct sequence and returns rest", () => {
+        const parser = zeroOrMore(sepBy(t("number"), t("op")))
+        const tokens = tokenize("42+12*39-60-sum(A1:a2)")
+        assertIsSuccess(tokens)
+
+        expect(parser(tokens.value)).toEqual({
+            ok: true,
+            value: {
+                match: tokens.value.slice(0, -7),
+                rest: tokens.value.slice(-7),
+            },
+        })
+    })
+
+    it("returns success state with empty array when it doesn't match", () => {
+        const parser = zeroOrMore(sepBy(t("number"), t("op")))
+        const tokens = tokenize("a1-42+12")
+        assertIsSuccess(tokens)
+
+        expect(parser(tokens.value)).toEqual({
+            ok: true,
+            value: {
+                match: [],
+                rest: tokens.value,
+            },
+        })
+    })
+})
+
+describe("between", () => {
+    it("matches correct sequence and returns rest", () => {
+        const parser = Func_Range.pattern
+        const tokens = tokenize("sum(A1:a2)+32")
+        assertIsSuccess(tokens)
+
+        expect(parser(tokens.value)).toEqual({
+            ok: true,
+            value: {
+                match: tokens.value.slice(2, 5),
+                rest: tokens.value.slice(-2),
+            },
+        })
+    })
+
+    it("fails on incorrect core", () => {
+        const parser = Func_List.pattern
+        const tokens = tokenize("sum(A1,a2,z99,)+32")
+        assertIsSuccess(tokens)
+
+        expect(parser(tokens.value)).toEqual({
+            ok: false,
+            error: {
+                type: "UNEXPECTED_TOKEN",
+                index: 0,
+                expectedType: "parens_close",
+                receivedToken: tokens.value[7],
+            },
+        })
+    })
+
+    it("fails on incorrect shell", () => {
+        const parser = between(
+            func_shell,
+            and(t("cell"), t("op_range"), t("cell")),
+        )
+        const tokens = tokenize("sum)A1:a2)+32")
+        assertIsSuccess(tokens)
+
+        expect(parser(tokens.value)).toEqual({
+            ok: false,
+            error: {
+                type: "UNEXPECTED_TOKEN",
+                index: 0,
+                expectedType: "parens_open",
+                receivedToken: tokens.value[1],
+            },
+        })
+    })
+
+    it("edge case: Func_List succeeds with single cell arg", () => {
+        const parser = Func_List.pattern
+        const tokens = tokenize("sum(A1)+32")
+        assertIsSuccess(tokens)
+
+        expect(parser(tokens.value)).toEqual({
+            ok: true,
+            value: {
+                match: [tokens.value[2]],
+                rest: tokens.value.slice(4),
+            },
+        })
+    })
+})
+
+describe("sepBy", () => {
+    it("matches correct sequence and returns rest", () => {
+        const parser = sepBy(t("number"), t("op"))
+        const tokens = tokenize("32*2-49/sum(a1:z00)")
+        assertIsSuccess(tokens)
+
+        expect(parser(tokens.value)).toEqual({
+            ok: true,
+            value: {
+                match: tokens.value.slice(0, 5),
+                rest: tokens.value.slice(5),
+            },
+        })
+    })
+
+    it("matches single item and returns rest", () => {
+        const parser = sepBy(t("number"), t("op"))
+        const tokens = tokenize("32")
+        assertIsSuccess(tokens)
+
+        expect(parser(tokens.value)).toEqual({
+            ok: true,
+            value: {
+                match: [tokens.value[0]],
+                rest: [],
+            },
+        })
+    })
+
+    it("fails on incorrect sequence", () => {
+        const parser = sepBy(t("number"), t("op"))
+        const tokens = tokenize("a1-32")
+        assertIsSuccess(tokens)
+
+        expect(parser(tokens.value)).toEqual({
+            ok: false,
+            error: {
+                type: "UNEXPECTED_TOKEN",
+                index: 0,
+                expectedType: "number",
+                receivedToken: tokens.value[0],
             },
         })
     })

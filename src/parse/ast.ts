@@ -234,9 +234,7 @@ export class Parser {
                     return this.createError(parseFuncRange.error)
                 }
 
-                // START_HERE:
-                // read through chatgpt chat 'fold vs. collect in fp', starting at heading '1. What do I mean by “invert control” in fromPattern()?'
-                // * think through adding func_list
+                // TODO: think through adding func_list
                 //
                 // big picture:
                 // in ast.ts:

@@ -29,24 +29,26 @@ export const P_OPERATORS_RANGE = [":"] as const
 export type OperatorRange = (typeof P_OPERATORS_RANGE)[number]
 
 export const P_OPERATORS_LIST = [","] as const
-export type Operatorlist = (typeof P_OPERATORS_LIST)[number]
+export type OperatorList = (typeof P_OPERATORS_LIST)[number]
 
 export const P_CHARS_NUM = /[0-9,.]/
 
 // Parsers
-const func_shell = {
+// Exported for testing
+export const func_shell = {
     start: and(t("func"), t("parens_open")),
     end: t("parens_close"),
 }
 
+// Exported for testing
 const rangeArg = and(t("cell"), t("op_range"), t("cell"))
-const Func_Range = {
+export const Func_Range = {
     pattern: between(func_shell, rangeArg),
     toNode: {}, // (tokens: Token[]) => Node
 }
 
 const listArg = sepBy(t("cell"), t("op_list"))
-const Func_List = {
+export const Func_List = {
     pattern: between(func_shell, listArg),
     toNode: {}, // (tokens: Token[]) => Node
 }

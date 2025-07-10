@@ -25,6 +25,7 @@ import {
     isNumber,
     isParensClose,
     isOpRange,
+    isOpList,
 } from "./utils/match"
 
 import { Failure, Result, fail, isSuccess, success } from "./types/result"
@@ -96,6 +97,15 @@ function getNextToken(
     if (isOpRange(char)) {
         return success({
             type: "op_range",
+            value: char,
+            start,
+        })
+    }
+
+    // It's the list operator: [,]
+    if (isOpList(char)) {
+        return success({
+            type: "op_list",
             value: char,
             start,
         })

@@ -5,6 +5,8 @@ import {
     P_OPERATORS_RANGE,
     Operator,
     OperatorRange,
+    P_OPERATORS_LIST,
+    OperatorList,
 } from "../types/grammar"
 
 export const cellPatternAnchored = /^[a-zA-Z]{1}[0-9]{1,2}$/
@@ -48,6 +50,10 @@ export function isOp(str: string): boolean {
 
 export function isOpRange(str: string): boolean {
     return P_OPERATORS_RANGE.includes(str as OperatorRange)
+}
+
+export function isOpList(str: string): boolean {
+    return P_OPERATORS_LIST.includes(str as OperatorList)
 }
 
 export function isParensOpen(str: string): boolean {
