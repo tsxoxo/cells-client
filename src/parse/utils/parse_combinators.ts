@@ -1,11 +1,12 @@
 import { Result, fail, success, isSuccess, Failure } from "../types/result"
 import { Token, TokenType } from "../types/token"
 import { ASTErrorType } from "../types/errors"
+import { ASTHandler } from "../ast"
 
 //============================================================
 // TYPES
 //============================================================
-type Parser = (tokens: Token[]) => Result<ParseSuccess, ParseError>
+export type Parser = (tokens: Token[]) => Result<ParseSuccess, ParseError>
 type ParseError = {
     type: ASTErrorType
     expectedType: TokenType
@@ -13,7 +14,6 @@ type ParseError = {
     index: number
 }
 type ParseSuccess = { match: Token[]; rest: Token[] }
-// type ParseResult = Result<, ParseError>
 
 //============================================================
 // PARSERS
@@ -71,39 +71,35 @@ export function and(...parsers: Parser[]): Parser {
     }
 }
 
-// Match any pattern.
+// these are just for the 'any' parser.
 type ChoiceParser = (
     tokens: Token[],
 ) => Result<ChoiceParseSuccess, ParseError[]>
 type ChoiceParseSuccess = ParseSuccess & {
-    // NOTE: narrow this down to Handler_type? Node_Type?
-    tag: string
-}
-type TaggedParser = {
-    tag: string
-    parser: Parser
+    handler: ASTHandler
 }
 
+// Match any pattern.
 // Different from other combinators: returns tag of successful parser.
-export function any(...taggedParsers: TaggedParser[]): ChoiceParser {
+export function any(...astHandlers: ASTHandler[]): ChoiceParser {
     return (tokens) => {
         const errors = []
-        for (const parser of taggedParsers) {
-            const parseResult = parser.parser(tokens)
+        for (const handler of astHandlers) {
+            const parseResult = handler.parser(tokens)
 
             // Return on first matching parser.
             if (isSuccess(parseResult)) {
                 return success({
-                    tag: parser.tag,
+                    handler,
                     ...parseResult.value,
                 })
             }
 
-            // Collect errors
+            // Collect errors.
             errors.push(parseResult.error)
         }
-        // Pass all errors as is and process further up the chain.
 
+        // Pass all errors as is and process further up the chain.
         return fail(errors)
     }
 }

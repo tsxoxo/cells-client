@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest"
-import { and, between, sepBy, t, zeroOrMore } from "../utils/parse_combinators"
+import {
+    and,
+    any,
+    between,
+    sepBy,
+    t,
+    zeroOrMore,
+} from "../utils/parse_combinators"
 import { tokenize } from "../tokenize"
 import { assertIsSuccess } from "../types/result"
-import { Func_List, Func_Range, func_shell } from "../types/grammar"
+import { func_shell, PATTERNS } from "../types/grammar"
+import { parseTable } from "../ast"
 
 describe("t", () => {
     it("matches correct token and returns rest", () => {
@@ -110,7 +118,7 @@ describe("zeroOrMore", () => {
 
 describe("between", () => {
     it("matches correct sequence and returns rest", () => {
-        const parser = Func_Range.pattern
+        const parser = PATTERNS.FUNC_RANGE
         const tokens = tokenize("sum(A1:a2)+32")
         assertIsSuccess(tokens)
 
@@ -124,7 +132,7 @@ describe("between", () => {
     })
 
     it("fails on incorrect core", () => {
-        const parser = Func_List.pattern
+        const parser = PATTERNS.FUNC_LIST
         const tokens = tokenize("sum(A1,a2,z99,)+32")
         assertIsSuccess(tokens)
 
@@ -159,7 +167,7 @@ describe("between", () => {
     })
 
     it("edge case: Func_List succeeds with single cell arg", () => {
-        const parser = Func_List.pattern
+        const parser = PATTERNS.FUNC_LIST
         const tokens = tokenize("sum(A1)+32")
         assertIsSuccess(tokens)
 
@@ -215,6 +223,47 @@ describe("sepBy", () => {
                 expectedType: "number",
                 receivedToken: tokens.value[0],
             },
+        })
+    })
+})
+
+describe("any", () => {
+    it("matches first correct sequence and returns rest", () => {
+        const parser = any(...parseTable.func)
+        const tokens = tokenize("sum(A1:a2)+32")
+        assertIsSuccess(tokens)
+
+        expect(parser(tokens.value)).toEqual({
+            ok: true,
+            value: {
+                match: tokens.value.slice(2, 5),
+                rest: tokens.value.slice(-2),
+                handler: parseTable.func[0],
+            },
+        })
+    })
+
+    it("returns all errors", () => {
+        const parser = any(...parseTable.func)
+        const tokens = tokenize("32")
+        assertIsSuccess(tokens)
+
+        expect(parser(tokens.value)).toEqual({
+            ok: false,
+            error: [
+                {
+                    type: "UNEXPECTED_TOKEN",
+                    index: 0,
+                    expectedType: "func",
+                    receivedToken: tokens.value[0],
+                },
+                {
+                    type: "UNEXPECTED_TOKEN",
+                    index: 0,
+                    expectedType: "func",
+                    receivedToken: tokens.value[0],
+                },
+            ],
         })
     })
 })

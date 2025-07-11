@@ -142,6 +142,13 @@ returns appropiate error:
 ## ERRORS
 
 - Big picture -- implement non-console error messaging
+
+* Parse errors that the 'any' parser returns
+  We want to be able to display a message to the user like these:
+* SUM(12) → "Function arguments must be cell references"
+* SUM(A1:) → "Expected cell after ':'"
+* SUM(A1,) → "Expected cell after ','"
+
 - Parsing: mb accumulate errors instead of failing fast for a different UX
 - add error: [OUT_OF_BOUND] Number too big (applies to single nums as well as result of calc. should be checked after evaluating cell reference)
 - THink about error boundaries

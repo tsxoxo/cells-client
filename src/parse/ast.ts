@@ -21,7 +21,52 @@ import { ASTErrorType, ParseError } from "./types/errors.ts"
 import { PATTERNS } from "./types/grammar.ts"
 import { Token } from "./types/token.ts"
 import { Node_Binary, Node } from "./types/ast.ts"
-import { makeTransformer } from "./utils/parse_combinators.ts"
+import { any, Parser as P } from "./utils/parse_combinators.ts"
+
+export type ASTHandler = {
+    tag: string
+    parser: P
+    toNode: (args: NodeBuilderArgs) => Node
+}
+
+type NodeBuilderArgs = {
+    match: Token[]
+    value: string
+    start: number
+}
+
+export const parseTable = {
+    func: [
+        {
+            tag: "func_range",
+            parser: PATTERNS.FUNC_RANGE,
+            toNode: (args: NodeBuilderArgs) => {
+                // match == cell1:cell2
+                const [from, , to] = args.match
+                return buildNode.func_range({
+                    value: args.value.toLowerCase() as FunctionKeyword,
+                    start: args.start,
+                    from: buildNode.cell(from),
+                    to: buildNode.cell(to),
+                })
+            },
+        },
+        {
+            tag: "func_list",
+            parser: PATTERNS.FUNC_LIST,
+            toNode: (args: NodeBuilderArgs) => {
+                // match == cell1(,cell2)*
+                const [from, , to] = args.match
+                return buildNode.func_range({
+                    value: args.value.toLowerCase() as FunctionKeyword,
+                    start: args.start,
+                    from: buildNode.cell(from),
+                    to: buildNode.cell(to),
+                })
+            },
+        },
+    ],
+}
 
 export class Parser {
     readonly tokens: Token[]
@@ -212,86 +257,36 @@ export class Parser {
 
             case "func": {
                 // START_HERE: 07-10
-                // * read Claude chat 'recursive descent vs...', from heading 'The Abstraction You're Building'
-                // * write tests for any
                 //
-                // * Parse errors that any returns
-                // We want to be able to display a message to the user like these:
-                // * SUM(12) → "Function arguments must be cell references"
-                // * SUM(A1:) → "Expected cell after ':'"
-                // * SUM(A1,) → "Expected cell after ','"
-                //
-                // * write the toNode and actually plug in the new patterns/parsers!
+                // * write toNode for func_list
+                // * handle func_list in interpret.ts
+                // * add tests for func_list
                 // * think about sepBy: Is there a better name?
-                const tokenToNode_funcRange = makeTransformer(
-                    PATTERNS.FunctionRange.pattern.map(({ type }) => type),
-                    (match: Token[]) => {
-                        const [cellTokenA, cellTokenB] =
-                            PATTERNS.FunctionRange.extract(match)
-
-                        return buildNode.func_range({
-                            // TODO: get rid of cast
-                            value: token.value.toLowerCase() as FunctionKeyword,
-                            start: token.start,
-                            from: buildNode.cell(cellTokenA),
-                            to: buildNode.cell(cellTokenB),
-                        })
-                    },
-                )
-
-                const tokenSlice = this.tokens.slice(this.current)
-                const parseFuncRange = tokenToNode_funcRange(tokenSlice)
-
-                if (!isSuccess(parseFuncRange)) {
-                    return this.createError(parseFuncRange.error)
+                //
+                const parseFunc = any(...parseTable.func)
+                const parseResult = parseFunc(this.tokens.slice(this.current))
+                if (!isSuccess(parseResult)) {
+                    // TODO: Think about what to do with these errors
+                    return this.createError(parseResult.error[0])
                 }
 
-                // TODO: think through adding func_list
-                //
-                // big picture:
-                // in ast.ts:
-                // explained:
-                // 1. call a function with IN==Token[] and OUT=Node
-                // 2. try parsing range syntax => return success or continue
-                // 2a. check tokens against hard-coded pattern -- easy.
-                // 3. try parsing list syntax => return success or fail
-                // 3b. try parsing single cell
-                // 3c. try parsing ", cell"
-                // 3d. when 3c fails, try parsing ')'
-                //
-                // pseudo-code:
-                // const func_range = matchPattern(PATTERNS.FunctionRange.pattern)
-                // const func_list = matchPattern(PATTERNS.FunctionList.pattern)
-                // const parseFunc  = choice(func_range, func_list)
-                // const maybeListOfCells = parseFunc(this.tokens.slice(this.current))
-                //
-                // with this approach, both range and list functions would produce the same type of node,
-                // containing a list of cell values
-                // PROs:
-                // simple
-                // CONs?:
-                // * lose differentiation -- but I'm not sure what we could need that for
-                // * parser would become slightly more coupled with cells data structure (it would have to call getCellsInRange) -- but I'm not sure that's so bad since that is a pure function
-                //
-                // big question:
-                // the pattern
-                // BNF: keyword ( cell (, cell)* )
-                // hunch: the pattern could be a function ?
-                // func_range.pattern: return an static array?
-                // for func_list:
-                //
-                // simplified problem:
-                // write just one of these parsers: many, sequence
+                // Happy path.
+                // Transform result to Node
+                const funcNode = parseResult.value.handler.toNode({
+                    match: parseResult.value.match,
+                    value: token.value,
+                    start: token.start,
+                })
 
-                // Consume tokens: slice.length-rest.length
+                // Consume tokens: slice.length - rest.length
+                const tokenSlice = this.tokens.slice(this.current)
                 const numTokensToConsume =
-                    tokenSlice.length - parseFuncRange.value.rest.length
-
+                    tokenSlice.length - parseResult.value.rest.length
                 for (let i = 0; i < numTokensToConsume; i++) {
                     this.consume()
                 }
 
-                return success(parseFuncRange.value.result)
+                return success(funcNode)
             }
 
             // Ran out of tokens unexpectedly.
@@ -308,41 +303,4 @@ export class Parser {
                 assertNever("ast", "token.type", token.type as never)
         }
     }
-
-    // private parseFunc(): Result<
-    //     { from: Node_Cell; to: Node_Cell },
-    //     ParseError
-    // > {
-    //     // match incoming tokens against function pattern
-    //     for (let i = 0; i < PATTERNS.function_range.length; i++) {
-    //         const token = this.peek()
-    //
-    //         // Fail fast.
-    //         if (token.type !== PATTERNS.function_range[i].type) {
-    //             return this.createError({
-    //                 type: "UNEXPECTED_TOKEN",
-    //                 token,
-    //                 expected: `token of type ${PATTERNS.function_range[i].type} while parsing function pattern (for example 'sum(a1:z99)')`,
-    //             })
-    //         }
-    //
-    //         // Happy path.
-    //         // Save cell refs and advance token stream.
-    //         if (token.type === "cell") {
-    //             toAndFromCells.push({
-    //                 type: "cell" as const,
-    //                 value: token.value,
-    //                 start: token.start,
-    //             })
-    //         }
-    //
-    //         this.consume()
-    //     }
-    //
-    //     // No errors. return cell nodes.
-    //     return success({
-    //         from: toAndFromCells[0],
-    //         to: toAndFromCells[1],
-    //     })
-    // }
 }

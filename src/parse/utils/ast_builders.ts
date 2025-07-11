@@ -1,5 +1,6 @@
+import { Node_Cell, Node_Func_Range } from "../types/ast"
+import { Token } from "../types/token"
 import { FunctionKeyword } from "./func"
-import { Node_Cell, Node_Func_Range, Token } from "./types/grammar"
 
 export const buildNode = {
     func_range: buildNode_funcRage,

@@ -41,17 +41,16 @@ export const func_shell = {
 }
 
 // Exported for testing
-const rangeArg = and(t("cell"), t("op_range"), t("cell"))
-export const Func_Range = {
-    pattern: between(func_shell, rangeArg),
-    toNode: {}, // (tokens: Token[]) => Node
-}
+const RANGE = and(t("cell"), t("op_range"), t("cell"))
+// export const Func_Range = {
+//     pattern: between(func_shell, rangeArg),
+//     toNode: {}, // (tokens: Token[]) => Node
+// }
 
-const listArg = sepBy(t("cell"), t("op_list"))
-export const Func_List = {
-    pattern: between(func_shell, listArg),
-    toNode: {}, // (tokens: Token[]) => Node
-}
+export const FUNC_RANGE = between(func_shell, RANGE)
+
+const LIST = sepBy(t("cell"), t("op_list"))
+export const FUNC_LIST = between(func_shell, LIST)
 
 // Molecules
 type Molecule = {
@@ -75,4 +74,6 @@ const FunctionRange: Molecule = {
 
 export const PATTERNS = {
     FunctionRange,
+    FUNC_RANGE,
+    FUNC_LIST,
 }
