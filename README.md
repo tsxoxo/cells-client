@@ -174,3 +174,42 @@ returns appropiate error:
 [x] Add unit tests for RD parser
 [x] Rewrite parser using recursive descent
 [x] Hook new parser into existing app
+[x] Add property testing
+[] Rewrite parser using combinators
+
+---
+
+# LESSONS
+
+## 2025-07-11
+
+### 1st step: Build a vertical slice
+
+This is a big one. I've been running into this again and again: Having an MVP would have clarified modelling problems immensely.
+
+By which I mean having a working version of the program with all the systems integrated: a whole 'vertical slice'. In this case this would have meant having something like: a minimal parser, a minimal ui, a minimal deployment. As it is, I am modelling stuff in the abstract.
+
+Example: I have fiddled with my error types, 'thinking ahead' to how they are going to be displayed in the UI. I could have saved myself a lot of time if I actually had a UI to display them at this moment.
+
+This has been on my mind so often, that I would make this a cardinal rule for the next project: the very first step is to build a minimal version of the whole program with all systems in place.
+
+(I heard this advice somewhere and it's been living in my head for free since then.)
+
+### Don't let testing drive data design
+
+Making function parameters optional just to simplify testing seems backwards. The question is: How
+are the functions actually being used in the program. Testing should not dictate the domain model.
+
+### Nesting sucks
+
+I like the factory pattern but I don't like huge objects and debugging syntax errors in nested objects. So I landed on this pattern as a compromise. It breaks things apart, which does make me jump around more and hurts the aesthetics, but this is still better than searching for a mismatched bracket in a 4+ nested object, even with currying (see utils/cells.ts). Maybe there's tooling to help with that?
+
+```ts
+function foo(){}
+function bar(){}
+
+export mainAPI = {
+    foo,
+    bar
+}
+```

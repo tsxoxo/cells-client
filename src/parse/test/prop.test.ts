@@ -43,6 +43,10 @@ import { NUM_OF_COLS } from "../../config/constants.ts"
 // Can't use the one from match.ts as we need this unanchored to match all cells
 const cellPattern = /[a-zA-Z]{1}[0-9]{1,2}/g
 
+// Create cellValueProvider with undefined cells to pass to interpreter.
+// const cellsEmpty = createEmptySpreadsheet()
+const cellValueProviderDummy = createCellValueProvider([], 1)
+
 // Fills in numeric values for cell refs
 // IN: "A2+1"
 // OUT: "99+1"
@@ -100,7 +104,8 @@ it("respects operator precedence", () => {
             assertIsSuccess(ast)
 
             // Step 2: Evaluate formula
-            const ourResult = interpret(ast.value)
+            // args 2 and 3 are just dummy arguments not used in this case.
+            const ourResult = interpret(ast.value, cellValueProviderDummy, -1)
             assertIsSuccess(ourResult)
 
             // Should be equal to eval()
@@ -121,7 +126,7 @@ it("parses numeric expressions with brackets", () => {
             assertIsSuccess(ast)
 
             // Evaluate formula.
-            const ourResult = interpret(ast.value)
+            const ourResult = interpret(ast.value, cellValueProviderDummy, -1)
             assertIsSuccess(ourResult)
 
             // Should be equal to eval()
@@ -153,7 +158,7 @@ it("processes single cell refs", () => {
                 NUM_OF_COLS,
             )
 
-            const ourResult = interpret(ast.value, cellValueProvider)
+            const ourResult = interpret(ast.value, cellValueProvider, -1)
             assertIsSuccess(ourResult)
 
             // HACK: We can't use eval() on formulas with cell refs,
@@ -185,7 +190,7 @@ it("tracks cell dependencies", () => {
                 NUM_OF_COLS,
             )
 
-            const ourResult = interpret(ast.value, cellValueProvider)
+            const ourResult = interpret(ast.value, cellValueProvider, -1)
             assertIsSuccess(ourResult)
 
             // deps is an array of cell indices
@@ -215,7 +220,7 @@ it("processes functions", () => {
                 NUM_OF_COLS,
             )
 
-            const ourResult = interpret(ast.value, cellValueProvider)
+            const ourResult = interpret(ast.value, cellValueProvider, -1)
             assertIsSuccess(ourResult)
 
             // NOTE: can we get the result in a simple way?
@@ -247,7 +252,11 @@ it("returns correct error when cell is undefined", () => {
                 NUM_OF_COLS,
             )
 
-            const resultFromEmpty = interpret(ast.value, cellValueProviderEmpty)
+            const resultFromEmpty = interpret(
+                ast.value,
+                cellValueProviderEmpty,
+                -1,
+            )
             assertIsFail(resultFromEmpty)
 
             // Create cellValueProvider with non-numeric cells to pass to interpreter.
@@ -260,6 +269,7 @@ it("returns correct error when cell is undefined", () => {
             const resultFromStrings = interpret(
                 ast.value,
                 cellValueProviderStrings,
+                -1,
             )
             assertIsFail(resultFromStrings)
         }),
@@ -281,7 +291,11 @@ it("returns correct error when cell in range contains string", () => {
                 NUM_OF_COLS,
             )
 
-            const resultFromEmpty = interpret(ast.value, cellValueProviderEmpty)
+            const resultFromEmpty = interpret(
+                ast.value,
+                cellValueProviderEmpty,
+                -1,
+            )
             assertIsFail(resultFromEmpty)
 
             // Create cellValueProvider with non-numeric cells to pass to interpreter.
@@ -294,6 +308,7 @@ it("returns correct error when cell in range contains string", () => {
             const resultFromStrings = interpret(
                 ast.value,
                 cellValueProviderStrings,
+                -1,
             )
             assertIsFail(resultFromStrings)
 

@@ -1,7 +1,8 @@
 import { Parser } from "./ast.ts"
 import { tokenize } from "./tokenize.ts"
-import { ParseError, Result } from "./types/errors.ts"
-import { Node } from "./types/grammar.ts"
+import { Node } from "./types/ast.ts"
+import { ParseError } from "./types/errors.ts"
+import { Result } from "./types/result.ts"
 
 // I cut out 'interpret' from this pipeline
 // (it gets called directly from state management).

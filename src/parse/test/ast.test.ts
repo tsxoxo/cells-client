@@ -3,7 +3,7 @@
 // =================================================
 import { describe, expect, it } from "vitest"
 import { Parser } from "../ast"
-import { Token, TokenType } from "../types/grammar"
+import { Token, TokenType } from "../types/token"
 import { assertIsFail, assertIsSuccess } from "../types/result"
 
 // =================================================
@@ -77,16 +77,18 @@ describe("ast", () => {
                     type: "func_range",
                     value: "sum",
                     start: 0,
-                    from: {
-                        type: "cell",
-                        value: "A1",
-                        start: 4,
-                    },
-                    to: {
-                        type: "cell",
-                        value: "B2",
-                        start: 7,
-                    },
+                    cells: [
+                        {
+                            type: "cell",
+                            value: "A1",
+                            start: 4,
+                        },
+                        {
+                            type: "cell",
+                            value: "B2",
+                            start: 7,
+                        },
+                    ],
                 },
             },
             {
@@ -172,16 +174,18 @@ describe("ast", () => {
                         type: "func_range",
                         value: "sum",
                         start: 0,
-                        from: {
-                            type: "cell",
-                            value: "A1",
-                            start: 4,
-                        },
-                        to: {
-                            type: "cell",
-                            value: "B2",
-                            start: 7,
-                        },
+                        cells: [
+                            {
+                                type: "cell",
+                                value: "A1",
+                                start: 4,
+                            },
+                            {
+                                type: "cell",
+                                value: "B2",
+                                start: 7,
+                            },
+                        ],
                     },
                     right: {
                         type: "number",
@@ -236,16 +240,18 @@ describe("ast", () => {
                             type: "func_range",
                             value: "sum",
                             start: 6,
-                            from: {
-                                type: "cell",
-                                value: "A1",
-                                start: 10,
-                            },
-                            to: {
-                                type: "cell",
-                                value: "B2",
-                                start: 13,
-                            },
+                            cells: [
+                                {
+                                    type: "cell",
+                                    value: "A1",
+                                    start: 10,
+                                },
+                                {
+                                    type: "cell",
+                                    value: "B2",
+                                    start: 13,
+                                },
+                            ],
                         },
                     },
                     right: {
@@ -303,16 +309,18 @@ describe("ast", () => {
                     type: "func_range",
                     value: "sum",
                     start: 0,
-                    from: {
-                        type: "cell",
-                        value: "A1",
-                        start: 4,
-                    },
-                    to: {
-                        type: "cell",
-                        value: "A9",
-                        start: 7,
-                    },
+                    cells: [
+                        {
+                            type: "cell",
+                            value: "A1",
+                            start: 4,
+                        },
+                        {
+                            type: "cell",
+                            value: "A9",
+                            start: 7,
+                        },
+                    ],
                 },
             },
             {

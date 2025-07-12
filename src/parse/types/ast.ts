@@ -4,12 +4,7 @@
 
 import { FunctionKeyword } from "../utils/func"
 
-export type Node =
-    | Node_Binary
-    | Node_Number
-    | Node_Cell
-    | Node_Func
-    | Node_Func_Range
+export type Node = Node_Binary | Node_Number | Node_Cell | Node_Func
 
 interface Node_Base {
     type: string
@@ -32,18 +27,10 @@ export interface Node_Cell extends Node_Base {
     type: "cell"
 }
 
-export interface Node_Func_Range extends Node_Base {
-    type: "func_range"
-    value: FunctionKeyword
-    from: Node_Cell
-    to: Node_Cell
-}
-
 export interface Node_Func extends Node_Base {
-    type: "func"
+    type: "func_range" | "func_list"
     value: FunctionKeyword
-    from: Node_Cell
-    to: Node_Cell
+    cells: Node_Cell[]
 }
 
 // Used for testing

@@ -1,29 +1,26 @@
-import { Node_Cell, Node_Func_Range } from "../types/ast"
+import { Node_Cell, Node_Func } from "../types/ast"
 import { Token } from "../types/token"
 import { FunctionKeyword } from "./func"
 
 export const buildNode = {
-    func_range: buildNode_funcRage,
+    func: buildNode_func,
     cell: buildNode_cell,
 }
 
-function buildNode_funcRage({
+function buildNode_func({
     value,
     start,
-    from,
-    to,
+    cells,
 }: {
     value: FunctionKeyword
     start: number
-    from: Node_Cell
-    to: Node_Cell
-}): Node_Func_Range {
+    cells: Node_Cell[]
+}): Node_Func {
     return {
         type: "func_range",
         value,
         start,
-        from,
-        to,
+        cells,
     }
 }
 

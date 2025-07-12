@@ -5,7 +5,7 @@ import { InterpretErrorType } from "../types/errors"
 import { CellValueProvider, createCellValueProvider } from "../utils/cells"
 import { Cell } from "../../types/types"
 import { NUM_OF_COLS } from "../../config/constants"
-import { Node } from "../types/grammar"
+import { Node } from "../types/ast"
 
 // Attempt at generic version
 // function createMockCellValueProvider(
@@ -36,27 +36,28 @@ import { Node } from "../types/grammar"
 // NOTE: for consistency, only use these values in tests:
 // A0 or B0 for single cell refs containing non-zero value
 // A0:B1 for ranges
+// TODO: fix this diagnostic
 const mockCellValueProvider: CellValueProvider = {
     getCellValue: (name) =>
         name === "A0"
-            ? success({ cellValue: 5, cellIndex: 0 })
-            : success({ cellValue: 10, cellIndex: 1 }),
+            ? success({ value: 5, index: 0 })
+            : success({ value: 10, index: 1 }),
     getRangeValues: () =>
         success({
-            cellValuesInRange: [5, 10, 15, 20],
-            cellIndexesInRange: [0, 1, 2, 3],
+            values: [5, 10, 15, 20],
+            indices: [0, 1, 2, 3],
         }),
 }
 
 const mockCellValueProviderZero: CellValueProvider = {
     getCellValue: (name) =>
         name === "A0"
-            ? success({ cellValue: 0, cellIndex: 0 })
-            : success({ cellValue: 10, cellIndex: 1 }), // sic! used for testing "1/(B0-B0)"
+            ? success({ value: 0, index: 0 })
+            : success({ value: 10, index: 1 }), // sic! used for testing "1/(B0-B0)"
     getRangeValues: () =>
         success({
-            cellValuesInRange: [0, 0, 0, 0],
-            cellIndexesInRange: [0, 1, 2, 3],
+            values: [0, 0, 0, 0],
+            indices: [0, 1, 2, 3],
         }),
 }
 
@@ -69,16 +70,16 @@ describe("interpret", () => {
                 inputAST: {
                     type: "binary_op" as const,
                     value: "+",
-                    position: { start: 2, end: 3 },
+                    start: 2,
                     left: {
                         type: "number",
                         value: "11",
-                        position: { start: 0, end: 2 },
+                        start: 0,
                     },
                     right: {
                         type: "number",
                         value: "31",
-                        position: { start: 3, end: 5 },
+                        start: 3,
                     },
                 } as Node,
                 expectedResult: {
@@ -92,16 +93,16 @@ describe("interpret", () => {
                 inputAST: {
                     type: "binary_op" as const,
                     value: "+",
-                    position: { start: 3, end: 4 },
+                    start: 3,
                     left: {
                         type: "number",
                         value: "11",
-                        position: { start: 1, end: 3 },
+                        start: 1,
                     },
                     right: {
                         type: "number",
                         value: "31",
-                        position: { start: 4, end: 6 },
+                        start: 4,
                     },
                 } as Node,
                 expectedResult: {
@@ -115,16 +116,16 @@ describe("interpret", () => {
                 inputAST: {
                     type: "binary_op" as const,
                     value: "+",
-                    position: { start: 2, end: 3 },
+                    start: 2,
                     left: {
                         type: "number",
                         value: "11",
-                        position: { start: 0, end: 2 },
+                        start: 0,
                     },
                     right: {
                         type: "cell",
                         value: "A0",
-                        position: { start: 3, end: 5 },
+                        start: 3,
                     },
                 } as Node,
                 expectedResult: {
@@ -138,26 +139,28 @@ describe("interpret", () => {
                 inputAST: {
                     type: "binary_op" as const,
                     value: "+",
-                    position: { start: 2, end: 3 },
+                    start: 2,
                     left: {
                         type: "number",
                         value: "11",
-                        position: { start: 0, end: 2 },
+                        start: 0,
                     },
                     right: {
                         type: "func_range",
                         value: "sum",
-                        position: { start: 3, end: 14 },
-                        from: {
-                            type: "cell",
-                            value: "A0",
-                            position: { start: 7, end: 9 },
-                        },
-                        to: {
-                            type: "cell",
-                            value: "B1",
-                            position: { start: 10, end: 12 },
-                        },
+                        start: 3,
+                        cells: [
+                            {
+                                type: "cell",
+                                value: "A0",
+                                start: 7,
+                            },
+                            {
+                                type: "cell",
+                                value: "B1",
+                                start: 10,
+                            },
+                        ],
                     },
                 } as Node,
                 expectedResult: {
@@ -171,35 +174,37 @@ describe("interpret", () => {
                 inputAST: {
                     type: "binary_op" as const,
                     value: "+",
-                    position: { start: 2, end: 3 },
+                    start: 2,
                     left: {
                         type: "number",
                         value: "11",
-                        position: { start: 0, end: 2 },
+                        start: 0,
                     },
                     right: {
                         type: "binary_op" as const,
                         value: "*",
-                        position: { start: 5, end: 6 },
+                        start: 5,
                         left: {
                             type: "cell",
                             value: "A0",
-                            position: { start: 3, end: 5 },
+                            start: 3,
                         },
                         right: {
                             type: "func_range",
                             value: "sum",
-                            position: { start: 6, end: 17 },
-                            from: {
-                                type: "cell",
-                                value: "A0",
-                                position: { start: 10, end: 12 },
-                            },
-                            to: {
-                                type: "cell",
-                                value: "B1",
-                                position: { start: 13, end: 15 },
-                            },
+                            start: 6,
+                            cells: [
+                                {
+                                    type: "cell",
+                                    value: "A0",
+                                    start: 10,
+                                },
+                                {
+                                    type: "cell",
+                                    value: "B1",
+                                    start: 13,
+                                },
+                            ],
                         },
                     },
                 } as Node,
@@ -209,7 +214,7 @@ describe("interpret", () => {
                 },
             },
         ])("$description", ({ inputAST, expectedResult }) => {
-            const result = interpret(inputAST, mockCellValueProvider)
+            const result = interpret(inputAST, mockCellValueProvider, -1)
             assertIsSuccess(result)
             expect(result.value).toEqual(expectedResult)
         })
@@ -224,7 +229,7 @@ describe("interpret", () => {
                 inputAST: {
                     type: "number",
                     value: "1",
-                    position: { start: 0, end: 1 },
+                    start: 0,
                 } as Node,
                 expectedResult: {
                     res: 1,
@@ -237,7 +242,7 @@ describe("interpret", () => {
                 inputAST: {
                     type: "cell",
                     value: "A0",
-                    position: { start: 0, end: 2 },
+                    start: 0,
                 } as Node,
                 expectedResult: {
                     res: 5,
@@ -250,17 +255,19 @@ describe("interpret", () => {
                 inputAST: {
                     type: "func_range",
                     value: "sum",
-                    position: { start: 0, end: 11 },
-                    from: {
-                        type: "cell",
-                        value: "A0",
-                        position: { start: 4, end: 6 },
-                    },
-                    to: {
-                        type: "cell",
-                        value: "B1",
-                        position: { start: 7, end: 9 },
-                    },
+                    start: 0,
+                    cells: [
+                        {
+                            type: "cell",
+                            value: "A0",
+                            start: 4,
+                        },
+                        {
+                            type: "cell",
+                            value: "B1",
+                            start: 7,
+                        },
+                    ],
                 } as Node,
                 expectedResult: {
                     res: 50, // 5 + 10 + 15 + 20
@@ -268,7 +275,7 @@ describe("interpret", () => {
                 },
             },
         ])("$description", ({ inputAST, expectedResult }) => {
-            const result = interpret(inputAST, mockCellValueProvider)
+            const result = interpret(inputAST, mockCellValueProvider, -1)
             assertIsSuccess(result)
             expect(result.value).toEqual(expectedResult)
         })
@@ -284,20 +291,20 @@ describe("interpret", () => {
         const ast = {
             type: "binary_op",
             value: "+",
-            position: { start: 2, end: 3 },
+            start: 2,
             left: {
                 type: "cell",
                 value: "A0",
-                position: { start: 0, end: 2 },
+                start: 0,
             },
             right: {
                 type: "cell",
                 value: "B0",
-                position: { start: 3, end: 5 },
+                start: 3,
             },
         } as Node
 
-        const result = interpret(ast, cellValueProvider)
+        const result = interpret(ast, cellValueProvider, -1)
 
         assertIsSuccess(result)
         expect(result.value).toEqual({
@@ -314,23 +321,23 @@ describe("interpret", () => {
                 inputAST: {
                     type: "binary_op",
                     value: "/",
-                    position: { start: 1, end: 2 },
+                    start: 1,
                     left: {
                         type: "number",
                         value: "1",
-                        position: { start: 0, end: 1 },
+                        start: 0,
                     },
                     right: {
                         type: "number",
                         value: "0",
-                        position: { start: 2, end: 3 },
+                        start: 2,
                     },
                 } as Node,
                 expectedErrorType: "DIVIDE_BY_0" as InterpretErrorType,
                 expectedPayload: {
                     type: "number",
                     value: "0",
-                    position: { start: 2, end: 3 },
+                    start: 2,
                 } as Node, // the 'right' node from inputAST
             },
             {
@@ -339,23 +346,23 @@ describe("interpret", () => {
                 inputAST: {
                     type: "binary_op",
                     value: "/",
-                    position: { start: 1, end: 2 },
+                    start: 1,
                     left: {
                         type: "number",
                         value: "1",
-                        position: { start: 0, end: 1 },
+                        start: 0,
                     },
                     right: {
                         type: "cell",
                         value: "A0",
-                        position: { start: 2, end: 4 },
+                        start: 2,
                     },
                 } as Node,
                 expectedErrorType: "DIVIDE_BY_0" as InterpretErrorType,
                 expectedPayload: {
                     type: "cell",
                     value: "A0",
-                    position: { start: 2, end: 4 },
+                    start: 2,
                 } as Node, // the 'right' node from inputAST
             },
             {
@@ -365,25 +372,25 @@ describe("interpret", () => {
                 inputAST: {
                     type: "binary_op",
                     value: "/",
-                    position: { start: 1, end: 2 },
+                    start: 1,
                     left: {
                         type: "number",
                         value: "1",
-                        position: { start: 0, end: 1 },
+                        start: 0,
                     },
                     right: {
                         type: "binary_op",
                         value: "-",
-                        position: { start: 5, end: 6 },
+                        start: 5,
                         left: {
                             type: "cell",
                             value: "B0",
-                            position: { start: 3, end: 5 },
+                            start: 3,
                         },
                         right: {
                             type: "cell",
                             value: "B0",
-                            position: { start: 6, end: 8 },
+                            start: 6,
                         },
                     },
                 } as Node,
@@ -391,16 +398,16 @@ describe("interpret", () => {
                 expectedPayload: {
                     type: "binary_op",
                     value: "-",
-                    position: { start: 5, end: 6 },
+                    start: 5,
                     left: {
                         type: "cell",
                         value: "B0",
-                        position: { start: 3, end: 5 },
+                        start: 3,
                     },
                     right: {
                         type: "cell",
                         value: "B0",
-                        position: { start: 6, end: 8 },
+                        start: 6,
                     },
                 } as Node, // the 'right' node from inputAST
             },
@@ -410,43 +417,47 @@ describe("interpret", () => {
                 inputAST: {
                     type: "binary_op",
                     value: "/",
-                    position: { start: 1, end: 2 },
+                    start: 1,
                     left: {
                         type: "number",
                         value: "1",
-                        position: { start: 0, end: 1 },
+                        start: 0,
                     },
                     right: {
                         type: "func_range",
                         value: "sum",
-                        position: { start: 2, end: 12 },
-                        from: {
-                            type: "cell",
-                            value: "A0",
-                            position: { start: 6, end: 8 },
-                        },
-                        to: {
-                            type: "cell",
-                            value: "B1",
-                            position: { start: 9, end: 11 },
-                        },
+                        start: 2,
+                        cells: [
+                            {
+                                type: "cell",
+                                value: "A0",
+                                start: 6,
+                            },
+                            {
+                                type: "cell",
+                                value: "B1",
+                                start: 9,
+                            },
+                        ],
                     },
                 } as Node,
                 expectedErrorType: "DIVIDE_BY_0" as InterpretErrorType,
                 expectedPayload: {
                     type: "func_range",
                     value: "sum",
-                    position: { start: 2, end: 12 },
-                    from: {
-                        type: "cell",
-                        value: "A0",
-                        position: { start: 6, end: 8 },
-                    },
-                    to: {
-                        type: "cell",
-                        value: "B1",
-                        position: { start: 9, end: 11 },
-                    },
+                    start: 2,
+                    cells: [
+                        {
+                            type: "cell",
+                            value: "A0",
+                            start: 6,
+                        },
+                        {
+                            type: "cell",
+                            value: "B1",
+                            start: 9,
+                        },
+                    ],
                 } as Node, // the 'right' node from inputAST
             },
         ])(
@@ -462,7 +473,11 @@ describe("interpret", () => {
                 expectedPayload: Node
                 expectedCellIndex?: number
             }) => {
-                const result = interpret(inputAST, mockCellValueProviderZero)
+                const result = interpret(
+                    inputAST,
+                    mockCellValueProviderZero,
+                    -1,
+                )
 
                 assertIsFail(result)
                 expect(result.error.type).toBe(expectedErrorType)

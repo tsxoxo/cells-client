@@ -43,11 +43,12 @@ export const parseTable = {
             toNode: (args: NodeBuilderArgs) => {
                 // match == cell1:cell2
                 const [from, , to] = args.match
-                return buildNode.func_range({
+                return buildNode.func({
                     value: args.value.toLowerCase() as FunctionKeyword,
                     start: args.start,
-                    from: buildNode.cell(from),
-                    to: buildNode.cell(to),
+                    cells: [from, to].map((cellToken) =>
+                        buildNode.cell(cellToken),
+                    ),
                 })
             },
         },
@@ -56,12 +57,11 @@ export const parseTable = {
             parser: PATTERNS.FUNC_LIST,
             toNode: (args: NodeBuilderArgs) => {
                 // match == cell1(,cell2)*
-                const [from, , to] = args.match
-                return buildNode.func_range({
+                const cells = args.match.filter((token) => token.type == "cell")
+                return buildNode.func({
                     value: args.value.toLowerCase() as FunctionKeyword,
                     start: args.start,
-                    from: buildNode.cell(from),
-                    to: buildNode.cell(to),
+                    cells: cells.map((cellToken) => buildNode.cell(cellToken)),
                 })
             },
         },
