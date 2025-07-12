@@ -257,12 +257,8 @@ export class Parser {
 
             case "func": {
                 // START_HERE: 07-10
-                //
-                // * write toNode for func_list
-                // * handle func_list in interpret.ts
                 // * add tests for func_list
-                // * think about sepBy: Is there a better name?
-                //
+
                 const parseFunc = any(...parseTable.func)
                 const parseResult = parseFunc(this.tokens.slice(this.current))
                 if (!isSuccess(parseResult)) {

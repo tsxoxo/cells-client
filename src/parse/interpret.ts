@@ -101,67 +101,16 @@ export function interpret(
                 return calcResult
             }
 
-            case "func_range": {
-                // Try to get cell values and indexes in range.
-                const rangeValuesResult = cellValueProvider.getRangeValues(
-                    [node.cells[0].value, node.cells[1].value],
-                    currentCellIndex,
-                )
-
-                // Enrich error.
-                if (!isSuccess(rangeValuesResult)) {
-                    switch (rangeValuesResult.error.type) {
-                        case "CIRCULAR_CELL_REF":
-                            return createError({
-                                ...rangeValuesResult.error,
-                                node,
-                                expected:
-                                    "cell to not contain reference to itself",
-                            })
-
-                        case "CELL_NOT_A_NUMBER":
-                            return createError({
-                                ...rangeValuesResult.error,
-                                node,
-                                expected: "cell to contain a number",
-                            })
-
-                        // Unexpected error type == something went seriously wrong.
-                        // Unknown state, so we crash.
-                        default:
-                            assertNever(
-                                "interpret",
-                                "error.type from cellValueProvider.getRangeValues",
-                                rangeValuesResult.error.type,
-                            )
-                    }
-                }
-                // Happy path: all values are numeric and no circular ref.
-                const result = applyFuncToValues(
-                    node.value,
-                    rangeValuesResult.value.values,
-                )
-
-                // This should only happen if the tokenizer lets through an invalid func reference.
-                // Something went very wrong. Abort mission.
-                if (!isSuccess(result)) {
-                    assertNever(
-                        "interpret",
-                        "function keyword",
-                        node.value as never,
-                    )
-                }
-
-                // Happy path: func processed successfully.
-                deps.push(...rangeValuesResult.value.indices)
-
-                return result
-            }
-
+            case "func_range":
             case "func_list": {
-                // Try to get cell values and indexes.
-                const cellValuesResult = cellValueProvider.getRangeValues(
-                    [node.cells[0].value, node.cells[1].value],
+                const getValue =
+                    node.type === "func_range"
+                        ? cellValueProvider.getRangeValues
+                        : cellValueProvider.getCellValues
+
+                // Try to get cell values and indices.
+                const cellValuesResult = getValue(
+                    node.cells.map((cell) => cell.value),
                     currentCellIndex,
                 )
 
