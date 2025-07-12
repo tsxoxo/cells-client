@@ -4,6 +4,37 @@ import { Result, fail, isSuccess, success } from "../types/result"
 import { CellError } from "../types/errors"
 
 //============================================================
+// ==================== CELL API =============================
+//
+// Main function for extracting values from cells.
+// Used in interpret parsing module.
+// Returns fail when any cell does not contain a number.
+//
+//============================================================
+type CellValueGetter = (
+    cells: string[],
+    currentIndex: number,
+) => Result<
+    {
+        values: number[]
+        indices: number[]
+    },
+    CellError
+>
+
+export type CellValueProvider = Record<string, CellValueGetter>
+
+export function createCellValueProvider(
+    cells: Cell[],
+    numOfCols: number,
+): CellValueProvider {
+    return {
+        getCellValue: getCellValue(cells),
+        getCellValues: getCellValues(cells),
+        getRangeValues: getRangeValues(cells, numOfCols),
+    }
+}
+//============================================================
 // CELL COORDINATES
 //
 // Helpers for converting cell names to cell indices.
@@ -35,20 +66,12 @@ export function getCellIndexfromXY(x: number, y: number): number {
 // Helpers for extracting values from cells.
 //
 //============================================================
-//
-type CellValueGetter = (
-    cells: string[],
-    currentIndex: number,
-) => Result<
-    {
-        values: number[]
-        indices: number[]
-    },
-    CellError
->
 
+// -------------------------------
+// Get value from cell indices.
+// -------------------------------
 // Takes array of cell index(es) and the spreadsheet data.
-// Returns cell values or
+// Returns numeric cell values or
 // error if any value is not a number.
 export function getNumbersFromCells(
     cellIndices: number[],
@@ -79,13 +102,10 @@ export function getNumbersFromCells(
 // Get value from single cell ref.
 // -------------------------------
 // Types defined on CellValueProvider
-function getCellValue(cells: Cell[]) {
-    return (
-        cellName: string,
-        currentCellIndex: number,
-    ): Result<{ value: number; index: number }, CellError> => {
+function getCellValue(cells: Cell[]): CellValueGetter {
+    return ([cell], currentCellIndex) => {
         // Convert name to index.
-        const cellIndex = getIndexFromCellName(cellName)
+        const cellIndex = getIndexFromCellName(cell)
 
         // Abort if the passed cell name refers back to the current cell.
         if (cellIndex === currentCellIndex) {
@@ -101,7 +121,10 @@ function getCellValue(cells: Cell[]) {
         }
 
         // Happy path: cell's value is a number
-        return success({ value: cellValuesResult.value[0], index: cellIndex })
+        return success({
+            values: [cellValuesResult.value[0]],
+            indices: [cellIndex],
+        })
     }
 }
 
@@ -142,12 +165,8 @@ function getCellValues(cells: Cell[]): CellValueGetter {
 
 // MAIN FUNCTION FOR HANDLING RANGE.
 // Types defined on CellValueProvider
-function getRangeValues(cells: Cell[], numOfCols: number) {
-    return (
-        fromName: string,
-        toName: string,
-        currentCellIndex: number,
-    ): Result<{ values: number[]; indices: number[] }, CellError> => {
+function getRangeValues(cells: Cell[], numOfCols: number): CellValueGetter {
+    return ([fromName, toName], currentCellIndex) => {
         // Convert names to indices.
         const [from, to] = getIndicesFromCellNames([fromName, toName])
 
@@ -212,40 +231,4 @@ export function getCellsInRange(
     }
 
     return range
-}
-//============================================================
-// ==================== CELL API =============================
-//
-// Main function for extracting values from cells.
-// Used in interpret parsing module.
-// Returns fail when any cell does not contain a number.
-//
-//============================================================
-export interface CellValueProvider {
-    getCellValue(
-        cellName: string,
-        currentCellIndex: number,
-    ): Result<{ value: number; index: number }, CellError>
-
-    getCellValues(
-        cellNames: string[],
-        currentCellIndex: number,
-    ): Result<{ values: number[]; indices: number[] }, CellError>
-
-    getRangeValues(
-        fromName: string,
-        toName: string,
-        currentCellIndex: number,
-    ): Result<{ values: number[]; indices: number[] }, CellError>
-}
-
-export function createCellValueProvider(
-    cells: Cell[],
-    numOfCols: number,
-): CellValueProvider {
-    return {
-        getCellValue: getCellValue(cells),
-        getCellValues: getCellValues(cells),
-        getRangeValues: getRangeValues(cells, numOfCols),
-    }
 }

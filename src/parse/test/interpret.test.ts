@@ -36,12 +36,11 @@ import { Node } from "../types/ast"
 // NOTE: for consistency, only use these values in tests:
 // A0 or B0 for single cell refs containing non-zero value
 // A0:B1 for ranges
-// TODO: fix this diagnostic
 const mockCellValueProvider: CellValueProvider = {
-    getCellValue: (name) =>
+    getCellValue: ([name]) =>
         name === "A0"
-            ? success({ value: 5, index: 0 })
-            : success({ value: 10, index: 1 }),
+            ? success({ values: [5], indices: [0] })
+            : success({ values: [10], indices: [1] }),
     getRangeValues: () =>
         success({
             values: [5, 10, 15, 20],
@@ -50,10 +49,10 @@ const mockCellValueProvider: CellValueProvider = {
 }
 
 const mockCellValueProviderZero: CellValueProvider = {
-    getCellValue: (name) =>
+    getCellValue: ([name]) =>
         name === "A0"
-            ? success({ value: 0, index: 0 })
-            : success({ value: 10, index: 1 }), // sic! used for testing "1/(B0-B0)"
+            ? success({ values: [0], indices: [0] })
+            : success({ values: [10], indices: [1] }), // sic! used for testing "1/(B0-B0)"
     getRangeValues: () =>
         success({
             values: [0, 0, 0, 0],

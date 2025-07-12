@@ -37,7 +37,7 @@ export function interpret(
             case "cell": {
                 // Try and get the cell's value.
                 const cellValueResult = cellValueProvider.getCellValue(
-                    node.value,
+                    [node.value],
                     currentCellIndex,
                 )
 
@@ -71,9 +71,9 @@ export function interpret(
                 }
 
                 // Happy path: cell contains a number
-                deps.push(cellValueResult.value.index)
+                deps.push(cellValueResult.value.indices[0])
 
-                return success(cellValueResult.value.value)
+                return success(cellValueResult.value.values[0])
             }
 
             case "binary_op": {
@@ -104,8 +104,7 @@ export function interpret(
             case "func_range": {
                 // Try to get cell values and indexes in range.
                 const rangeValuesResult = cellValueProvider.getRangeValues(
-                    node.cells[0].value,
-                    node.cells[1].value,
+                    [node.cells[0].value, node.cells[1].value],
                     currentCellIndex,
                 )
 
@@ -162,8 +161,7 @@ export function interpret(
             case "func_list": {
                 // Try to get cell values and indexes.
                 const cellValuesResult = cellValueProvider.getRangeValues(
-                    node.cells[0].value,
-                    node.cells[1].value,
+                    [node.cells[0].value, node.cells[1].value],
                     currentCellIndex,
                 )
 
