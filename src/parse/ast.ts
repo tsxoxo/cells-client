@@ -256,7 +256,7 @@ export class Parser {
             }
 
             case "func": {
-                // START_HERE: 07-10
+                // START_HERE: 07-13
                 // * add tests for func_list
 
                 const parseFunc = any(...parseTable.func)
