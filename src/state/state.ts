@@ -1,26 +1,21 @@
 import { assertEvent } from "xstate"
 import type { Cell } from "../types/types"
-import { Context, changeCellContent } from "./cellsMachine"
+import { Context, ChangeCell } from "./cellsMachine"
 import { parseToAST } from "../parse/main"
-import {
-    ParseError,
-    Result,
-    fail,
-    isSuccess,
-    success,
-} from "../parse/types/result"
+import { Result, fail, isSuccess, success } from "../parse/types/result"
 import { AppError } from "../errors/errors"
 import { interpret } from "../parse/interpret"
 import { isNumber } from "../parse/utils/match"
 import { createCellValueProvider } from "../parse/utils/cells"
 import { NUM_OF_COLS } from "../config/constants"
+import { ParseError } from "../parse/types/errors"
 
 // CONTROL FLOW
 export function handleCellContentChange(
     context: Context,
-    event: changeCellContent,
-): Result<Cell[], AppError> {
-    assertEvent(event, "changeCellContent")
+    event: ChangeCell,
+): Result<{ cells: Cell[] }, AppError> {
+    assertEvent(event, "changeCell")
 
     // Evaluate content. Parse if formula.
     const maybeNewCell = updateCell(
@@ -36,6 +31,9 @@ export function handleCellContentChange(
             cause: maybeNewCell.error,
         })
     }
+
+    // HACK: for now, just return the new cell
+    return success({ cells: [maybeNewCell.value] })
 
     // Happy path: not formula or successfully parsed.
     //
@@ -125,13 +123,7 @@ function safeEval(
     }
 
     const cellValueProvider = createCellValueProvider(cells, NUM_OF_COLS)
-    const maybeFormula = interpret(
-        maybeAST.value,
-        cells,
-        cellValueProvider,
-        NUM_OF_COLS,
-        cellIndex,
-    )
+    const maybeFormula = interpret(maybeAST.value, cellValueProvider, cellIndex)
 
     // Pass along either error or result
     // If this crashes, let it crash.

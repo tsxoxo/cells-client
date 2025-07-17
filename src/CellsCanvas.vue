@@ -2,7 +2,7 @@
 import { useMachine } from "@xstate/vue"
 import { cellsMachine } from "./state/cellsMachine"
 import { createBrowserInspector } from "@statelyai/inspect"
-import { computed, watch } from "vue"
+import { computed, onMounted, watch } from "vue"
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./config/constants"
 import { handleErrors } from "./errors/errors"
 import { getCellIndexfromXY } from "./parse/utils/cells"
@@ -16,6 +16,7 @@ const { snapshot, send } = useMachine(cellsMachine, {
     inspect,
 })
 const cells = computed(() => snapshot.value.context.cells)
+
 function onFocus(event: Event, ind: number) {
     const input = event.target as HTMLInputElement
     const cell = cells.value[ind]
@@ -89,7 +90,7 @@ watch(
                                     @change="
                                         (event) =>
                                             send({
-                                                type: 'changeCellContent',
+                                                type: 'changeCell',
                                                 indexOfCell: getCellIndexfromXY(
                                                     x,
                                                     y,
