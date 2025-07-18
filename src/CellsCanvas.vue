@@ -2,7 +2,7 @@
 import { useMachine } from "@xstate/vue"
 import { cellsMachine } from "./state/cellsMachine"
 import { createBrowserInspector } from "@statelyai/inspect"
-import { computed, watch } from "vue"
+import { Ref, computed, ref, watch } from "vue"
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./config/constants"
 import { handleErrors } from "./errors/errors"
 import { getCellIndexfromXY } from "./parse/utils/cells"
@@ -31,7 +31,21 @@ function onBlur(event: Event, ind: number) {
             ? String(cell.value)
             : (cell?.content ?? "")
 }
+function onChange(event: Event, cellIndex: number) {
+    const input = event.target as HTMLInputElement
+    submittingCellsValues.value[cellIndex] = input.value
+
+    send({
+        type: "changeCell",
+        cellIndex,
+        value: input.value,
+    })
+}
 function getDisplayValue(cellIndex: number) {
+    if (isSubmitting(cellIndex)) {
+        return submittingCellsValues.value[cellIndex]
+    }
+
     const cell = cells.value[cellIndex]
     if (!cell) {
         console.error(
@@ -40,6 +54,16 @@ function getDisplayValue(cellIndex: number) {
         return "err"
     }
     return cell.value === undefined ? cell.content : String(cell.value)
+}
+const submittingCellsValues: Ref<Record<number, string>> = ref({})
+const submittingCellsIndices = computed(() => {
+    const newCells = snapshot.value.context.pendingSubmissions.flatMap(
+        (submission) => submission.newCells,
+    )
+    return newCells.map((newCell) => newCell.ownIndex)
+})
+const isSubmitting = (cellIndex: number) => {
+    return submittingCellsIndices.value.includes(cellIndex)
 }
 watch(
     () => snapshot.value.context.errors,
@@ -75,30 +99,27 @@ watch(
                         </div>
                     </template>
                     <template v-else>
-                        <div
-                            :key="`cell-div-${letter} + ${number}`"
-                            class="cell"
-                        >
+                        <div :key="`cell-div-${letter} + ${number}`">
                             <Transition name="update-value">
                                 <input
                                     :key="`cell-input-${letter} + ${number}`"
+                                    class="cell"
+                                    :class="{
+                                        submitting: isSubmitting(
+                                            getCellIndexfromXY(x, y),
+                                        ),
+                                    }"
                                     :value="
                                         getDisplayValue(
                                             getCellIndexfromXY(x, y),
                                         )
                                     "
                                     @change="
-                                        (event) =>
-                                            send({
-                                                type: 'changeCell',
-                                                cellIndex: getCellIndexfromXY(
-                                                    x,
-                                                    y,
-                                                ),
-                                                value: (
-                                                    event.target as HTMLInputElement
-                                                ).value,
-                                            })
+                                        (e) =>
+                                            onChange(
+                                                e,
+                                                getCellIndexfromXY(x, y),
+                                            )
                                     "
                                     @focus="
                                         (e) =>

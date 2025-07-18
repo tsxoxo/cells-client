@@ -122,10 +122,6 @@ export const cellsMachine = setup({
                                 assertIsSuccess(event.output)
                                 // assume it's an array with a single cell
                                 const i = event.output.value[0].ownIndex
-                                console.log(
-                                    "event.output.value[0],: ",
-                                    event.output.value[0],
-                                )
                                 return context.cells.toSpliced(
                                     i,
                                     1,

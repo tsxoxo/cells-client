@@ -18,6 +18,7 @@
     --cells-bg: var(--primary-100);
     --track-names-bg: var(--primary-500);
     --cell-idle-bg: var(--primary-100);
+    --cell-submitting-bg: var(--primary-500);
     --lines-lighter: color-mix(in srgb, var(--primary-900) 20%, transparent);
     --lines-darker: var(--primary-900);
     --text: var(--primary-900);
@@ -84,4 +85,8 @@ main div input {
 
 .selected {
     fill: var(--circle-fill);
+}
+
+.submitting {
+    background-color: var(--cell-submitting-bg);
 }
