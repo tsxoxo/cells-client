@@ -1,7 +1,7 @@
 import { ParseError } from "../parse/types/errors"
 
 export type AppError = {
-    indexOfCell: number
+    cellIndex: number
     cause: ParseError
 }
 

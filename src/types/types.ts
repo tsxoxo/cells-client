@@ -7,6 +7,7 @@ export interface Cell {
     dependencies: number[]
     // cells that reference this cell
     dependents: number[]
+    ownIndex: number
     // used for debug and experimentation
     // could be used to store things like own index, own name, PosX
     _data?: Record<string, unknown>

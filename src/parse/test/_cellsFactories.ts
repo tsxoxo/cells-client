@@ -12,7 +12,7 @@ export function createNumericSpreadsheet(
 ): Cell[] {
     return [...new Array(x * y)].map(() => {
         const randomNatNoZero = Math.floor(Math.random() * 9999) + 1
-        return createCell(randomNatNoZero)
+        return createCell({ value: randomNatNoZero })
     })
 }
 
@@ -21,7 +21,7 @@ export function createEmptySpreadsheet(
     y = NUM_OF_ROWS,
 ): Cell[] {
     return [...new Array(x * y)].map(() => {
-        return createCell()
+        return createCell({})
     })
 }
 
@@ -30,6 +30,6 @@ export function createStringSpreadsheet(
     y = NUM_OF_ROWS,
 ): Cell[] {
     return [...new Array(x * y)].map(() => {
-        return createCell(undefined, "foo")
+        return createCell({ content: "foo" })
     })
 }

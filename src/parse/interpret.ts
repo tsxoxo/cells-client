@@ -13,6 +13,10 @@ import { Node } from "./types/ast.ts"
 
 // type CellValueProvider = ReturnType<typeof createCellValueProvider>
 
+// TODO: 07-18
+// Think about this:
+// Do we need to pass in currentCellIndex as argument?
+// Can't we at the call site create a cellValueProvider that has it in scope?
 export function interpret(
     tree: Node,
     cellValueProvider: CellValueProvider,

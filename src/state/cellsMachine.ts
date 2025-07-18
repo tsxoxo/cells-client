@@ -5,24 +5,26 @@ import { handleCellContentChange } from "./state"
 import { Result, fail, isSuccess, success } from "../parse/types/result"
 import { AppError } from "../errors/errors"
 
+type Payload = {
+    newCells: Cell[]
+    oldCells: Cell[]
+    error?: AppError
+}
+
 export interface Context {
     cells: Cell[]
     errors: AppError[]
-    submittingCells: number[]
-    pendingSubmissions: Cell[]
+    pendingSubmissions: Payload[]
 }
 
 export type ChangeCell = {
     type: "changeCell"
-    indexOfCell: number
+    cellIndex: number
     value: string
 }
 
-async function submitCells(
-    cells: Cell[],
-    index: number,
-): Promise<Result<{}, Error>> {
-    const url = `http://localhost:3000/cells/${index}`
+async function submit(payload: Payload[]): Promise<Result<unknown, Error>> {
+    const url = `http://localhost:3000/cells`
     try {
         const res = await fetch(url, {
             method: "POST",
@@ -30,7 +32,7 @@ async function submitCells(
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                cells,
+                payload,
             }),
         })
 
@@ -51,27 +53,52 @@ export const cellsMachine = setup({
         events: {} as ChangeCell | { type: "RETRY" },
     },
     actions: {
-        parseInput: assign(({ context, event }) => {
+        setPending: assign(({ context, event }) => {
             assertEvent(event, "changeCell")
-            const result = handleCellContentChange(context, event)
+            const updatedCellsResult = handleCellContentChange(context, event)
+            const newCells = [] as Cell[]
 
-            return isSuccess(result)
-                ? { pendingSubmissions: result.value.cells }
-                : { errors: [result.error] }
+            // create payload by adding old cells
+            // NOTE: I know this function is doing a lot
+            if (!isSuccess(updatedCellsResult)) {
+                const faultyCell = structuredClone(
+                    context.cells[event.cellIndex],
+                )
+                faultyCell.content = event.value
+
+                newCells.push(faultyCell)
+            } else {
+                newCells.push(...updatedCellsResult.value.cells)
+            }
+
+            const oldCells = newCells.map(
+                (updatedCell) => context.cells[updatedCell.ownIndex],
+            )
+
+            return {
+                pendingSubmissions: [
+                    ...context.pendingSubmissions,
+                    {
+                        newCells,
+                        oldCells,
+                        ...(!isSuccess(updatedCellsResult) && {
+                            error: updatedCellsResult.error,
+                        }),
+                    },
+                ],
+            }
         }),
-        // NOTE: do we need submittingCells AND pendingSubmissions?
-        // setSubmittingCells: assign(({ context, event }) => {
-        //     const result = handleCellContentChange(context, event)
-        //
-        //     return isSuccess(result)
-        //         ? { cells: result.value }
-        //         : { errors: [result.error] }
-        // }),
+        cleanPending: assign(() => {
+            return {
+                pendingSubmissions: [],
+            }
+        }),
 
         setCell: assign(({ context, event }) => {
-            console.log("in setCell!!!")
-            console.log(event.output)
-
+            // BUG:
+            // typeof event is not being inferred correctly
+            // DIAGNOSTIC: 1. Property 'output' does not exist on type 'ChangeCell | { type: "RETRY"; }'.
+            console.log(`server sent back ${JSON.stringify(event.output)}`)
             return { cells: context.cells }
             // START_HERE: 07-17
             // * what to return here?
@@ -83,17 +110,17 @@ export const cellsMachine = setup({
         }),
 
         setError: assign(({ context, event }) => {
-            const result = handleCellContentChange(context, event)
-
-            return isSuccess(result)
-                ? { cells: result.value }
-                : { errors: [result.error] }
+            // BUG:
+            // typeof event is not being inferred correctly
+            // DIAGNOSTIC: 1. Property 'error' does not exist on type 'ChangeCell | { type: "RETRY"; }'.
+            return { errors: [...context.errors, event.error] }
         }),
     },
     actors: {
-        submitCell: fromPromise(
-            async ({ input }: { input: { pendingSubmissions: Cell[] } }) => {
-                const response = await submitCells(input.pendingSubmissions, 12)
+        submit: fromPromise(
+            // prettier-ignore
+            async ({ input: { pendingSubmissions }, }: { input: { pendingSubmissions: Payload[] } }) => {
+                const response = await submit(pendingSubmissions)
 
                 return response
             },
@@ -103,7 +130,6 @@ export const cellsMachine = setup({
     /** @xstate-layout N4IgpgJg5mDOIC5QGEwBs2wHQCcwEMIBPAYgGMALfAOxlQwG0AGAXUVAAcB7WASwBdeXauxAAPRABYATABoQRRAA4AjFgCsAX23zqXCHFH1Mo7n0HDREhAFoAbPMW27OkMex5CTzjwFCRSOKIdgDMWEoAnEqSIQDs6o6IKkrSGrGq0lramkA */
     context: {
         cells: INITIAL_CELLS,
-        submittingCells: [],
         pendingSubmissions: [],
         errors: [],
     },
@@ -120,14 +146,16 @@ export const cellsMachine = setup({
         submitting: {
             entry: [
                 {
-                    type: "parseInput",
+                    type: "setPending",
                 },
-                // {
-                //     type: "setSubmittingCells",
-                // },
+            ],
+            exit: [
+                {
+                    type: "cleanPending",
+                },
             ],
             invoke: {
-                id: "submitCell",
+                id: "submit",
                 input: ({ context: { pendingSubmissions } }) => ({
                     pendingSubmissions,
                 }),
@@ -143,7 +171,7 @@ export const cellsMachine = setup({
                         type: "setError",
                     },
                 },
-                src: "submitCell",
+                src: "submit",
             },
         },
         submit_fail: {

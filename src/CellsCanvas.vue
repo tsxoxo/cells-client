@@ -2,7 +2,7 @@
 import { useMachine } from "@xstate/vue"
 import { cellsMachine } from "./state/cellsMachine"
 import { createBrowserInspector } from "@statelyai/inspect"
-import { computed, onMounted, watch } from "vue"
+import { computed, watch } from "vue"
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./config/constants"
 import { handleErrors } from "./errors/errors"
 import { getCellIndexfromXY } from "./parse/utils/cells"
@@ -91,7 +91,7 @@ watch(
                                         (event) =>
                                             send({
                                                 type: 'changeCell',
-                                                indexOfCell: getCellIndexfromXY(
+                                                cellIndex: getCellIndexfromXY(
                                                     x,
                                                     y,
                                                 ),

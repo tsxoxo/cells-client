@@ -1,23 +1,48 @@
 import { Cell } from "../types/types"
 import { NUMBER_OF_CELLS } from "../config/constants"
 
-export function createCell(
-    val = undefined as number | undefined,
-    cont = "",
+export function createCell({
+    value = undefined as number | undefined,
+    content = "",
     dependencies = [] as number[],
     dependents = [] as number[],
-): Cell {
+    ownIndex = -1,
+}): Cell {
     return {
-        value: val,
-        content: cont ? cont : String(val),
+        value,
+        content: content ? content : String(value),
         dependencies,
         dependents,
+        ownIndex,
     }
 }
-export const INITIAL_CELLS: Cell[] = [...new Array(NUMBER_OF_CELLS)].map(() =>
-    createCell(),
+export const INITIAL_CELLS: Cell[] = [...new Array(NUMBER_OF_CELLS)].map(
+    (_, ind) => createCell({ ownIndex: ind }),
 )
-INITIAL_CELLS[0] = createCell(10, "", [], [2])
-INITIAL_CELLS[1] = createCell(11, "", [], [2])
-INITIAL_CELLS[2] = createCell(21, "=A0+B0", [0, 1], [26])
-INITIAL_CELLS[26] = createCell(31, "=A2+10", [2])
+INITIAL_CELLS[0] = createCell({
+    value: 10,
+    content: "",
+    dependencies: [],
+    dependents: [2],
+    ownIndex: 0,
+})
+INITIAL_CELLS[1] = createCell({
+    value: 11,
+    content: "",
+    dependencies: [],
+    dependents: [2],
+    ownIndex: 1,
+})
+INITIAL_CELLS[2] = createCell({
+    value: 21,
+    content: "=A0+B0",
+    dependencies: [0, 1],
+    dependents: [26],
+    ownIndex: 2,
+})
+INITIAL_CELLS[26] = createCell({
+    value: 31,
+    content: "=A2+10",
+    dependencies: [2],
+    ownIndex: 26,
+})

@@ -18,16 +18,12 @@ export function handleCellContentChange(
     assertEvent(event, "changeCell")
 
     // Evaluate content. Parse if formula.
-    const maybeNewCell = updateCell(
-        event.indexOfCell,
-        event.value,
-        context.cells,
-    )
+    const maybeNewCell = updateCell(event.cellIndex, event.value, context.cells)
 
     // Enrich ParseError with index of cell
     if (!isSuccess(maybeNewCell)) {
         return fail({
-            indexOfCell: event.indexOfCell,
+            cellIndex: event.cellIndex,
             cause: maybeNewCell.error,
         })
     }
@@ -38,12 +34,12 @@ export function handleCellContentChange(
     // Happy path: not formula or successfully parsed.
     //
     // Update dependencies.
-    const { dependencies: oldDeps } = context.cells[event.indexOfCell]
+    const { dependencies: oldDeps } = context.cells[event.cellIndex]
     const { dependencies: newDeps } = maybeNewCell.value
     const { stale, fresh } = makeDiff(oldDeps, newDeps)
     const cellsWithUpdatedDeps = updateDeps(
         context.cells,
-        event.indexOfCell,
+        event.cellIndex,
         stale,
         fresh,
     )
@@ -52,11 +48,7 @@ export function handleCellContentChange(
     // cells = propagateChanges(cells, event.indexOfCell)
 
     return success(
-        cellsWithUpdatedDeps.toSpliced(
-            event.indexOfCell,
-            1,
-            maybeNewCell.value,
-        ),
+        cellsWithUpdatedDeps.toSpliced(event.cellIndex, 1, maybeNewCell.value),
     )
 }
 
