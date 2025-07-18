@@ -73,7 +73,10 @@ export const cellsMachine = setup({
             console.log(event.output)
 
             return { cells: context.cells }
-            // START_HERE: what to return here?
+            // START_HERE: 07-17
+            // * what to return here?
+            // * how do we handle server time out?
+            // * start with action plan from claude chat 'back end 1', heading 'Next Session Action Plan' (last message)
             // return isSuccess(result)
             //     ? { cells: result.value }
             //     : { errors: [result.error] }
