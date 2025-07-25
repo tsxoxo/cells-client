@@ -1,4 +1,4 @@
-import { setup, assign, fromPromise, assertEvent } from "xstate"
+import { setup, assign, fromPromise, assertEvent, raise } from "xstate"
 import type { Cell } from "../types/types"
 import { INITIAL_CELLS } from "../test/INITIAL_DATA"
 import { handleCellContentChange } from "./state"
@@ -6,6 +6,8 @@ import { assertIsSuccess, isSuccess } from "../parse/types/result"
 import { AppError } from "../errors/errors"
 import { submit } from "../io/fetch"
 import { Payload } from "../types/io"
+
+const STATUS_CLEAR_DELAY = 3000
 
 export interface Context {
     cells: Cell[]
@@ -19,7 +21,7 @@ export interface Context {
 }
 
 export type ChangeCell = {
-    type: "changeCell"
+    type: "CHANGE_CELL"
     cellIndex: number
     value: string
 }
@@ -27,11 +29,14 @@ export type ChangeCell = {
 export const cellsMachine = setup({
     types: {
         context: {} as Context,
-        events: {} as ChangeCell | { type: "RETRY" },
+        events: {} as
+            | ChangeCell
+            | { type: "RETRY" }
+            | { type: "CLEAR_FEEDBACK" },
     },
     actions: {
         setPending: assign(({ context, event }) => {
-            assertEvent(event, "changeCell")
+            assertEvent(event, "CHANGE_CELL")
             const updatedCellsResult = handleCellContentChange(context, event)
             const newCells = [] as Cell[]
 
@@ -89,15 +94,28 @@ export const cellsMachine = setup({
         feedback: {
             type: "none",
             message: "",
-            timestamp: 0,
+            timestamp: Date.now(),
         },
     },
     id: "Cells",
     initial: "idle",
+    on: {
+        CLEAR_FEEDBACK: {
+            // No target
+            actions: assign({
+                feedback: () => ({
+                    type: "none",
+                    message: "",
+                    timestamp: Date.now(),
+                }),
+            }),
+        },
+    },
+
     states: {
         idle: {
             on: {
-                changeCell: {
+                CHANGE_CELL: {
                     target: "submitting",
                 },
             },
@@ -118,6 +136,7 @@ export const cellsMachine = setup({
                         ({ event }) => { 
               console.log( `server sent back ${JSON.stringify(event.output)}`) 
                         },
+                        // setCell
                         // Update context based on server response.
                         // The response is either:
                         // * A mirror of the request payload,
@@ -142,9 +161,13 @@ export const cellsMachine = setup({
                                 type: "success",
                                 // TODO: get this string from ui_strings.js
                                 message: "Saved",
-                                timestamp: 0,
+                                timestamp: Date.now(),
                             }),
                         }),
+                        raise(
+                            { type: "CLEAR_FEEDBACK" },
+                            { delay: STATUS_CLEAR_DELAY },
+                        ),
                     ],
                 },
                 onError: {

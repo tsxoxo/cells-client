@@ -15,7 +15,7 @@ export function handleCellContentChange(
     context: Context,
     event: ChangeCell,
 ): Result<{ cells: Cell[] }, AppError> {
-    assertEvent(event, "changeCell")
+    assertEvent(event, "CHANGE_CELL")
 
     // Evaluate content. Parse if formula.
     const maybeNewCell = updateCell(event.cellIndex, event.value, context.cells)

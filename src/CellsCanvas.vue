@@ -28,7 +28,7 @@ function onChange(event: Event, cellIndex: number) {
     submittingCellsValues.value[cellIndex] = input.value
 
     send({
-        type: "changeCell",
+        type: "CHANGE_CELL",
         cellIndex,
         value: input.value,
     })
