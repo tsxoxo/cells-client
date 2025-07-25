@@ -8,6 +8,8 @@
         "build": "vue-tsc && vite build",
         "preview": "vite preview",
         "test": "vitest",
+        "e2e": "playwright test --ui",
+        "e2e:headless": "playwright test",
         "lint": "eslint --ext .ts,.vue,.js .",
         "lint:fix": "eslint --ext .ts,.vue,.js . --fix",
         "format": "prettier --write \"**/*.{ts,vue,js,json}\" --tab-width 4",
@@ -21,6 +23,8 @@
     },
     "devDependencies": {
         "@eslint/js": "^9.24.0",
+        "@playwright/test": "^1.54.1",
+        "@types/node": "^24.1.0",
         "@vitejs/plugin-vue": "^4.6.2",
         "eslint": "^9.24.0",
         "eslint-config-prettier": "^10.1.2",

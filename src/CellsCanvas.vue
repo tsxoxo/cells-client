@@ -64,7 +64,7 @@ watch(
 </script>
 
 <template>
-    <main>
+    <main data-testid="cells-container">
         <template v-for="(number, y) in NUM_OF_ROWS + 1">
             <template v-for="(letter, x) in ALPHABET_WITH_FILLER">
                 <template v-if="number === 1">
