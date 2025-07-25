@@ -140,6 +140,7 @@ returns appropiate error:
 - parse: add nested functions
 
 ## ERRORS
+- DESIGN QUESTION: If user starts editing another cell while error is displayed, should StatusBar clear the error or persist it?
 
 - Big picture -- implement non-console error messaging
 

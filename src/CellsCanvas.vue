@@ -1,20 +1,12 @@
 <script setup lang="ts">
-import { useMachine } from "@xstate/vue"
-import { cellsMachine } from "./state/cellsMachine"
-import { createBrowserInspector } from "@statelyai/inspect"
-import { Ref, computed, ref, watch } from "vue"
+import { Ref, computed, inject, ref, watch } from "vue"
 import { ALPHABET_WITH_FILLER, NUM_OF_ROWS } from "./config/constants"
 import { handleErrors } from "./errors/errors"
 import { getCellIndexfromXY } from "./parse/utils/cells"
+import { CELLS_MACHINE_KEY } from "./types/types"
 
-const { inspect } = createBrowserInspector({
-    // Comment out the line below to start the inspector
-    autoStart: false,
-})
+const { snapshot, send } = inject(CELLS_MACHINE_KEY)!
 
-const { snapshot, send } = useMachine(cellsMachine, {
-    inspect,
-})
 const cells = computed(() => snapshot.value.context.cells)
 
 function onFocus(event: Event, ind: number) {

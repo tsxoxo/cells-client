@@ -11,6 +11,11 @@ export interface Context {
     cells: Cell[]
     errors: AppError[]
     pendingSubmissions: Payload[]
+    feedback: {
+        type: "none" | "success" | "error"
+        message: string
+        timestamp: number
+    }
 }
 
 export type ChangeCell = {
@@ -81,6 +86,11 @@ export const cellsMachine = setup({
         cells: INITIAL_CELLS,
         pendingSubmissions: [],
         errors: [],
+        feedback: {
+            type: "none",
+            message: "",
+            timestamp: 0,
+        },
     },
     id: "Cells",
     initial: "idle",
@@ -128,6 +138,12 @@ export const cellsMachine = setup({
                                     event.output.value[0],
                                 )
                             },
+                            feedback: () => ({
+                                type: "success",
+                                // TODO: get this string from ui_strings.js
+                                message: "Saved",
+                                timestamp: 0,
+                            }),
                         }),
                     ],
                 },

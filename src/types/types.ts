@@ -1,3 +1,11 @@
+import type { InjectionKey } from "vue"
+import type { cellsMachine } from "../state/cellsMachine"
+import { useMachine } from "@xstate/vue"
+
+export const CELLS_MACHINE_KEY: InjectionKey<
+    ReturnType<typeof useMachine<typeof cellsMachine>>
+> = Symbol("cellsMachine")
+
 export interface Cell {
     // raw user input
     content: string
