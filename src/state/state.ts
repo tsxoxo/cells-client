@@ -3,7 +3,7 @@ import type { Cell } from "../types/types"
 import { Context, ChangeCell } from "./cellsMachine"
 import { parseToAST } from "../parse/main"
 import { Result, fail, isSuccess, success } from "../parse/types/result"
-import { AppError } from "../errors/errors"
+import { UIError, createUIError } from "../errors/errors"
 import { interpret } from "../parse/interpret"
 import { isNumber } from "../parse/utils/match"
 import { createCellValueProvider } from "../parse/utils/cells"
@@ -14,7 +14,7 @@ import { ParseError } from "../parse/types/errors"
 export function handleCellContentChange(
     context: Context,
     event: ChangeCell,
-): Result<{ cells: Cell[] }, AppError> {
+): Result<{ cells: Cell[] }, UIError> {
     assertEvent(event, "CHANGE_CELL")
 
     // Evaluate content. Parse if formula.
@@ -22,10 +22,13 @@ export function handleCellContentChange(
 
     // Enrich ParseError with index of cell
     if (!isSuccess(maybeNewCell)) {
-        return fail({
-            cellIndex: event.cellIndex,
-            cause: maybeNewCell.error,
-        })
+        return fail(
+            createUIError({
+                cellIndex: event.cellIndex,
+                type: maybeNewCell.error.type,
+                token: maybeNewCell.error.token,
+            }),
+        )
     }
 
     // HACK: for now, just return the new cell

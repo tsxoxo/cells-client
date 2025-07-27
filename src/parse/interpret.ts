@@ -215,8 +215,17 @@ function createError({
 }): Failure<ParseError> {
     return fail({
         type,
-        payload: node,
+        token: {
+            value: node.value,
+            start: node.start,
+        },
+        debugNode: node,
         cell,
+        // TODO: Can we say what we got?
+        // Non-trivial: in a node of type 'func_range', the error was
+        // a non-numerical cell contained within the range.
+        // we want `received = cell.content`
+        // how difficult is that to do?
         msg: `${type} in Interpreter: expected [${expected}], got [${node.value}]`,
     })
 }

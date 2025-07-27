@@ -86,7 +86,6 @@ export function getNumbersFromCells(
 
         // Fail immediately on any non-numeric value
         if (cell === undefined || typeof cell.value !== "number") {
-            console.log("cell: ", cell)
             return fail({
                 type: "CELL_NOT_A_NUMBER",
                 cellIndex,
@@ -171,8 +170,6 @@ function getRangeValues(cells: Cell[], numOfCols: number): CellValueGetter {
     return ([fromName, toName], currentCellIndex) => {
         // Convert names to indices.
         const [from, to] = getIndicesFromCellNames([fromName, toName])
-        console.log("to: ", to)
-        console.log("from: ", from)
 
         // Arg order of from and to does not matter, cells get sorted in getCellsinRange.
         const indices = getCellsInRange(from, to, numOfCols)

@@ -91,19 +91,18 @@ export class Parser {
 
     private createError({
         type,
-        receivedToken,
+        token,
         expectedType,
     }: {
         type: ASTErrorType
-        receivedToken: Token
+        token: Token
         // TODO: expected should probably be TokenType
         expectedType: string | undefined
     }): Failure<ParseError> {
-        const tokenDisplayString =
-            receivedToken.type === "eof" ? "eof" : receivedToken.value
+        const tokenDisplayString = token.type === "eof" ? "eof" : token.value
         return fail({
             type,
-            payload: receivedToken,
+            token,
             msg: `${type} in makeAST: expected [${expectedType}], got [${tokenDisplayString}]`,
         })
     }
@@ -224,7 +223,7 @@ export class Parser {
             case "parens_close": {
                 return this.createError({
                     type: "PARENS",
-                    receivedToken: token,
+                    token,
                     expectedType: "opening parenthesis",
                 })
             }
@@ -240,7 +239,7 @@ export class Parser {
                 if (this.peek()?.value !== ")") {
                     return this.createError({
                         type: "PARENS",
-                        receivedToken: this.peek(),
+                        token: this.peek(),
                         expectedType: "closing parenthesis",
                     })
                 }
@@ -263,7 +262,13 @@ export class Parser {
                 const parseResult = parseFunc(this.tokens.slice(this.current))
                 if (!isSuccess(parseResult)) {
                     // TODO: Think about what to do with these errors
-                    return this.createError(parseResult.error[0])
+                    const { receivedToken: token, ...rest } =
+                        parseResult.error[0]
+
+                    return this.createError({
+                        ...rest,
+                        token,
+                    })
                 }
 
                 // Happy path.
@@ -289,7 +294,7 @@ export class Parser {
             case "eof":
                 return this.createError({
                     type: "UNEXPECTED_TOKEN",
-                    receivedToken: token,
+                    token,
                     expectedType: "a factor",
                 })
 

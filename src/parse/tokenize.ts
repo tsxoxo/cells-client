@@ -30,7 +30,7 @@ import {
 
 import { Failure, Result, fail, isSuccess, success } from "./types/result"
 
-import { BrokenToken, ParseError, TokenizeErrorType } from "./types/errors"
+import { ParseError, TokenizeErrorType } from "./types/errors"
 
 import { Token } from "./types/token.ts"
 
@@ -40,9 +40,7 @@ import { Token } from "./types/token.ts"
 //
 // Feeds the string to getNextToken, bit by bit,
 // and accrues the token array if result is ok.
-export function tokenize(
-    str: string,
-): Result<Token[], ParseError & { payload: BrokenToken }> {
+export function tokenize(str: string): Result<Token[], ParseError> {
     const tokens = [] as Token[]
     let ind = 0
 
@@ -77,10 +75,7 @@ export function tokenize(
 // OUT: valid Token or error
 //
 // Uses matchers
-function getNextToken(
-    start: number,
-    str: string,
-): Result<Token, ParseError & { payload: BrokenToken }> {
+function getNextToken(start: number, str: string): Result<Token, ParseError> {
     // const token = createEmptyToken(start)
     const char = str[start]
 
@@ -153,7 +148,7 @@ function getNextToken(
         if (!isNumber(maybeNumber)) {
             return createError({
                 type: "INVALID_NUMBER",
-                payload: { start, value: maybeNumber },
+                token: { start, value: maybeNumber, type: "INVALID" },
                 expected: "number",
             })
         }
@@ -203,7 +198,7 @@ function getNextToken(
 
         return createError({
             type: "INVALID_TOKEN",
-            payload: { value: maybeCellOrFunc, start },
+            token: { value: maybeCellOrFunc, start, type: "INVALID" },
             expected:
                 "cell reference (e.g. 'A42') or function keyword (e.g. 'sum')",
         })
@@ -213,7 +208,7 @@ function getNextToken(
     // Examples: ~`^'$
     return createError({
         type: "INVALID_CHAR",
-        payload: { value: char, start },
+        token: { value: char, start, type: "INVALID" },
         expected: "valid character",
     })
 }
@@ -224,16 +219,16 @@ function getNextToken(
 // Factories
 function createError({
     type,
-    payload,
+    token,
     expected,
 }: {
     type: TokenizeErrorType
-    payload: BrokenToken
+    token: Token
     expected: string
-}): Failure<ParseError & { payload: BrokenToken }> {
+}): Failure<ParseError> {
     return fail({
         type,
-        payload,
-        msg: `${type} in Tokenizer: expected [${expected}], got [${payload.value}]`,
+        token,
+        msg: `${type} in Tokenizer: expected [${expected}], got [${token.value}]`,
     })
 }

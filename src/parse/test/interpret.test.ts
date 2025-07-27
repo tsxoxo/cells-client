@@ -283,8 +283,20 @@ describe("interpret", () => {
     it("(smoke test) Works with the real cellValueProvider", () => {
         // Formula: "A0+B0"
         const cells: Cell[] = [
-            { content: "5", value: 5, dependencies: [], dependents: [] },
-            { content: "10", value: 10, dependencies: [], dependents: [] },
+            {
+                content: "5",
+                value: 5,
+                dependencies: [],
+                dependents: [],
+                ownIndex: 0,
+            },
+            {
+                content: "10",
+                value: 10,
+                dependencies: [],
+                dependents: [],
+                ownIndex: 1,
+            },
         ]
         const cellValueProvider = createCellValueProvider(cells, NUM_OF_COLS)
         const ast = {
@@ -333,7 +345,7 @@ describe("interpret", () => {
                     },
                 } as Node,
                 expectedErrorType: "DIVIDE_BY_0" as InterpretErrorType,
-                expectedPayload: {
+                expectedErrorNode: {
                     type: "number",
                     value: "0",
                     start: 2,
@@ -358,7 +370,7 @@ describe("interpret", () => {
                     },
                 } as Node,
                 expectedErrorType: "DIVIDE_BY_0" as InterpretErrorType,
-                expectedPayload: {
+                expectedErrorNode: {
                     type: "cell",
                     value: "A0",
                     start: 2,
@@ -394,7 +406,7 @@ describe("interpret", () => {
                     },
                 } as Node,
                 expectedErrorType: "DIVIDE_BY_0" as InterpretErrorType,
-                expectedPayload: {
+                expectedErrorNode: {
                     type: "binary_op",
                     value: "-",
                     start: 5,
@@ -441,7 +453,7 @@ describe("interpret", () => {
                     },
                 } as Node,
                 expectedErrorType: "DIVIDE_BY_0" as InterpretErrorType,
-                expectedPayload: {
+                expectedErrorNode: {
                     type: "func_range",
                     value: "sum",
                     start: 2,
@@ -464,12 +476,12 @@ describe("interpret", () => {
             ({
                 inputAST,
                 expectedErrorType,
-                expectedPayload,
+                expectedErrorNode,
                 expectedCellIndex,
             }: {
                 inputAST: Node
                 expectedErrorType: InterpretErrorType
-                expectedPayload: Node
+                expectedErrorNode: Node
                 expectedCellIndex?: number
             }) => {
                 const result = interpret(
@@ -480,7 +492,7 @@ describe("interpret", () => {
 
                 assertIsFail(result)
                 expect(result.error.type).toBe(expectedErrorType)
-                expect(result.error.payload).toEqual(expectedPayload)
+                expect(result.error.debugNode).toEqual(expectedErrorNode)
                 if (expectedCellIndex !== undefined) {
                     expect(result.error.cellIndex).toEqual(expectedCellIndex)
                 }

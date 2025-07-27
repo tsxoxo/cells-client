@@ -27,6 +27,6 @@ export const ALPHABET_WITH_FILLER = [
     "Y",
     "Z",
 ]
-export const NUM_OF_ROWS = 4
+export const NUM_OF_ROWS = 100
 export const NUM_OF_COLS = ALPHABET_WITH_FILLER.length - 1
 export const NUMBER_OF_CELLS = NUM_OF_COLS * NUM_OF_ROWS

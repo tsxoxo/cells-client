@@ -3,7 +3,7 @@ import type { Cell } from "../types/types"
 import { INITIAL_CELLS } from "../test/INITIAL_DATA"
 import { handleCellContentChange } from "./state"
 import { assertIsSuccess, isSuccess } from "../parse/types/result"
-import { AppError } from "../errors/errors"
+import { UIError } from "../errors/errors"
 import { submit } from "../io/fetch"
 import { Payload } from "../types/io"
 
@@ -11,7 +11,7 @@ const STATUS_CLEAR_DELAY = 3000
 
 export interface Context {
     cells: Cell[]
-    errors: AppError[]
+    errors: UIError[]
     pendingSubmissions: Payload[]
     feedback: {
         type: "none" | "success" | "error"
@@ -42,6 +42,7 @@ export const cellsMachine = setup({
 
             // create payload by adding old cells
             // NOTE: I know this function is doing a lot
+            // TODO: This is unreadable
             if (!isSuccess(updatedCellsResult)) {
                 const faultyCell = structuredClone(
                     context.cells[event.cellIndex],
@@ -64,7 +65,7 @@ export const cellsMachine = setup({
                         newCells,
                         oldCells,
                         ...(!isSuccess(updatedCellsResult) && {
-                            error: updatedCellsResult.error,
+                            errors: [updatedCellsResult.error],
                         }),
                     },
                 ],

@@ -1,10 +1,5 @@
-import { ParseError } from "../parse/types/errors"
-
-// TODO: Do we need this now we have UIError?
-export type AppError = {
-    cellIndex: number
-    cause: ParseError
-}
+import { ParseErrorType } from "../parse/types/errors"
+import { Token } from "../parse/types/token"
 
 // Bare necessities for showing expressive errors.
 // Derived from ParseError through an interface.
@@ -12,7 +7,7 @@ export type AppError = {
 // because we'll be sending this to the BE and that would
 // make our API dependent on implementation details of the
 // parser.
-type UIError = {
+export type UIError = {
     msg: string
     token: {
         start: number
@@ -21,13 +16,27 @@ type UIError = {
     cellIndex: number
 }
 
-// export function makeUIError({type, token, cellIndex}: {
-//   type: ParseEr,
-//   payload: Parse,
-//   cellIndex: number
-// })
+export function createUIError({
+    type,
+    token,
+    cellIndex,
+}: {
+    type: ParseErrorType
+    // TODO: THis is not completely true since in interpret.ts we are losing the `type` prop
+    token: Pick<Token, "start" | "value">
+    cellIndex: number
+}): UIError {
+    return {
+        msg: type,
+        token: {
+            start: token.start,
+            value: token.value,
+        },
+        cellIndex,
+    }
+}
 
-export function handleErrors(errors: AppError[]) {
+export function handleErrors(errors: UIError[]) {
     if (errors.length > 0) {
         errors.forEach((error) => {
             console.log(`errors: ${JSON.stringify(error, null, 2)}`)

@@ -164,8 +164,8 @@ describe("tokenizer", () => {
 
                 assertIsFail(result)
                 expect(result.error.type).toBe(expectedError)
-                expect(result.error.payload.value).toBe(expectedValue)
-                expect(result.error.payload.start).toEqual(expectedStart)
+                expect(result.error.token.value).toBe(expectedValue)
+                expect(result.error.token.start).toEqual(expectedStart)
             },
         )
     })

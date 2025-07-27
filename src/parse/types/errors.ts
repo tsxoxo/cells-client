@@ -30,12 +30,17 @@
 import { Token } from "./token"
 import { Node } from "./ast"
 
+export type ParseErrorType =
+    | TokenizeErrorType
+    | ASTErrorType
+    | InterpretErrorType
 // Error object that bubble up and get handled
 export type ParseError = {
-    type: TokenizeErrorType | ASTErrorType | InterpretErrorType
-    payload: BrokenToken | Token | Node
+    type: ParseErrorType
+    token: Pick<Token, "value" | "start">
     msg: string
     cellIndex?: number // Cell which contains an invalid value
+    debugNode?: Node
 }
 
 export type CellError = {
@@ -49,11 +54,6 @@ export type TokenizeErrorType =
     | "INVALID_CHAR" // For cases like $, ?, ^
     | "INVALID_NUMBER" // For cases like "1.2,3"
     | "INVALID_TOKEN" // For things like "foo", "a999"
-
-export type BrokenToken = {
-    value: string
-    start: number
-}
 
 export type ASTErrorType = "UNEXPECTED_TOKEN" | "PARENS"
 

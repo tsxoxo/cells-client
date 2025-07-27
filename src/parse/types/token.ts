@@ -10,7 +10,7 @@ export type TokenType =
     | "parens_open"
     | "parens_close"
     | "func"
-    | undefined // Used for INVALID_CHAR error and as initial value in factory function.
+    | "INVALID" // Used for INVALID_CHAR error and as initial value in factory function.
     | "eof" // Used for end-of-file error
 
 export type Token = {
