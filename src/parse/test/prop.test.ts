@@ -219,6 +219,8 @@ it("processes functions", () => {
                 cells,
                 NUM_OF_COLS,
             )
+            // DEBUG
+            // console.log(cells[0])
 
             const ourResult = interpret(ast.value, cellValueProvider, -1)
             assertIsSuccess(ourResult)
