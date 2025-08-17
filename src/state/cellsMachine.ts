@@ -9,6 +9,9 @@ import { Payload } from "../types/io"
 
 const STATUS_CLEAR_DELAY = 3000
 
+// START_HERE: 08-17 SUN
+// * Get cells from db when machine starts. Should be an async actor. First step: Model this visually.
+
 export interface Context {
     cells: Cell[]
     errors: UIError[]

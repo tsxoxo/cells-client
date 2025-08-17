@@ -255,8 +255,7 @@ export class Parser {
             }
 
             case "func": {
-                // START_HERE: 07-13
-                // * add tests for func_list
+                // TODO: 07-13 * add tests for func_list
 
                 const parseFunc = any(...parseTable.func)
                 const parseResult = parseFunc(this.tokens.slice(this.current))
